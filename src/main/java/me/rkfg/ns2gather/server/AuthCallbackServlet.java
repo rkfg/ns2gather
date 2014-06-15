@@ -58,7 +58,7 @@ public class AuthCallbackServlet extends HttpServlet {
             if (verified != null) {
                 try {
                     Long steamId = Long.valueOf(verified.getIdentifier().replaceAll("http://steamcommunity.com/openid/id/", ""));
-                    req.getSession().setAttribute(NS2GServiceImpl.STEAMID_SESSION, steamId);
+                    req.getSession().setAttribute(Settings.STEAMID_SESSION, steamId);
                     Cookie rememberMeCookie = new Cookie("rememberSteamId", rememberMe(steamId));
                     rememberMeCookie.setMaxAge(REMEMBER_MAXAGE);
                     resp.addCookie(rememberMeCookie);

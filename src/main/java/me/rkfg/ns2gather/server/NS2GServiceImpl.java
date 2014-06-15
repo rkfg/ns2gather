@@ -71,10 +71,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         ALL, VOTES, RESULTS
     }
 
-    static final String STEAMID_SESSION = "steamid";
-    static final int TIMEOUT = 10000;
-    public static final long MESSAGE_CLEANUP_INTERVAL = 120000;
-    protected static final long PLAYER_PING_TIMEOUT = 10000;
     static ConsumerManager manager = new ConsumerManager();
     HashMap<Long, PlayerDTO> connectedPlayers = new HashMap<>();
     HashMap<Long, String> steamIdName = new HashMap<>();
@@ -102,7 +98,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                         result.add(messageDTO);
                     }
                 }
-                if (System.currentTimeMillis() - messageDTO.getTimestamp() > MESSAGE_CLEANUP_INTERVAL) {
+                if (System.currentTimeMillis() - messageDTO.getTimestamp() > Settings.MESSAGE_CLEANUP_INTERVAL) {
                     messages.remove(messageDTO);
                 }
             }
@@ -161,7 +157,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     Iterator<Entry<Long, PlayerDTO>> iterator = connectedPlayers.entrySet().iterator();
                     while (iterator.hasNext()) {
                         Entry<Long, PlayerDTO> entry = iterator.next();
-                        if (System.currentTimeMillis() - entry.getValue().getLastPing() > PLAYER_PING_TIMEOUT) {
+                        if (System.currentTimeMillis() - entry.getValue().getLastPing() > Settings.PLAYER_PING_TIMEOUT) {
                             iterator.remove();
                             postMessage(MessageType.USER_LEAVES, entry.getValue().getName());
                             try {
@@ -182,7 +178,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             @Override
             public void run() {
                 for (MessageDTO messageDTO : messages) {
-                    if (System.currentTimeMillis() - messageDTO.getTimestamp() > MESSAGE_CLEANUP_INTERVAL) {
+                    if (System.currentTimeMillis() - messageDTO.getTimestamp() > Settings.MESSAGE_CLEANUP_INTERVAL) {
                         messages.remove(messageDTO);
                     }
                 }
@@ -216,7 +212,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public Long getSteamId() throws ClientAuthException, LogicException {
-        Long result = (Long) perThreadRequest.get().getSession().getAttribute(STEAMID_SESSION);
+        Long result = (Long) perThreadRequest.get().getSession().getAttribute(Settings.STEAMID_SESSION);
         if (result == null) {
             result = rememberMe();
             if (result == null) {
@@ -247,7 +243,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     try {
                         steamId = (Long) session.createQuery("select r.steamId from Remembered r where r.rememberId = :rid")
                                 .setLong("rid", rid).uniqueResult();
-                        perThreadRequest.get().getSession().setAttribute(STEAMID_SESSION, steamId);
+                        perThreadRequest.get().getSession().setAttribute(Settings.STEAMID_SESSION, steamId);
                     } catch (NonUniqueResultException e) {
                         throw new LogicException("Дублирующийся id в БД, автовход отклонён.");
                     }
@@ -315,8 +311,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     public static HttpClient getHTTPClient() {
-        RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(TIMEOUT).setConnectTimeout(TIMEOUT)
-                .setSocketTimeout(TIMEOUT).build();
+        RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(Settings.TIMEOUT).setConnectTimeout(Settings.TIMEOUT)
+                .setSocketTimeout(Settings.TIMEOUT).build();
         return HttpClientBuilder.create().setDefaultRequestConfig(config)
                 .setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36")
                 .build();

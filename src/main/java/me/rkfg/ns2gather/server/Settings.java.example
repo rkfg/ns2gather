@@ -3,4 +3,8 @@ package me.rkfg.ns2gather.server;
 public class Settings {
     static final String STEAM_API_KEY = "INSERT_STEAM_API_KEY_HERE";
     static final String CALLBACK_URL = "INSERT_FULL_CALLBACK_URL_HERE";
+    static final String STEAMID_SESSION = "steamid";
+    static final int TIMEOUT = 10000;
+    static final long MESSAGE_CLEANUP_INTERVAL = 120000;
+    static final long PLAYER_PING_TIMEOUT = 10000;
 }
