@@ -61,10 +61,7 @@ public class NS2G implements EntryPoint {
     public static RuleDTO[] voteRules = { new RuleDTO(1, 1, 2, "командира"), new RuleDTO(1, 2, 2, "карту"), new RuleDTO(1, 1, 1, "сервер") };
     DateTimeFormat format = DateTimeFormat.getFormat("[HH:mm:ss]");
     private final NS2GServiceAsync ns2gService = GWT.create(NS2GService.class);
-    private final Label lblId = new Label("Id:");
-    private final Label label_id = new Label("");
     private final Label label_nick = new Label("Ник");
-    private final HorizontalPanel horizontalPanel_status = new HorizontalPanel();
     private final SplitLayoutPanel splitLayoutPanel = new SplitLayoutPanel();
     private final DockLayoutPanel dockLayoutPanel = new DockLayoutPanel(Unit.EM);
     private final ScrollPanel scrollPanel = new ScrollPanel();
@@ -209,8 +206,6 @@ public class NS2G implements EntryPoint {
         dataProvider_players.addDataDisplay(dataGrid_players);
         dataProvider_maps.addDataDisplay(dataGrid_maps);
         dataProvider_servers.addDataDisplay(dataGrid_servers);
-        horizontalPanel_status.add(lblId);
-        horizontalPanel_status.add(label_id);
         dataGrid_players.setRowStyles(new RowStyles<PlayerDTO>() {
 
             @Override
@@ -236,7 +231,6 @@ public class NS2G implements EntryPoint {
 
             @Override
             public void onSuccess(Long result) {
-                label_id.setText(result.toString());
                 runPing();
                 loadMaps();
                 loadServers();
