@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+
+  <!-- Servlets -->
+  <servlet>
+    <servlet-name>NS2Servlet</servlet-name>
+    <servlet-class>me.rkfg.ns2gather.server.NS2GServiceImpl</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <servlet>
+    <servlet-name>CallbackServlet</servlet-name>
+    <servlet-class>me.rkfg.ns2gather.server.AuthCallbackServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>NS2Servlet</servlet-name>
+    <url-pattern>/ns2g/ns2g</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>CallbackServlet</servlet-name>
+    <url-pattern>/ns2g/callback</url-pattern>
+  </servlet-mapping>
+  
+  <!-- Default page to serve -->
+  <welcome-file-list>
+    <welcome-file>ns2g.html</welcome-file>
+  </welcome-file-list>
+
+</web-app>

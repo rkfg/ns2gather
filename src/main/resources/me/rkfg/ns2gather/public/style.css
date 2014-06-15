@@ -1,0 +1,30 @@
+@CHARSET "UTF-8";
+
+.msg_system {
+    color: #009900;
+    font-weight: bold;
+}
+
+.msg_chat {
+    
+}
+
+body {
+    font-size: 20px !important;
+}
+
+.gwt-Label {
+    font-size: 20px !important;
+}
+
+.gwt-Button {
+    font-size: 20px !important;
+}
+
+.gwt-TextBox {
+    font-size: 20px !important;
+}
+
+.big-datagrid > td > div{
+    font-size: 20px !important;
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+                                         "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+ <session-factory>
+  <property name="hibernate.connection.driver_class">org.gjt.mm.mysql.Driver</property>
+  <property name="hibernate.connection.password">INSERT_MYSQL_PASSWORD_HERE</property>
+  <property name="hibernate.connection.url">jdbc:mysql://127.0.0.1/ns2g</property>
+  <property name="hibernate.connection.username">ns2g</property>
+  <property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
+  <property name="hibernate.show_sql">true</property>
+  <property name="hibernate.hbm2ddl.auto">update</property>
+  <mapping class="me.rkfg.ns2gather.domain.Map"/>
+  <mapping class="me.rkfg.ns2gather.domain.PlayerVote"/>
+  <mapping class="me.rkfg.ns2gather.domain.Remembered"/>
+  <mapping class="me.rkfg.ns2gather.domain.Server"/>
+  <mapping class="me.rkfg.ns2gather.domain.Vote"/>
+  <mapping class="me.rkfg.ns2gather.domain.VoteResult"/>
+ </session-factory>
+</hibernate-configuration>
