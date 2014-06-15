@@ -167,21 +167,45 @@ public class NS2G implements EntryPoint {
 
         splitLayoutPanel_1.addWest(dataGrid_players, 500.0);
 
-        dataGrid_players.addColumn(textColumn_playerName, "Имя");
+        dataGrid_players.addColumn(column_voteComm);
+        dataGrid_players.setColumnWidth(column_voteComm, "50px");
+        column_voteComm.setFieldUpdater(new FieldUpdater<PlayerDTO, Boolean>() {
 
-        dataGrid_players.addColumn(column_voteComm, "Голос за командира");
+            @Override
+            public void update(int index, PlayerDTO object, Boolean value) {
+                checkLimit(value, object, dataProvider_players, voteRules[0].getVotesLimit());
+            }
+        });
+
+        dataGrid_players.addColumn(textColumn_playerName, "Имя");
 
         splitLayoutPanel_1.addEast(dataGrid_servers, 500.0);
 
-        dataGrid_servers.addColumn(textColumn_serverName, "Сервер");
+        dataGrid_servers.addColumn(column_voteServer);
+        dataGrid_servers.setColumnWidth(column_voteServer, "50px");
+        column_voteServer.setFieldUpdater(new FieldUpdater<ServerDTO, Boolean>() {
 
-        dataGrid_servers.addColumn(column_voteServer, "Голос за сервер");
+            @Override
+            public void update(int index, ServerDTO object, Boolean value) {
+                checkLimit(value, object, dataProvider_servers, voteRules[2].getVotesLimit());
+            }
+        });
+
+        dataGrid_servers.addColumn(textColumn_serverName, "Сервер");
 
         splitLayoutPanel_1.add(dataGrid_maps);
 
-        dataGrid_maps.addColumn(textColumn_mapName, "Карта");
+        dataGrid_maps.addColumn(column_voteMap);
+        dataGrid_maps.setColumnWidth(column_voteMap, "50px");
+        column_voteMap.setFieldUpdater(new FieldUpdater<MapDTO, Boolean>() {
 
-        dataGrid_maps.addColumn(column_voteMap, "Голос за карту");
+            @Override
+            public void update(int index, MapDTO object, Boolean value) {
+                checkLimit(value, object, dataProvider_maps, voteRules[1].getVotesLimit());
+            }
+        });
+
+        dataGrid_maps.addColumn(textColumn_mapName, "Карта");
         dataProvider_players.addDataDisplay(dataGrid_players);
         dataProvider_maps.addDataDisplay(dataGrid_maps);
         dataProvider_servers.addDataDisplay(dataGrid_servers);
@@ -206,27 +230,6 @@ public class NS2G implements EntryPoint {
             @Override
             public String getStyleNames(ServerDTO row, int rowIndex) {
                 return "big-datagrid";
-            }
-        });
-        column_voteComm.setFieldUpdater(new FieldUpdater<PlayerDTO, Boolean>() {
-
-            @Override
-            public void update(int index, PlayerDTO object, Boolean value) {
-                checkLimit(value, object, dataProvider_players, voteRules[0].getVotesLimit());
-            }
-        });
-        column_voteMap.setFieldUpdater(new FieldUpdater<MapDTO, Boolean>() {
-
-            @Override
-            public void update(int index, MapDTO object, Boolean value) {
-                checkLimit(value, object, dataProvider_maps, voteRules[1].getVotesLimit());
-            }
-        });
-        column_voteServer.setFieldUpdater(new FieldUpdater<ServerDTO, Boolean>() {
-
-            @Override
-            public void update(int index, ServerDTO object, Boolean value) {
-                checkLimit(value, object, dataProvider_servers, voteRules[2].getVotesLimit());
             }
         });
         ns2gService.getSteamId(new AsyncCallback<Long>() {
