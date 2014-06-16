@@ -11,6 +11,7 @@ import java.util.Set;
 
 import me.rkfg.ns2gather.dto.ChatMessageType;
 import me.rkfg.ns2gather.dto.CheckedDTO;
+import me.rkfg.ns2gather.dto.GatherState;
 import me.rkfg.ns2gather.dto.MapDTO;
 import me.rkfg.ns2gather.dto.MessageDTO;
 import me.rkfg.ns2gather.dto.PlayerDTO;
@@ -126,6 +127,17 @@ public class NS2G implements EntryPoint {
     private final Label label_voted = new Label("0/0");
     private final SliderBar sliderBar_chatVolume = new AdvancedSliderBar();
     private final Image image_soundIcon = new Image("icons/sound.png");
+    private final HorizontalPanel horizontalPanel_1 = new HorizontalPanel();
+    private final GatherStatusLabel gatherStatusLabel = new GatherStatusLabel(new ClickHandler() {
+
+        @Override
+        public void onClick(ClickEvent event) {
+            if (gatherStatusLabel.getGatherState() != GatherState.COMPLETED) {
+                return;
+            }
+            loadVoteResult();
+        }
+    });
 
     /**
      * This is the entry point method.
@@ -135,6 +147,13 @@ public class NS2G implements EntryPoint {
         RootLayoutPanel rootLayoutPanel = RootLayoutPanel.get();
 
         rootLayoutPanel.add(splitLayoutPanel);
+
+        splitLayoutPanel.addNorth(horizontalPanel_1, 50.0);
+        horizontalPanel_1.setSize("100%", "100%");
+
+        horizontalPanel_1.add(gatherStatusLabel);
+        horizontalPanel_1.setCellVerticalAlignment(gatherStatusLabel, HasVerticalAlignment.ALIGN_MIDDLE);
+        horizontalPanel_1.setCellHorizontalAlignment(gatherStatusLabel, HasHorizontalAlignment.ALIGN_CENTER);
 
         splitLayoutPanel.addSouth(dockLayoutPanel, 300.0);
         horizontalPanel.setSpacing(5);
@@ -355,6 +374,9 @@ public class NS2G implements EntryPoint {
                             badVote = true;
                         }
                         soundsToPlay.add(NS2Sound.VOTE_END);
+                        break;
+                    case GATHER_STATUS:
+                        gatherStatusLabel.setGatherState(GatherState.values()[Integer.valueOf(message.getContent())]);
                         break;
                     default:
                         break;

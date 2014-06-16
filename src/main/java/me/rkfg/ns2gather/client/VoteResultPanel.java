@@ -20,6 +20,7 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.view.client.ListDataProvider;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
 
 public class VoteResultPanel extends DialogBox {
     private final SimplePanel rootPanel = new SimplePanel();
@@ -35,6 +36,7 @@ public class VoteResultPanel extends DialogBox {
     private final HTML html_connect = new HTML("<a href=\"steam://connect/\">Подключиться</a>", true);
     private final Button button_close = new Button("Закрыть");
     private final HorizontalPanel horizontalPanel = new HorizontalPanel();
+    private final Label label_2 = new Label("Вы сможете снова открыть это окно, щёлкнув по статусу gather'а.");
 
     public VoteResultPanel(List<VoteResultDTO> voteResult, ListDataProvider<PlayerDTO> dataProvider_players,
             ListDataProvider<MapDTO> dataProvider_maps, ListDataProvider<ServerDTO> dataProvider_servers) {
@@ -72,6 +74,9 @@ public class VoteResultPanel extends DialogBox {
 
         flexTable.setWidget(5, 0, horizontalPanel);
         horizontalPanel.setSize("100%", "50px");
+
+        horizontalPanel.add(label_2);
+        horizontalPanel.setCellVerticalAlignment(label_2, HasVerticalAlignment.ALIGN_MIDDLE);
         flexTable.getCellFormatter().setWidth(5, 0, "");
         button_close.addClickHandler(new Button_closeClickHandler());
 
@@ -79,6 +84,7 @@ public class VoteResultPanel extends DialogBox {
         flexTable.getFlexCellFormatter().setColSpan(6, 0, 2);
         flexTable.getCellFormatter().setHorizontalAlignment(6, 0, HasHorizontalAlignment.ALIGN_CENTER);
         flexTable.getFlexCellFormatter().setColSpan(5, 0, 2);
+        html_connect.setStyleName("gwt-Label");
         fillFields(voteResult, dataProvider_players, dataProvider_maps, dataProvider_servers);
     }
 

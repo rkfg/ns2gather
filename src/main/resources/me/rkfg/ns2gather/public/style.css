@@ -28,3 +28,21 @@ body {
 .big-datagrid > td > div{
     font-size: 20px !important;
 }
+
+.gstatus {
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.gopen {
+    color: #009900;
+}
+
+.gclosed {
+    color: #660000;
+}
+
+.gcompleted {
+    color: #0000cc;
+    cursor: pointer;
+}

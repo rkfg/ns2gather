@@ -170,6 +170,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                                     removeVotes(entry.getValue().getId());
                                     postMessage(MessageType.USER_LEAVES, entry.getValue().getName(), gatherId);
                                     postVoteChangeMessage(gatherId);
+                                    updateGatherStateByPlayerNumber(getGatherById(gatherId));
                                 } catch (LogicException | ClientAuthException e) {
                                     e.printStackTrace();
                                 }
@@ -359,28 +360,40 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 connectedPlayers.addPlayer(gatherId, existing);
                 postMessage(MessageType.USER_ENTERS, name);
                 postVoteChangeMessage();
-                updateGatherState();
+                updateGatherStateByPlayerNumber();
             } else {
                 existing.setLastPing(System.currentTimeMillis());
             }
         }
     }
 
-    private void updateGatherState() throws LogicException, ClientAuthException {
-        Gather gather = getCurrentGather();
-        if (connectedPlayers.getPlayersByGather(gather.getId()).size() >= 12) {
+    private void updateGatherStateByPlayerNumber() throws LogicException, ClientAuthException {
+        updateGatherStateByPlayerNumber(getCurrentGather());
+    }
+
+    private void updateGatherStateByPlayerNumber(Gather gather) throws LogicException, ClientAuthException {
+        if (gather.getState() == GatherState.COMPLETED) {
+            // nothing to do here
+            return;
+        }
+        Long gatherId = gather.getId();
+        if (connectedPlayers.getPlayersByGather(gatherId).size() >= 3) {
             if (gather.getState() == GatherState.OPEN) {
                 // close gather if 12 or more players here
-                gather.setState(GatherState.CLOSED);
-                HibernateUtil.saveObject(gather);
+                updateGatherState(gather, GatherState.CLOSED);
             }
         } else {
             if (gather.getState() == GatherState.CLOSED) {
                 // reopen gather if players have left
-                gather.setState(GatherState.OPEN);
-                HibernateUtil.saveObject(gather);
+                updateGatherState(gather, GatherState.OPEN);
             }
         }
+    }
+
+    private void updateGatherState(Gather gather, GatherState newState) throws LogicException, ClientAuthException {
+        gather.setState(newState);
+        postMessage(MessageType.GATHER_STATUS, String.valueOf(newState.ordinal()), gather.getId());
+        HibernateUtil.saveObject(gather);
     }
 
     private void postMessage(MessageDTO messageDTO) {
@@ -459,13 +472,13 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private void postResults(final Long gatherId) throws LogicException, ClientAuthException {
         synchronized (voteCountLock) {
+            final Gather gather = getGatherById(gatherId);
             try {
                 HibernateUtil.exec(new HibernateCallback<Void>() {
 
                     @Override
                     public Void run(Session session) throws LogicException, ClientAuthException {
                         session.enableFilter("gatherId").setParameter("gid", gatherId);
-                        Gather gather = getGatherById(gatherId);
                         resetVotes(gatherId, ResetType.RESULTS);
                         for (VoteType voteType : VoteType.values()) {
                             @SuppressWarnings("unchecked")
@@ -511,6 +524,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 return;
             }
             postMessage(MessageType.VOTE_ENDED, "ok");
+            updateGatherState(gather, GatherState.COMPLETED);
         }
     }
 
