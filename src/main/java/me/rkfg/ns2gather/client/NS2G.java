@@ -38,7 +38,9 @@ import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.DataGrid;
 import com.google.gwt.user.cellview.client.RowStyles;
 import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window.Location;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
@@ -138,6 +140,8 @@ public class NS2G implements EntryPoint {
             loadVoteResult();
         }
     });
+    private final Button button_enterNewGather = new Button("Зайти в новый сбор");
+    private final Button button_logout = new Button("Выход");
 
     /**
      * This is the entry point method.
@@ -154,6 +158,11 @@ public class NS2G implements EntryPoint {
         horizontalPanel_1.add(gatherStatusLabel);
         horizontalPanel_1.setCellVerticalAlignment(gatherStatusLabel, HasVerticalAlignment.ALIGN_MIDDLE);
         horizontalPanel_1.setCellHorizontalAlignment(gatherStatusLabel, HasHorizontalAlignment.ALIGN_CENTER);
+        button_logout.addClickHandler(new Button_logoutClickHandler());
+
+        horizontalPanel_1.add(button_logout);
+        horizontalPanel_1.setCellWidth(button_logout, "1px");
+        horizontalPanel_1.setCellHorizontalAlignment(button_logout, HasHorizontalAlignment.ALIGN_RIGHT);
 
         splitLayoutPanel.addSouth(dockLayoutPanel, 300.0);
         horizontalPanel.setSpacing(5);
@@ -175,6 +184,11 @@ public class NS2G implements EntryPoint {
         horizontalPanel.add(button_vote);
         horizontalPanel.setCellVerticalAlignment(button_vote, HasVerticalAlignment.ALIGN_MIDDLE);
         horizontalPanel.setCellHorizontalAlignment(button_vote, HasHorizontalAlignment.ALIGN_CENTER);
+        button_enterNewGather.addClickHandler(new Button_enterNewGatherClickHandler());
+
+        horizontalPanel.add(button_enterNewGather);
+        horizontalPanel.setCellVerticalAlignment(button_enterNewGather, HasVerticalAlignment.ALIGN_MIDDLE);
+        horizontalPanel.setCellHorizontalAlignment(button_enterNewGather, HasHorizontalAlignment.ALIGN_RIGHT);
         flexTable.setCellPadding(5);
 
         dockLayoutPanel.addSouth(flexTable, 6.0);
@@ -563,6 +577,31 @@ public class NS2G implements EntryPoint {
             setChatVolume(event.getValue());
             cookieSettingsManager.setStringCookie(CookieSettingsManager.CHAT_VOLUME_COOKIE, String.valueOf(event.getValue()));
             soundManager.playSound(NS2Sound.CHAT);
+        }
+    }
+
+    private class Button_logoutClickHandler implements ClickHandler {
+        public void onClick(ClickEvent event) {
+            ns2gService.logout(new MyAsyncCallback<Void>() {
+
+                @Override
+                public void onSuccess(Void result) {
+                    Cookies.removeCookie(CookieSettingsManager.REMEMBER_STEAM_ID);
+                    Location.reload();
+                }
+            });
+        }
+    }
+
+    private class Button_enterNewGatherClickHandler implements ClickHandler {
+        public void onClick(ClickEvent event) {
+            ns2gService.resetGatherPresence(new MyAsyncCallback<Void>() {
+
+                @Override
+                public void onSuccess(Void result) {
+                    Location.reload();
+                }
+            });
         }
     }
 }

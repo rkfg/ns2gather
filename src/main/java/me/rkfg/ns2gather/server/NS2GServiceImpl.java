@@ -23,6 +23,7 @@ import me.rkfg.ns2gather.client.NS2G;
 import me.rkfg.ns2gather.client.NS2GService;
 import me.rkfg.ns2gather.domain.Gather;
 import me.rkfg.ns2gather.domain.PlayerVote;
+import me.rkfg.ns2gather.domain.Remembered;
 import me.rkfg.ns2gather.domain.Vote;
 import me.rkfg.ns2gather.domain.VoteResult;
 import me.rkfg.ns2gather.domain.VoteType;
@@ -673,4 +674,26 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         }
     }
 
+    @Override
+    public void logout() throws LogicException, ClientAuthException {
+        HibernateUtil.exec(new HibernateCallback<Void>() {
+
+            @Override
+            public Void run(Session session) throws LogicException, ClientAuthException {
+                @SuppressWarnings("unchecked")
+                List<Remembered> remembereds = session.createQuery("from Remembered r where r.steamId = :sid").setLong("sid", getSteamId())
+                        .list();
+                for (Remembered remembered : remembereds) {
+                    session.delete(remembered);
+                }
+                getSession().invalidate();
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public void resetGatherPresence() throws LogicException {
+        getSession().removeAttribute(Settings.GATHER_ID);
+    }
 }

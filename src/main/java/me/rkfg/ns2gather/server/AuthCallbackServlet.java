@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import me.rkfg.ns2gather.client.CookieSettingsManager;
 import me.rkfg.ns2gather.domain.Remembered;
 
 import org.hibernate.Session;
@@ -59,7 +60,7 @@ public class AuthCallbackServlet extends HttpServlet {
                 try {
                     Long steamId = Long.valueOf(verified.getIdentifier().replaceAll("http://steamcommunity.com/openid/id/", ""));
                     req.getSession().setAttribute(Settings.STEAMID_SESSION, steamId);
-                    Cookie rememberMeCookie = new Cookie("rememberSteamId", rememberMe(steamId));
+                    Cookie rememberMeCookie = new Cookie(CookieSettingsManager.REMEMBER_STEAM_ID, rememberMe(steamId));
                     rememberMeCookie.setMaxAge(REMEMBER_MAXAGE);
                     resp.addCookie(rememberMeCookie);
                     resp.getWriter().print(

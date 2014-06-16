@@ -42,4 +42,8 @@ public interface NS2GService extends RemoteService {
     List<VoteResultDTO> getVoteResults() throws LogicException, ClientAuthException;
 
     void fakeLogin() throws ClientAuthException, LogicException;
+
+    void logout() throws LogicException, ClientAuthException;
+
+    void resetGatherPresence() throws LogicException;
 }

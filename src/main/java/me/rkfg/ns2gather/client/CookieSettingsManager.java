@@ -5,6 +5,7 @@ import com.google.gwt.user.client.Cookies;
 public class CookieSettingsManager {
 
     public static final String CHAT_VOLUME_COOKIE = "chat_volume";
+    public static final String REMEMBER_STEAM_ID = "rememberSteamId";
 
     public String getStringCookie(String name, String defaultValue) {
         String result = Cookies.getCookie(name);
