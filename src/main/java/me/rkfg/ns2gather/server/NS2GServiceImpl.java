@@ -463,7 +463,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         });
         postVoteChangeMessage();
         postMessage(MessageType.USER_READY, getUserName());
-        if (getVotedPlayersCount(gatherId) >= connectedPlayers.getPlayersByGather(gatherId).size()) {
+        if (getVotedPlayersCount(gatherId) == Settings.GATHER_PLAYER_LIMIT) {
             countResults(gatherId);
         }
     }
