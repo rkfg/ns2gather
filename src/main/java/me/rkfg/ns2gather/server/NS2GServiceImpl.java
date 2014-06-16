@@ -460,7 +460,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         postVoteChangeMessage();
         postMessage(MessageType.USER_READY, getUserName());
         if (getVotedPlayersCount(gatherId) >= connectedPlayers.getPlayersByGather(gatherId).size()) {
-            postResults(gatherId);
+            countResults(gatherId);
         }
     }
 
@@ -473,7 +473,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 + " в БД. Операция не выполнена.");
     }
 
-    private void postResults(final Long gatherId) throws LogicException, ClientAuthException {
+    private void countResults(final Long gatherId) throws LogicException, ClientAuthException {
         synchronized (voteCountLock) {
             final Gather gather = getGatherById(gatherId);
             try {
