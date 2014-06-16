@@ -56,6 +56,8 @@ import org.openid4java.message.AuthRequest;
 import org.openid4java.message.MessageException;
 
 import ru.ppsrk.gwt.client.ClientAuthException;
+import ru.ppsrk.gwt.client.ClientAuthenticationException;
+import ru.ppsrk.gwt.client.ClientAuthorizationException;
 import ru.ppsrk.gwt.client.LogicException;
 import ru.ppsrk.gwt.server.HibernateCallback;
 import ru.ppsrk.gwt.server.HibernateUtil;
@@ -228,7 +230,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         if (result == null) {
             result = rememberMe();
             if (result == null) {
-                throw new ClientAuthException("not logged in");
+                throw new ClientAuthenticationException("not logged in");
             }
         }
         return result;
@@ -680,7 +682,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private void requiresDebug() throws ClientAuthException {
         if (!debug) {
-            throw new ClientAuthException("debug mode required");
+            throw new ClientAuthorizationException("debug mode required");
         }
     }
 
