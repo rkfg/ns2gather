@@ -46,4 +46,6 @@ public interface NS2GService extends RemoteService {
     void logout() throws LogicException, ClientAuthException;
 
     void resetGatherPresence() throws LogicException;
+
+    String getVoteStat() throws LogicException, ClientAuthException;
 }

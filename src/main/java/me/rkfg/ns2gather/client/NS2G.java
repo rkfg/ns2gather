@@ -301,6 +301,7 @@ public class NS2G implements EntryPoint {
             public void onSuccess(String result) {
                 label_nick.setText(result + ": ");
                 loadPlayers();
+                loadVoteStat();
             }
 
             @Override
@@ -310,6 +311,16 @@ public class NS2G implements EntryPoint {
         });
         loadVolume();
         ready = true;
+    }
+
+    protected void loadVoteStat() {
+        ns2gService.getVoteStat(new MyAsyncCallback<String>() {
+
+            @Override
+            public void onSuccess(String result) {
+                label_voted.setText(result);
+            }
+        });
     }
 
     protected void fakeLogin() {

@@ -590,8 +590,17 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void postVoteChangeMessage(Long gatherId) throws LogicException, ClientAuthException {
-        postMessage(MessageType.VOTE_CHANGE,
-                String.format("%d/%d", getVotedPlayersCount(gatherId), connectedPlayers.getPlayersByGather(gatherId).size()), gatherId);
+        postMessage(MessageType.VOTE_CHANGE, getVoteStat(gatherId), gatherId);
+    }
+
+    @Override
+    public String getVoteStat() throws LogicException, ClientAuthException {
+        ping();
+        return getVoteStat(getCurrentGatherId());
+    }
+
+    private String getVoteStat(Long gatherId) throws LogicException, ClientAuthException {
+        return String.format("%d/%d", getVotedPlayersCount(gatherId), connectedPlayers.getPlayersByGather(gatherId).size());
     }
 
     private Long getVotedPlayersCount(final Long gatherId) throws LogicException, ClientAuthException {
