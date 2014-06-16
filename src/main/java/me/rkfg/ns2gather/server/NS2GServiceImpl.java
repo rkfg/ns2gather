@@ -378,7 +378,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             return;
         }
         Long gatherId = gather.getId();
-        if (connectedPlayers.getPlayersByGather(gatherId).size() >= 3) {
+        if (connectedPlayers.getPlayersByGather(gatherId).size() >= Settings.GATHER_PLAYER_LIMIT) {
             if (gather.getState() == GatherState.OPEN) {
                 // close gather if 12 or more players here
                 updateGatherState(gather, GatherState.CLOSED);
