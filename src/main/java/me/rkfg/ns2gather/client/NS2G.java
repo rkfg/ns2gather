@@ -4,8 +4,10 @@ import static ru.ppsrk.gwt.client.ClientUtils.*;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import me.rkfg.ns2gather.dto.ChatMessageType;
 import me.rkfg.ns2gather.dto.CheckedDTO;
@@ -303,14 +305,14 @@ public class NS2G implements EntryPoint {
     private void runMessageListener() {
         LongPollingClient<List<MessageDTO>> client = new LongPollingClient<List<MessageDTO>>(1000) {
 
-            Long lastMessageUpdate = 0L;
+            Long lastMessageUpdate = System.currentTimeMillis();
 
             @Override
             public void success(List<MessageDTO> result) {
                 boolean loadPlayers = false;
                 boolean voteEnded = false;
                 boolean badVote = false;
-                NS2Sound soundToPlay = null;
+                Set<NS2Sound> soundsToPlay = new HashSet<NS2Sound>();
                 for (MessageDTO message : result) {
                     if (message.getTimestamp() > lastMessageUpdate) {
                         lastMessageUpdate = message.getTimestamp();
@@ -319,11 +321,11 @@ public class NS2G implements EntryPoint {
                     case USER_ENTERS:
                         addChatMessage(message.getContent() + " входит.", message.getTimestamp());
                         loadPlayers = true;
-                        soundToPlay = NS2Sound.USER_ENTERS;
+                        soundsToPlay.add(NS2Sound.USER_ENTERS);
                         break;
                     case USER_LEAVES:
                         addChatMessage(message.getContent() + " покидает нас.", message.getTimestamp());
-                        soundToPlay = NS2Sound.USER_LEAVES;
+                        soundsToPlay.add(NS2Sound.USER_LEAVES);
                         loadPlayers = true;
                         break;
                     case USER_READY:
@@ -337,7 +339,7 @@ public class NS2G implements EntryPoint {
                         break;
                     case CHAT_MESSAGE:
                         addChatMessage(message.getContent(), message.getTimestamp(), ChatMessageType.CHAT);
-                        soundToPlay = NS2Sound.CHAT;
+                        soundsToPlay.add(NS2Sound.CHAT);
                         break;
                     case VOTE_CHANGE:
                         label_voted.setText(message.getContent());
@@ -350,7 +352,7 @@ public class NS2G implements EntryPoint {
                             addChatMessage(message.getContent(), message.getTimestamp());
                             badVote = true;
                         }
-                        soundToPlay = NS2Sound.VOTE_END;
+                        soundsToPlay.add(NS2Sound.VOTE_END);
                         break;
                     default:
                         break;
@@ -364,8 +366,10 @@ public class NS2G implements EntryPoint {
                         loadVoteResult();
                     }
                 }
-                if (soundToPlay != null) {
-                    soundManager.playSound(soundToPlay);
+                if (!soundsToPlay.isEmpty()) {
+                    for (NS2Sound sound : soundsToPlay) {
+                        soundManager.playSound(sound);
+                    }
                 }
             }
 
