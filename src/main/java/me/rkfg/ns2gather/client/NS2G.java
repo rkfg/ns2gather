@@ -44,12 +44,17 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.view.client.ListDataProvider;
+import com.kiouri.sliderbar.client.event.BarValueChangedEvent;
+import com.kiouri.sliderbar.client.event.BarValueChangedHandler;
+import com.kiouri.sliderbar.client.solution.adv.AdvancedSliderBar;
+import com.kiouri.sliderbar.client.view.SliderBar;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -57,7 +62,9 @@ import com.google.gwt.view.client.ListDataProvider;
 public class NS2G implements EntryPoint {
 
     public static final long GATHER_ID = 0;
+    private boolean ready = false;
     private SoundManager soundManager = new SoundManager();
+    private CookieSettingsManager cookieSettingsManager = new CookieSettingsManager();
     public static RuleDTO[] voteRules = { new RuleDTO(1, 1, 2, "командира"), new RuleDTO(1, 2, 2, "карту"), new RuleDTO(1, 1, 1, "сервер") };
     DateTimeFormat format = DateTimeFormat.getFormat("[HH:mm:ss]");
     private final NS2GServiceAsync ns2gService = GWT.create(NS2GService.class);
@@ -116,6 +123,8 @@ public class NS2G implements EntryPoint {
     private final FlexTable flexTable = new FlexTable();
     private final Label lblNewLabel = new Label("Проголосовали:");
     private final Label label_voted = new Label("0/0");
+    private final SliderBar sliderBar_chatVolume = new AdvancedSliderBar();
+    private final Image image_soundIcon = new Image("icons/sound.png");
 
     /**
      * This is the entry point method.
@@ -127,11 +136,22 @@ public class NS2G implements EntryPoint {
         rootLayoutPanel.add(splitLayoutPanel);
 
         splitLayoutPanel.addSouth(dockLayoutPanel, 300.0);
+        horizontalPanel.setSpacing(5);
 
         dockLayoutPanel.addNorth(horizontalPanel, 3.0);
         horizontalPanel.setSize("100%", "100%");
         button_vote.addClickHandler(new Button_voteClickHandler());
+        sliderBar_chatVolume.setWidth("200px");
+        sliderBar_chatVolume.setMaxValue(200);
+        sliderBar_chatVolume.addBarValueChangedHandler(new SliderBar_chatVolumeBarValueChangedHandler());
 
+        horizontalPanel.add(sliderBar_chatVolume);
+        horizontalPanel.setCellWidth(sliderBar_chatVolume, "1px");
+        horizontalPanel.setCellVerticalAlignment(sliderBar_chatVolume, HasVerticalAlignment.ALIGN_MIDDLE);
+
+        horizontalPanel.add(image_soundIcon);
+        horizontalPanel.setCellVerticalAlignment(image_soundIcon, HasVerticalAlignment.ALIGN_MIDDLE);
+        horizontalPanel.setCellWidth(image_soundIcon, "1px");
         horizontalPanel.add(button_vote);
         horizontalPanel.setCellVerticalAlignment(button_vote, HasVerticalAlignment.ALIGN_MIDDLE);
         horizontalPanel.setCellHorizontalAlignment(button_vote, HasHorizontalAlignment.ALIGN_CENTER);
@@ -255,13 +275,14 @@ public class NS2G implements EntryPoint {
 
             }
         });
-        setVolumes();
+        loadVolume();
+        ready = true;
     }
 
-    private void setVolumes() {
-        soundManager.setVolume(NS2Sound.CHAT, 0.3);
-        soundManager.setVolume(NS2Sound.USER_ENTERS, 0.3);
-        soundManager.setVolume(NS2Sound.USER_LEAVES, 0.3);
+    private void loadVolume() {
+        int volume = cookieSettingsManager.getLongCookie(CookieSettingsManager.CHAT_VOLUME_COOKIE, 70L).intValue();
+        setChatVolume(volume);
+        sliderBar_chatVolume.setValue(volume);
     }
 
     protected void checkLimit(Boolean value, CheckedDTO object, final ListDataProvider<? extends CheckedDTO> dataProvider, int limit) {
@@ -492,11 +513,28 @@ public class NS2G implements EntryPoint {
         return result;
     }
 
+    private void setChatVolume(int volume) {
+        for (NS2Sound ns2Sound : Arrays.asList(NS2Sound.CHAT, NS2Sound.USER_ENTERS, NS2Sound.USER_LEAVES)) {
+            soundManager.setVolume(ns2Sound, volume / 200.0);
+        }
+    }
+
     private class TextBox_chatTextKeyDownHandler implements KeyDownHandler {
         public void onKeyDown(KeyDownEvent event) {
             if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
                 button_sendChat.click();
             }
+        }
+    }
+
+    private class SliderBar_chatVolumeBarValueChangedHandler implements BarValueChangedHandler {
+        public void onBarValueChanged(BarValueChangedEvent event) {
+            if (!ready) {
+                return;
+            }
+            setChatVolume(event.getValue());
+            cookieSettingsManager.setStringCookie(CookieSettingsManager.CHAT_VOLUME_COOKIE, String.valueOf(event.getValue()));
+            soundManager.playSound(NS2Sound.CHAT);
         }
     }
 }

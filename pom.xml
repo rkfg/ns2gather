@@ -103,6 +103,11 @@
 			<artifactId>hibernate-c3p0</artifactId>
 			<version>4.3.5.Final</version>
 		</dependency>
+		<dependency>
+			<groupId>com.kiouri.sliderbar</groupId>
+			<artifactId>gwt-slider-bar</artifactId>
+			<version>1.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 	<build>
