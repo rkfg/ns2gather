@@ -39,5 +39,7 @@ public interface NS2GService extends RemoteService {
 
     void vote(Long[][] votes) throws LogicException, ClientAuthException;
 
-    List<VoteResultDTO> getVoteResults(Long gatherId) throws LogicException, ClientAuthException;
+    List<VoteResultDTO> getVoteResults() throws LogicException, ClientAuthException;
+
+    void fakeLogin() throws ClientAuthException;
 }

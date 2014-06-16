@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Map.Entry;
 import java.util.SortedSet;
 import java.util.Timer;
@@ -216,7 +217,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public Long getSteamId() throws ClientAuthException, LogicException {
-        Long result = (Long) perThreadRequest.get().getSession().getAttribute(Settings.STEAMID_SESSION);
+        Long result = (Long) getSession().getAttribute(Settings.STEAMID_SESSION);
         if (result == null) {
             result = rememberMe();
             if (result == null) {
@@ -247,7 +248,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     try {
                         steamId = (Long) session.createQuery("select r.steamId from Remembered r where r.rememberId = :rid")
                                 .setLong("rid", rid).uniqueResult();
-                        perThreadRequest.get().getSession().setAttribute(Settings.STEAMID_SESSION, steamId);
+                        getSession().setAttribute(Settings.STEAMID_SESSION, steamId);
                     } catch (NonUniqueResultException e) {
                         throw new LogicException("Дублирующийся id в БД, автовход отклонён.");
                     }
@@ -269,6 +270,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         String name = steamIdName.get(steamId);
         if (name != null) {
             return name;
+        }
+        if (debug) {
+            return "fake" + steamId.toString();
         }
         HttpClient client = getHTTPClient();
         HttpUriRequest request = new HttpGet(
@@ -487,18 +491,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         });
     }
 
-    // from http://stackoverflow.com/questions/2864840/treemap-sort-by-value
-    static <K, V extends Comparable<? super V>> SortedSet<Map.Entry<K, V>> entriesSortedByValues(Map<K, V> map) {
-        SortedSet<Map.Entry<K, V>> sortedEntries = new TreeSet<Map.Entry<K, V>>(new Comparator<Map.Entry<K, V>>() {
-            @Override
-            public int compare(Map.Entry<K, V> e1, Map.Entry<K, V> e2) {
-                return e2.getValue().compareTo(e1.getValue());
-            }
-        });
-        sortedEntries.addAll(map.entrySet());
-        return sortedEntries;
-    }
-
     private void postVoteChangeMessage() throws LogicException, ClientAuthException {
         postMessage(MessageType.VOTE_CHANGE, String.format("%d/%d", getVotedPlayersCount(NS2G.GATHER_ID), connectedPlayers.size()));
     }
@@ -561,6 +553,18 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             throw LogicExceptionFormatted.format("Невозможно определить %s, переголосовка.", NS2G.voteRules[idx].getName());
         }
         return voteResults;
+    }
+
+    @Override
+    public void fakeLogin() throws ClientAuthException {
+        requiresDebug();
+        getSession().setAttribute(Settings.STEAMID_SESSION, new Random().nextLong());
+    }
+
+    private void requiresDebug() throws ClientAuthException {
+        if (!debug) {
+            throw new ClientAuthException("debug mode required");
+        }
     }
 
 }

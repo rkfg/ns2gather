@@ -281,6 +281,10 @@ public class NS2G implements EntryPoint {
         ready = true;
     }
 
+    protected void fakeLogin() {
+        openPopupPanel(new FakeLoginBox());
+    }
+
     private void loadVolume() {
         int volume = cookieSettingsManager.getLongCookie(CookieSettingsManager.CHAT_VOLUME_COOKIE, 70L).intValue();
         setChatVolume(volume);
