@@ -143,7 +143,7 @@ public class NS2G implements EntryPoint {
     });
     private final Button button_enterNewGather = new Button("Зайти в новый сбор");
     private final Button button_logout = new Button("Выход");
-    private List<String> votedPlayers = new ArrayList<String>();
+    private Set<String> votedPlayers = new HashSet<String>();
 
     /**
      * This is the entry point method.
@@ -332,10 +332,10 @@ public class NS2G implements EntryPoint {
     }
 
     private void loadVotedNames() {
-        ns2gService.getVotedPlayerNames(new MyAsyncCallback<List<String>>() {
+        ns2gService.getVotedPlayerNames(new MyAsyncCallback<Set<String>>() {
 
             @Override
-            public void onSuccess(List<String> result) {
+            public void onSuccess(Set<String> result) {
                 votedPlayers = result;
                 dataGrid_players.redraw();
             }
@@ -468,7 +468,7 @@ public class NS2G implements EntryPoint {
     }
 
     protected void resetHighlight() {
-        votedPlayers = new ArrayList<String>();
+        votedPlayers = new HashSet<String>();
         dataGrid_players.redraw();
     }
 

@@ -7,11 +7,13 @@ import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -57,7 +59,6 @@ import org.openid4java.message.MessageException;
 
 import ru.ppsrk.gwt.client.ClientAuthException;
 import ru.ppsrk.gwt.client.ClientAuthenticationException;
-import ru.ppsrk.gwt.client.ClientAuthorizationException;
 import ru.ppsrk.gwt.client.LogicException;
 import ru.ppsrk.gwt.server.HibernateCallback;
 import ru.ppsrk.gwt.server.HibernateUtil;
@@ -711,12 +712,12 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     @Override
-    public List<String> getVotedPlayerNames() throws LogicException, ClientAuthException {
-        return HibernateUtil.exec(new HibernateCallback<List<String>>() {
+    public Set<String> getVotedPlayerNames() throws LogicException, ClientAuthException {
+        return HibernateUtil.exec(new HibernateCallback<Set<String>>() {
 
             @Override
-            public List<String> run(Session session) throws LogicException, ClientAuthException {
-                List<String> result = new LinkedList<>();
+            public Set<String> run(Session session) throws LogicException, ClientAuthException {
+                Set<String> result = new HashSet<>();
                 Long gatherId = getCurrentGatherId();
                 session.enableFilter("gatherId").setParameter("gid", gatherId);
                 @SuppressWarnings("unchecked")
