@@ -25,7 +25,7 @@ body {
     font-size: 20px !important;
 }
 
-.big-datagrid > td > div{
+.big-datagrid>td {
     font-size: 20px !important;
 }
 
@@ -45,4 +45,9 @@ body {
 .gcompleted {
     color: #0000cc;
     cursor: pointer;
+}
+
+.voted {
+    background-color: #ccffcc !important;
+    color: black !important;
 }

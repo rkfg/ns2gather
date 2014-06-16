@@ -48,4 +48,6 @@ public interface NS2GService extends RemoteService {
     void resetGatherPresence() throws LogicException;
 
     String getVoteStat() throws LogicException, ClientAuthException;
+
+    List<String> getVotedPlayerNames() throws LogicException, ClientAuthException;
 }

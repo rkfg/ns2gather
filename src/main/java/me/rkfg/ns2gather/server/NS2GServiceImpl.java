@@ -35,6 +35,7 @@ import me.rkfg.ns2gather.dto.MessageVisibility;
 import me.rkfg.ns2gather.dto.PlayerDTO;
 import me.rkfg.ns2gather.dto.ServerDTO;
 import me.rkfg.ns2gather.dto.VoteResultDTO;
+import me.rkfg.ns2gather.server.GatherPlayersManager.GatherPlayers;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -705,4 +706,28 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     public void resetGatherPresence() throws LogicException {
         getSession().removeAttribute(Settings.GATHER_ID);
     }
+
+    @Override
+    public List<String> getVotedPlayerNames() throws LogicException, ClientAuthException {
+        return HibernateUtil.exec(new HibernateCallback<List<String>>() {
+
+            @Override
+            public List<String> run(Session session) throws LogicException, ClientAuthException {
+                List<String> result = new LinkedList<>();
+                Long gatherId = getCurrentGatherId();
+                session.enableFilter("gatherId").setParameter("gid", gatherId);
+                @SuppressWarnings("unchecked")
+                List<Long> votedSteamIds = session.createQuery("select distinct(v.player.steamId) from Vote v left join v.gather").list();
+                GatherPlayers gatherPlayers = connectedPlayers.getPlayersByGather(gatherId);
+                for (Long voteSteamId : votedSteamIds) {
+                    PlayerDTO playerDTO = gatherPlayers.get(voteSteamId);
+                    if (playerDTO != null) {
+                        result.add(playerDTO.getName());
+                    }
+                }
+                return result;
+            }
+        });
+    }
+
 }

@@ -2,6 +2,7 @@ package me.rkfg.ns2gather.client;
 
 import static ru.ppsrk.gwt.client.ClientUtils.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -142,6 +143,7 @@ public class NS2G implements EntryPoint {
     });
     private final Button button_enterNewGather = new Button("Зайти в новый сбор");
     private final Button button_logout = new Button("Выход");
+    private List<String> votedPlayers = new ArrayList<String>();
 
     /**
      * This is the entry point method.
@@ -263,7 +265,11 @@ public class NS2G implements EntryPoint {
 
             @Override
             public String getStyleNames(PlayerDTO row, int rowIndex) {
-                return "big-datagrid";
+                String result = "big-datagrid";
+                if (votedPlayers.contains(row.getName())) {
+                    result += " voted";
+                }
+                return result;
             }
         });
         dataGrid_maps.setRowStyles(new RowStyles<MapDTO>() {
@@ -302,6 +308,7 @@ public class NS2G implements EntryPoint {
                 label_nick.setText(result + ": ");
                 loadPlayers();
                 loadVoteStat();
+                loadVotedNames();
             }
 
             @Override
@@ -311,6 +318,18 @@ public class NS2G implements EntryPoint {
         });
         loadVolume();
         ready = true;
+    }
+
+    private void loadVotedNames() {
+        ns2gService.getVotedPlayerNames(new MyAsyncCallback<List<String>>() {
+
+            @Override
+            public void onSuccess(List<String> result) {
+                votedPlayers = result;
+                dataGrid_players.redraw();
+            }
+
+        });
     }
 
     protected void loadVoteStat() {
@@ -371,13 +390,19 @@ public class NS2G implements EntryPoint {
                         break;
                     case USER_LEAVES:
                         addChatMessage(message.getContent() + " покидает нас.", message.getTimestamp());
+                        votedPlayers.remove(message.getContent());
+                        dataGrid_players.redraw();
                         soundsToPlay.add(NS2Sound.USER_LEAVES);
                         loadPlayers = true;
                         break;
                     case USER_READY:
+                        votedPlayers.add(message.getContent());
+                        dataGrid_players.redraw();
                         addChatMessage(message.getContent() + " готов начать игру!", message.getTimestamp());
                         break;
                     case USER_UNREADY:
+                        votedPlayers.remove(message.getContent());
+                        dataGrid_players.redraw();
                         addChatMessage(message.getContent() + " отменил готовность начать игру.", message.getTimestamp());
                         break;
                     case GAME_START:
@@ -392,6 +417,7 @@ public class NS2G implements EntryPoint {
                         break;
                     case VOTE_ENDED:
                         voteEnded = true;
+                        resetHighlight();
                         if (message.getContent().equals("ok")) {
                             addChatMessage("Голосование завершено!", message.getTimestamp());
                         } else {
@@ -428,6 +454,11 @@ public class NS2G implements EntryPoint {
             }
         };
         client.start();
+    }
+
+    protected void resetHighlight() {
+        votedPlayers = new ArrayList<String>();
+        dataGrid_players.redraw();
     }
 
     protected void loadVoteResult() {
