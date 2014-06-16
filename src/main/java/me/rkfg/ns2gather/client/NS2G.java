@@ -162,7 +162,7 @@ public class NS2G implements EntryPoint {
 
         splitLayoutPanel.add(splitLayoutPanel_1);
 
-        splitLayoutPanel_1.addWest(dataGrid_players, 500.0);
+        splitLayoutPanel_1.addWest(dataGrid_players, 400.0);
 
         dataGrid_players.addColumn(column_voteComm);
         dataGrid_players.setColumnWidth(column_voteComm, "50px");
@@ -176,7 +176,7 @@ public class NS2G implements EntryPoint {
 
         dataGrid_players.addColumn(textColumn_playerName, "Имя");
 
-        splitLayoutPanel_1.addEast(dataGrid_servers, 500.0);
+        splitLayoutPanel_1.addEast(dataGrid_servers, 300.0);
 
         dataGrid_servers.addColumn(column_voteServer);
         dataGrid_servers.setColumnWidth(column_voteServer, "50px");
