@@ -681,9 +681,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         getSession().setAttribute(Settings.STEAMID_SESSION, new Random().nextLong());
     }
 
-    private void requiresDebug() throws ClientAuthException {
+    private void requiresDebug() throws LogicException {
         if (!debug) {
-            throw new ClientAuthorizationException("debug mode required");
+            throw new LogicException("debug mode required");
         }
     }
 
