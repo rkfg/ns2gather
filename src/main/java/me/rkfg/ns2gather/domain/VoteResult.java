@@ -1,19 +1,22 @@
 package me.rkfg.ns2gather.domain;
 
 import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
 
 import ru.ppsrk.gwt.domain.BasicDomain;
 
 @Entity
 public class VoteResult extends BasicDomain {
-    Long gatherId;
+    @ManyToOne
+    Gather gather;
     VoteType type;
     Long targetId;
     Long voteCount;
+    Long place;
 
-    public VoteResult(Long gatherId, VoteType type, Long targetId, Long voteCount) {
+    public VoteResult(Gather gather, VoteType type, Long targetId, Long voteCount) {
         super();
-        this.gatherId = gatherId;
+        this.gather = gather;
         this.type = type;
         this.targetId = targetId;
         this.voteCount = voteCount;
@@ -22,12 +25,12 @@ public class VoteResult extends BasicDomain {
     public VoteResult() {
     }
 
-    public Long getGatherId() {
-        return gatherId;
+    public Gather getGather() {
+        return gather;
     }
 
-    public void setGatherId(Long gatherId) {
-        this.gatherId = gatherId;
+    public void setGather(Gather gather) {
+        this.gather = gather;
     }
 
     public VoteType getType() {
@@ -52,6 +55,14 @@ public class VoteResult extends BasicDomain {
 
     public void setVoteCount(Long voteCount) {
         this.voteCount = voteCount;
+    }
+
+    public Long getPlace() {
+        return place;
+    }
+
+    public void setPlace(Long place) {
+        this.place = place;
     }
 
     public void inc() {

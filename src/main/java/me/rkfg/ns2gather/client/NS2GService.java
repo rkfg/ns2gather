@@ -19,7 +19,7 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("ns2g")
 public interface NS2GService extends RemoteService {
 
-    String login();
+    String login() throws LogicException;
 
     Long getSteamId() throws ClientAuthException, LogicException;
 
@@ -35,11 +35,11 @@ public interface NS2GService extends RemoteService {
 
     void sendChatMessage(String text) throws ClientAuthException, LogicException;
 
-    List<PlayerDTO> getConnectedPlayers();
+    List<PlayerDTO> getConnectedPlayers() throws LogicException, ClientAuthException;
 
     void vote(Long[][] votes) throws LogicException, ClientAuthException;
 
     List<VoteResultDTO> getVoteResults() throws LogicException, ClientAuthException;
 
-    void fakeLogin() throws ClientAuthException;
+    void fakeLogin() throws ClientAuthException, LogicException;
 }

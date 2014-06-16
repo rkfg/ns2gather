@@ -3,27 +3,22 @@ package me.rkfg.ns2gather.domain;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
-
 import ru.ppsrk.gwt.domain.BasicDomain;
 
 @Entity
-@FilterDef(name = "pv_gatherId", parameters = @ParamDef(name = "gid", type = "long"))
-@Filter(name = "pv_gatherId", condition = "gatherId = :gid")
 public class Vote extends BasicDomain {
     @ManyToOne
     PlayerVote player;
     Long targetId;
     VoteType type;
-    Long gatherId;
+    @ManyToOne
+    Gather gather;
 
-    public Vote(PlayerVote player, Long targetId, VoteType type, Long gatherId) {
+    public Vote(PlayerVote player, Long targetId, VoteType type, Gather gather) {
         this.player = player;
         this.targetId = targetId;
         this.type = type;
-        this.gatherId = gatherId;
+        this.gather = gather;
     }
 
     public Vote() {
@@ -53,12 +48,12 @@ public class Vote extends BasicDomain {
         this.type = type;
     }
 
-    public Long getGatherId() {
-        return gatherId;
+    public Gather getGather() {
+        return gather;
     }
 
-    public void setGatherId(Long gatherId) {
-        this.gatherId = gatherId;
+    public void setGather(Gather gather) {
+        this.gather = gather;
     }
 
 }

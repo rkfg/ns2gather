@@ -8,11 +8,13 @@ public class MessageDTO implements IsSerializable {
     MessageType type;
     String content;
     Long timestamp;
+    Long gatherId;
 
-    public MessageDTO(MessageType type, String content) {
+    public MessageDTO(MessageType type, String content, Long gatherId) {
         super();
         this.type = type;
         this.content = content;
+        this.gatherId = gatherId;
         visibility = MessageVisibility.BROADCAST;
         timestamp = System.currentTimeMillis();
     }
@@ -58,6 +60,14 @@ public class MessageDTO implements IsSerializable {
 
     public void setTimestamp(Long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public Long getGatherId() {
+        return gatherId;
+    }
+
+    public void setGatherId(Long gatherId) {
+        this.gatherId = gatherId;
     }
 
 }

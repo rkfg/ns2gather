@@ -63,7 +63,6 @@ import com.kiouri.sliderbar.client.view.SliderBar;
  */
 public class NS2G implements EntryPoint {
 
-    public static final long GATHER_ID = 0;
     private boolean ready = false;
     private SoundManager soundManager = new SoundManager();
     private CookieSettingsManager cookieSettingsManager = new CookieSettingsManager();
@@ -163,7 +162,6 @@ public class NS2G implements EntryPoint {
         flexTable.setSize("100%", "100%");
         label_nick.setWordWrap(false);
         flexTable.setWidget(0, 0, label_nick);
-        label_nick.setWidth("10px");
         textBox_chatText.addKeyDownHandler(new TextBox_chatTextKeyDownHandler());
         flexTable.setWidget(0, 1, textBox_chatText);
         flexTable.getCellFormatter().setWidth(0, 1, "100%");
@@ -386,7 +384,7 @@ public class NS2G implements EntryPoint {
     }
 
     protected void loadVoteResult() {
-        ns2gService.getVoteResults(GATHER_ID, new MyAsyncCallback<List<VoteResultDTO>>() {
+        ns2gService.getVoteResults(new MyAsyncCallback<List<VoteResultDTO>>() {
 
             @Override
             public void onSuccess(List<VoteResultDTO> result) {
