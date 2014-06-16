@@ -555,6 +555,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     protected Long getCurrentGatherId() throws LogicException, ClientAuthException {
+        getSteamId();
         Long gatherId = (Long) getSession().getAttribute(Settings.GATHER_ID);
         if (gatherId == null) {
             gatherId = findOpenGatherId();
