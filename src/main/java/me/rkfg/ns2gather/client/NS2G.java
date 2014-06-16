@@ -309,6 +309,7 @@ public class NS2G implements EntryPoint {
                 loadPlayers();
                 loadVoteStat();
                 loadVotedNames();
+                loadGatherState();
             }
 
             @Override
@@ -318,6 +319,16 @@ public class NS2G implements EntryPoint {
         });
         loadVolume();
         ready = true;
+    }
+
+    protected void loadGatherState() {
+        ns2gService.getGatherState(new MyAsyncCallback<GatherState>() {
+
+            @Override
+            public void onSuccess(GatherState result) {
+                gatherStatusLabel.setGatherState(result);
+            }
+        });
     }
 
     private void loadVotedNames() {

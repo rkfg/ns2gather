@@ -730,4 +730,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         });
     }
 
+    @Override
+    public GatherState getGatherState() throws LogicException, ClientAuthException {
+        return getCurrentGather().getState();
+    }
 }
