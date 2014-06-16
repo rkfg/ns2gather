@@ -71,6 +71,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         ALL, VOTES, RESULTS
     }
 
+    private static final boolean forceDebug = false;
+    private static final boolean forceRelease = false;
+
     static ConsumerManager manager = new ConsumerManager();
     HashMap<Long, PlayerDTO> connectedPlayers = new HashMap<>();
     HashMap<Long, String> steamIdName = new HashMap<>();
@@ -78,6 +81,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     Long playerId = 1L;
     ConcurrentLinkedQueue<MessageDTO> messages = new ConcurrentLinkedQueue<>();
     Object voteCountLock = new Object();
+    private boolean debug = false;
 
     private class MessagePollingServer extends LongPollingServer<List<MessageDTO>> {
 
@@ -110,11 +114,11 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     public NS2GServiceImpl() {
-        HibernateUtil.initSessionFactory("hibernate.cfg.xml");
+        debug = HibernateUtil.initSessionFactoryDebugRelease(forceDebug, forceRelease, "hibernate_dev.cfg.xml", "hibernate.cfg.xml");
         runPlayersCleanup();
         runMessageCleanup();
         try {
-            resetVotes(NS2G.GATHER_ID, ResetType.ALL);
+            resetVotes(null, ResetType.ALL);
         } catch (LogicException | ClientAuthException e) {
             e.printStackTrace();
         }
