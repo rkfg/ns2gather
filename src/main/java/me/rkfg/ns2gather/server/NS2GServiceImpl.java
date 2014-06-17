@@ -165,8 +165,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             @Override
             public void run() {
                 synchronized (connectedPlayers) {
-                    for (Long gatherId : connectedPlayers.keySet()) {
-                        Iterator<Entry<Long, PlayerDTO>> iterator = connectedPlayers.get(gatherId).entrySet().iterator();
+                    for (Long gatherId : connectedPlayers.getGathers()) {
+                        Iterator<Entry<Long, PlayerDTO>> iterator = connectedPlayers.getPlayersByGather(gatherId).entrySet().iterator();
                         while (iterator.hasNext()) {
                             Entry<Long, PlayerDTO> entry = iterator.next();
                             if (System.currentTimeMillis() - entry.getValue().getLastPing() > Settings.PLAYER_PING_TIMEOUT) {

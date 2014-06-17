@@ -1,16 +1,13 @@
 package me.rkfg.ns2gather.server;
 
 import java.util.HashMap;
+import java.util.Set;
 
 import me.rkfg.ns2gather.dto.PlayerDTO;
-import me.rkfg.ns2gather.server.GatherPlayersManager.GatherPlayers;
 
-public class GatherPlayersManager extends HashMap<Long, GatherPlayers> {
+public class GatherPlayersManager {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = -7988788333824827521L;
+    HashMap<Long, GatherPlayers> gatherToPlayers = new HashMap<>();
 
     public class GatherPlayers extends HashMap<Long, PlayerDTO> {
 
@@ -31,12 +28,16 @@ public class GatherPlayersManager extends HashMap<Long, GatherPlayers> {
     }
 
     public GatherPlayers getPlayersByGather(Long gatherId) {
-        GatherPlayers result = get(gatherId);
+        GatherPlayers result = gatherToPlayers.get(gatherId);
         if (result == null) {
             result = new GatherPlayers();
-            put(gatherId, result);
+            gatherToPlayers.put(gatherId, result);
         }
         return result;
+    }
+
+    public Set<Long> getGathers() {
+        return gatherToPlayers.keySet();
     }
 
 }
