@@ -85,7 +85,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     HashMap<Long, String> steamIdName = new HashMap<>();
 
     Long playerId = 1L;
-    ConcurrentLinkedQueue<MessageDTO> messages = new ConcurrentLinkedQueue<>();
+    MessageManager messageManager = new MessageManager();
     Object voteCountLock = new Object();
     Object findGatherLock = new Object();
     private boolean debug = false;
@@ -101,18 +101,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
         @Override
         public List<MessageDTO> exec() throws LogicException, ClientAuthException, ClientAuthException {
-            List<MessageDTO> result = new LinkedList<>();
-            for (MessageDTO messageDTO : messages) {
-                if (messageDTO.getTimestamp() > since) {
-                    if (messageDTO.getVisibility() == MessageVisibility.BROADCAST && messageDTO.getGatherId() == getCurrentGatherId()
-                            || messageDTO.getVisibility() == MessageVisibility.PERSONAL && messageDTO.getTo().equals(getSteamId())) {
-                        result.add(messageDTO);
-                    }
-                }
-                if (System.currentTimeMillis() - messageDTO.getTimestamp() > Settings.MESSAGE_CLEANUP_INTERVAL) {
-                    messages.remove(messageDTO);
-                }
-            }
+            List<MessageDTO> result = messageManager.getNewMessages(getCurrentGatherId(), getSteamId(), since);
             if (result.isEmpty()) {
                 return null;
             }
@@ -123,7 +112,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     public NS2GServiceImpl() {
         debug = HibernateUtil.initSessionFactoryDebugRelease(forceDebug, forceRelease, "hibernate_dev.cfg.xml", "hibernate.cfg.xml");
         runPlayersCleanup();
-        runMessageCleanup();
         try {
             resetVotes(null, ResetType.ALL);
         } catch (LogicException | ClientAuthException e) {
@@ -173,7 +161,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                                 iterator.remove();
                                 try {
                                     removeVotes(entry.getValue().getId());
-                                    postMessage(MessageType.USER_LEAVES, entry.getValue().getName(), gatherId);
+                                    messageManager.postMessage(MessageType.USER_LEAVES, entry.getValue().getName(), gatherId);
                                     postVoteChangeMessage(gatherId);
                                     updateGatherStateByPlayerNumber(getGatherById(gatherId));
                                 } catch (LogicException | ClientAuthException e) {
@@ -185,20 +173,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 }
             }
         }, 5000, 5000);
-    }
-
-    private void runMessageCleanup() {
-        new Timer().schedule(new TimerTask() {
-
-            @Override
-            public void run() {
-                for (MessageDTO messageDTO : messages) {
-                    if (System.currentTimeMillis() - messageDTO.getTimestamp() > Settings.MESSAGE_CLEANUP_INTERVAL) {
-                        messages.remove(messageDTO);
-                    }
-                }
-            }
-        }, 10000, 10000);
     }
 
     @Override
@@ -363,7 +337,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 }
                 existing = new PlayerDTO(steamId, name, System.currentTimeMillis());
                 connectedPlayers.addPlayer(gatherId, existing);
-                postMessage(MessageType.USER_ENTERS, name);
+                messageManager.postMessage(MessageType.USER_ENTERS, name, gatherId);
                 postVoteChangeMessage();
                 updateGatherStateByPlayerNumber();
             } else {
@@ -397,12 +371,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private void updateGatherState(Gather gather, GatherState newState) throws LogicException, ClientAuthException {
         gather.setState(newState);
-        postMessage(MessageType.GATHER_STATUS, String.valueOf(newState.ordinal()), gather.getId());
+        messageManager.postMessage(MessageType.GATHER_STATUS, String.valueOf(newState.ordinal()), gather.getId());
         HibernateUtil.saveObject(gather);
-    }
-
-    private void postMessage(MessageDTO messageDTO) {
-        messages.offer(messageDTO);
     }
 
     @Override
@@ -416,7 +386,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public void sendChatMessage(String text) throws ClientAuthException, LogicException {
-        postMessage(MessageType.CHAT_MESSAGE, getUserName() + ": " + text);
+        messageManager.postMessage(MessageType.CHAT_MESSAGE, getUserName() + ": " + text, getCurrentGatherId());
     }
 
     @Override
@@ -463,7 +433,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             }
         });
         postVoteChangeMessage();
-        postMessage(MessageType.USER_READY, getUserName());
+        messageManager.postMessage(MessageType.USER_READY, getUserName(), gatherId);
         if (getVotedPlayersCount(gatherId) == Settings.GATHER_PLAYER_LIMIT) {
             countResults(gatherId);
         }
@@ -527,11 +497,11 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 });
             } catch (LogicException e) {
                 resetVotes(gatherId, ResetType.ALL);
-                postMessage(MessageType.VOTE_ENDED, e.getMessage());
+                messageManager.postMessage(MessageType.VOTE_ENDED, e.getMessage(), gatherId);
                 postVoteChangeMessage();
                 return;
             }
-            postMessage(MessageType.VOTE_ENDED, "ok");
+            messageManager.postMessage(MessageType.VOTE_ENDED, "ok", gatherId);
             updateGatherState(gather, GatherState.COMPLETED);
         }
     }
@@ -595,7 +565,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void postVoteChangeMessage(Long gatherId) throws LogicException, ClientAuthException {
-        postMessage(MessageType.VOTE_CHANGE, getVoteStat(gatherId), gatherId);
+        messageManager.postMessage(MessageType.VOTE_CHANGE, getVoteStat(gatherId), gatherId);
     }
 
     @Override
@@ -621,21 +591,13 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         });
     }
 
-    private void postMessage(MessageType type, String content) throws LogicException, ClientAuthException {
-        postMessage(type, content, getCurrentGatherId());
-    }
-
-    private void postMessage(MessageType type, String content, Long gatherId) throws LogicException, ClientAuthException {
-        postMessage(new MessageDTO(type, content, gatherId));
-    }
-
     private void validateVoteNumbers(Long[][] votes) throws LogicException, ClientAuthException {
         int idx = 0;
         for (Long[] vote : votes) {
             if (vote.length < NS2G.voteRules[idx].getVotesRequired() || vote.length > NS2G.voteRules[idx].getVotesLimit()) {
                 if (removeVotes(getSteamId())) {
                     postVoteChangeMessage();
-                    postMessage(MessageType.USER_UNREADY, getUserName());
+                    messageManager.postMessage(MessageType.USER_UNREADY, getUserName(), getCurrentGatherId());
                 }
                 throw LogicExceptionFormatted.format("Ожидается %s голосов за %s, получено %d. Пожалуйста, переголосуйте.",
                         NS2G.voteRules[idx].voteRange(), NS2G.voteRules[idx].getName(), vote.length);
