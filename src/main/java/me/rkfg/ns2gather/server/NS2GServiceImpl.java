@@ -1,12 +1,7 @@
 package me.rkfg.ns2gather.server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,17 +29,8 @@ import me.rkfg.ns2gather.dto.VoteResultDTO;
 import me.rkfg.ns2gather.server.GatherPlayersManager.CleanupCallback;
 import me.rkfg.ns2gather.server.GatherPlayersManager.GatherPlayers;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.openid4java.consumer.ConsumerException;
 import org.openid4java.consumer.ConsumerManager;
 import org.openid4java.discovery.DiscoveryException;
@@ -86,7 +72,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             updateGatherStateByPlayerNumber(getGatherById(gatherId));
         }
     });
-    HashMap<Long, String> steamIdName = new HashMap<>();
 
     Long playerId = 1L;
     MessageManager messageManager = new MessageManager();
@@ -226,48 +211,19 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         if (steamId == null) {
             steamId = getSteamId();
         }
-        String name = steamIdName.get(steamId);
+        String name = connectedPlayers.getNameBySteamId(steamId);
         if (name != null) {
             return name;
         }
         if (debug) {
             name = "fake" + steamId.toString();
-            steamIdName.put(steamId, name);
+            connectedPlayers.addNameBySteamId(steamId, name);
             ping();
             return name;
         }
-        HttpClient client = getHTTPClient();
-        HttpUriRequest request = new HttpGet(
-                String.format("http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=%s&steamids=%s",
-                        Settings.STEAM_API_KEY, getSteamId()));
-        try {
-            HttpResponse response = client.execute(request);
-            JSONObject jsonRootObject = new JSONObject(readStream(response.getEntity().getContent()));
-            JSONObject jsonResponse = jsonRootObject.optJSONObject("response");
-            if (jsonResponse == null) {
-                throw new LogicException("no response");
-            }
-            JSONArray jsonPlayers = jsonResponse.optJSONArray("players");
-            if (jsonPlayers == null || jsonPlayers.length() == 0) {
-                throw new LogicException("no players");
-            }
-            JSONObject jsonPlayer = jsonPlayers.optJSONObject(0);
-            if (jsonPlayer == null) {
-                throw new LogicException("no player");
-            }
-            name = jsonPlayer.optString("personaname");
-            if (name == null) {
-                throw new LogicException("no persona name");
-            }
-            steamIdName.put(steamId, name);
-            ping();
-            return name;
-        } catch (IOException | IllegalStateException e) {
-            throw new LogicException("can't get player data");
-        } catch (JSONException e) {
-            throw new LogicException("invalid player data");
-        } finally {
-        }
+        name = connectedPlayers.lookupNameBySteamId(steamId);
+        ping();
+        return name;
     }
 
     @Override
@@ -280,25 +236,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         return HibernateUtil.queryList("from Map", new String[] {}, new Object[] {}, MapDTO.class);
     }
 
-    public static HttpClient getHTTPClient() {
-        RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(Settings.TIMEOUT).setConnectTimeout(Settings.TIMEOUT)
-                .setSocketTimeout(Settings.TIMEOUT).build();
-        return HttpClientBuilder.create().setDefaultRequestConfig(config)
-                .setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36")
-                .build();
-    }
-
-    public static String readStream(InputStream stream) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            builder.append(line);
-        }
-        reader.close();
-        return builder.toString();
-    }
-
     @Override
     public void ping() throws ClientAuthException, LogicException {
         synchronized (connectedPlayers) {
@@ -306,7 +243,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             Long gatherId = getCurrentGatherId();
             PlayerDTO existing = connectedPlayers.getPlayerByGatherSteamId(gatherId, steamId);
             if (existing == null) {
-                String name = steamIdName.get(steamId);
+                String name = connectedPlayers.getNameBySteamId(steamId);
                 if (name == null) {
                     return;
                 }
