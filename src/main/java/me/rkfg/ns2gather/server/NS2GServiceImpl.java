@@ -8,15 +8,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
@@ -33,10 +28,10 @@ import me.rkfg.ns2gather.dto.GatherState;
 import me.rkfg.ns2gather.dto.MapDTO;
 import me.rkfg.ns2gather.dto.MessageDTO;
 import me.rkfg.ns2gather.dto.MessageType;
-import me.rkfg.ns2gather.dto.MessageVisibility;
 import me.rkfg.ns2gather.dto.PlayerDTO;
 import me.rkfg.ns2gather.dto.ServerDTO;
 import me.rkfg.ns2gather.dto.VoteResultDTO;
+import me.rkfg.ns2gather.server.GatherPlayersManager.CleanupCallback;
 import me.rkfg.ns2gather.server.GatherPlayersManager.GatherPlayers;
 
 import org.apache.http.HttpResponse;
@@ -81,7 +76,16 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     private static final boolean forceRelease = false;
 
     static ConsumerManager manager = new ConsumerManager();
-    GatherPlayersManager connectedPlayers = new GatherPlayersManager();
+    GatherPlayersManager connectedPlayers = new GatherPlayersManager(new CleanupCallback() {
+
+        @Override
+        public void playerRemoved(Long gatherId, PlayerDTO player) throws LogicException, ClientAuthException {
+            removeVotes(player.getId());
+            messageManager.postMessage(MessageType.USER_LEAVES, player.getName(), gatherId);
+            postVoteChangeMessage(gatherId);
+            updateGatherStateByPlayerNumber(getGatherById(gatherId));
+        }
+    });
     HashMap<Long, String> steamIdName = new HashMap<>();
 
     Long playerId = 1L;
@@ -111,7 +115,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     public NS2GServiceImpl() {
         debug = HibernateUtil.initSessionFactoryDebugRelease(forceDebug, forceRelease, "hibernate_dev.cfg.xml", "hibernate.cfg.xml");
-        runPlayersCleanup();
         try {
             resetVotes(null, ResetType.ALL);
         } catch (LogicException | ClientAuthException e) {
@@ -145,34 +148,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 return null;
             }
         });
-    }
-
-    private void runPlayersCleanup() {
-        new Timer().schedule(new TimerTask() {
-
-            @Override
-            public void run() {
-                synchronized (connectedPlayers) {
-                    for (Long gatherId : connectedPlayers.getGathers()) {
-                        Iterator<Entry<Long, PlayerDTO>> iterator = connectedPlayers.getPlayersByGather(gatherId).entrySet().iterator();
-                        while (iterator.hasNext()) {
-                            Entry<Long, PlayerDTO> entry = iterator.next();
-                            if (System.currentTimeMillis() - entry.getValue().getLastPing() > Settings.PLAYER_PING_TIMEOUT) {
-                                iterator.remove();
-                                try {
-                                    removeVotes(entry.getValue().getId());
-                                    messageManager.postMessage(MessageType.USER_LEAVES, entry.getValue().getName(), gatherId);
-                                    postVoteChangeMessage(gatherId);
-                                    updateGatherStateByPlayerNumber(getGatherById(gatherId));
-                                } catch (LogicException | ClientAuthException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }, 5000, 5000);
     }
 
     @Override
