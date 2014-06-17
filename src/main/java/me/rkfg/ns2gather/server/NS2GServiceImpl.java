@@ -218,10 +218,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         if (debug) {
             name = "fake" + steamId.toString();
             connectedPlayers.addNameBySteamId(steamId, name);
-            ping();
-            return name;
+        } else {
+            name = connectedPlayers.lookupNameBySteamId(steamId);
         }
-        name = connectedPlayers.lookupNameBySteamId(steamId);
         ping();
         return name;
     }
