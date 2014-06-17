@@ -51,3 +51,7 @@ body {
     background-color: #ccffcc !important;
     color: black !important;
 }
+
+h1 {
+    text-align: center;
+}

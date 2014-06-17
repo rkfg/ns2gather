@@ -2,7 +2,6 @@ package me.rkfg.ns2gather.client;
 
 import static ru.ppsrk.gwt.client.ClientUtils.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -286,14 +285,20 @@ public class NS2G implements EntryPoint {
                 return "big-datagrid";
             }
         });
-        ns2gService.getSteamId(new AsyncCallback<Long>() {
+        ns2gService.getUserName(new AsyncCallback<String>() {
 
             @Override
-            public void onSuccess(Long result) {
+            public void onSuccess(String result) {
+                label_nick.setText(result + ": ");
                 runPing();
+                runMessageListener();
                 loadMaps();
                 loadServers();
-                runMessageListener();
+                loadPlayers();
+                loadVoteStat();
+                loadVotedNames();
+                loadGatherState();
+                postRulesAnnounce();
             }
 
             @Override
@@ -301,24 +306,13 @@ public class NS2G implements EntryPoint {
                 login();
             }
         });
-        ns2gService.getUserName(new AsyncCallback<String>() {
-
-            @Override
-            public void onSuccess(String result) {
-                label_nick.setText(result + ": ");
-                loadPlayers();
-                loadVoteStat();
-                loadVotedNames();
-                loadGatherState();
-            }
-
-            @Override
-            public void onFailure(Throwable caught) {
-
-            }
-        });
         loadVolume();
         ready = true;
+    }
+
+    protected void postRulesAnnounce() {
+        addChatMessage("Участвуя в Gather, вы соглашаетесь с <a href=\"rules.html\" target=\"_blank\">правилами</a>",
+                System.currentTimeMillis(), ChatMessageType.SYSTEM, false);
     }
 
     protected void loadGatherState() {
@@ -497,9 +491,13 @@ public class NS2G implements EntryPoint {
     }
 
     protected void addChatMessage(String text, long timestamp, ChatMessageType messageType) {
+        addChatMessage(text, timestamp, messageType, true);
+    }
+
+    protected void addChatMessage(String text, long timestamp, ChatMessageType messageType, boolean escape) {
         html_chat.setHTML(html_chat.getHTML() + "<br/>" + format.format(new Date(timestamp)) + " <span class=\""
-                + getCSSClassByMessageType(messageType) + "\">" + new SafeHtmlBuilder().appendEscaped(text).toSafeHtml().asString()
-                + "</span>");
+                + getCSSClassByMessageType(messageType) + "\">"
+                + (escape ? new SafeHtmlBuilder().appendEscaped(text).toSafeHtml().asString() : text) + "</span>");
         scrollPanel.scrollToBottom();
     }
 
@@ -550,7 +548,7 @@ public class NS2G implements EntryPoint {
         });
     }
 
-    private void login() {
+    protected void login() {
         ns2gService.login(new MyAsyncCallback<String>() {
 
             @Override
