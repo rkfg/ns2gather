@@ -265,50 +265,52 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void updateGatherStateByPlayerNumber(final Gather gather) throws LogicException, ClientAuthException {
-        if (gather.getState() == GatherState.COMPLETED) {
-            // nothing to do here
-            return;
-        }
-        final Long gatherId = gather.getId();
-        int connectedPlayersCount = connectedPlayers.getPlayersByGather(gatherId).size();
-        if (connectedPlayersCount == Settings.GATHER_PLAYER_MAX) {
-            if (gather.getState() == GatherState.OPEN) {
-                // close gather if player limit reached
-                updateGatherState(gather, GatherState.CLOSED);
+        synchronized (gatherCountdownManager) {
+            if (gather.getState() == GatherState.COMPLETED) {
+                // nothing to do here
+                return;
             }
-        } else {
-            if (gather.getState() == GatherState.CLOSED) {
-                // reopen gather if players have left
-                updateGatherState(gather, GatherState.OPEN);
-            }
-        }
-        if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN) {
-            // minimum players count reached
-            if (connectedPlayersCount % 2 == 0) {
-                // even number, gather may be ready
-                if (getVotedPlayersCount(gatherId) < connectedPlayersCount) {
-                    // not everyone voted yet, run the timer
-                    gatherCountdownManager.scheduleGatherCountdownTask(gatherId, new TimerTask() {
-
-                        @Override
-                        public void run() {
-                            try {
-                                resolveGather(gather);
-                            } catch (LogicException | ClientAuthException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                            }
-                        }
-                    }, Settings.GATHER_RESOLVE_DELAY);
-                    messageManager.postMessage(MessageType.RUN_TIMER, String.valueOf(Settings.GATHER_RESOLVE_DELAY / 1000), gatherId);
-                } else {
-                    // gather is fully ready, let's count votes
-                    stopGatherTimer(gatherId);
-                    countResults(gatherId);
+            final Long gatherId = gather.getId();
+            int connectedPlayersCount = connectedPlayers.getPlayersByGather(gatherId).size();
+            if (connectedPlayersCount == Settings.GATHER_PLAYER_MAX) {
+                if (gather.getState() == GatherState.OPEN) {
+                    // close gather if player limit reached
+                    updateGatherState(gather, GatherState.CLOSED);
                 }
             } else {
-                // odd number, stop the timer and wait
-                stopGatherTimer(gatherId);
+                if (gather.getState() == GatherState.CLOSED) {
+                    // reopen gather if players have left
+                    updateGatherState(gather, GatherState.OPEN);
+                }
+            }
+            if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN) {
+                // minimum players count reached
+                if (connectedPlayersCount % 2 == 0) {
+                    // even number, gather may be ready
+                    if (getVotedPlayersCount(gatherId) < connectedPlayersCount) {
+                        // not everyone voted yet, run the timer
+                        gatherCountdownManager.scheduleGatherCountdownTask(gatherId, new TimerTask() {
+
+                            @Override
+                            public void run() {
+                                try {
+                                    resolveGather(gather);
+                                } catch (LogicException | ClientAuthException e) {
+                                    // TODO Auto-generated catch block
+                                    e.printStackTrace();
+                                }
+                            }
+                        }, Settings.GATHER_RESOLVE_DELAY);
+                        messageManager.postMessage(MessageType.RUN_TIMER, String.valueOf(Settings.GATHER_RESOLVE_DELAY / 1000), gatherId);
+                    } else {
+                        // gather is fully ready, let's count votes
+                        stopGatherTimer(gatherId);
+                        countResults(gatherId);
+                    }
+                } else {
+                    // odd number, stop the timer and wait
+                    stopGatherTimer(gatherId);
+                }
             }
         }
     }
