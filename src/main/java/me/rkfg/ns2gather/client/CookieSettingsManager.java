@@ -6,6 +6,7 @@ public class CookieSettingsManager {
 
     public static final String CHAT_VOLUME_COOKIE = "chat_volume";
     public static final String REMEMBER_STEAM_ID = "rememberSteamId";
+    public static final String KICKED = "kicked";
 
     public String getStringCookie(String name, String defaultValue) {
         String result = Cookies.getCookie(name);
@@ -30,5 +31,9 @@ public class CookieSettingsManager {
 
     public void setLongCookie(String name, Long value) {
         setStringCookie(name, value.toString());
+    }
+
+    public void removeCookie(String name) {
+        Cookies.removeCookie(name);
     }
 }

@@ -41,6 +41,7 @@ import com.google.gwt.user.cellview.client.RowStyles;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.Window.Location;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
@@ -145,6 +146,7 @@ public class NS2G implements EntryPoint {
     private final Button button_logout = new Button("Выход");
     private Set<String> votedPlayers = new HashSet<String>();
     private VoteResultPanel voteResultPanel = new VoteResultPanel(dataProvider_players, dataProvider_maps, dataProvider_servers);
+    private String myNick;
 
     /**
      * This is the entry point method.
@@ -243,6 +245,11 @@ public class NS2G implements EntryPoint {
     }
 
     private void init() {
+        String kickedMessage = cookieSettingsManager.getStringCookie(CookieSettingsManager.KICKED, "");
+        if (!kickedMessage.isEmpty()) {
+            Window.alert(kickedMessage);
+            cookieSettingsManager.removeCookie(CookieSettingsManager.KICKED);
+        }
         column_voteComm.setFieldUpdater(new FieldUpdater<PlayerDTO, Boolean>() {
 
             @Override
@@ -297,11 +304,19 @@ public class NS2G implements EntryPoint {
 
             @Override
             public void onSuccess(String result) {
+                myNick = result;
                 label_nick.setText(result + ": ");
-                runPing();
-                runMessageListener();
-                loadInitState();
-                postRulesAnnounce();
+                // send initial ping to show our presence
+                ns2gService.ping(new MyAsyncCallback<Void>() {
+
+                    @Override
+                    public void onSuccess(Void result) {
+                        runPing();
+                        runMessageListener();
+                        loadInitState();
+                        postRulesAnnounce();
+                    }
+                });
             }
 
             @Override
@@ -368,7 +383,7 @@ public class NS2G implements EntryPoint {
     private void runMessageListener() {
         LongPollingClient<List<MessageDTO>> client = new LongPollingClient<List<MessageDTO>>(1000) {
 
-            Long lastMessageUpdate = System.currentTimeMillis();
+            Long lastMessageUpdate = System.currentTimeMillis() - 5000;
 
             @Override
             public void success(List<MessageDTO> result) {
@@ -382,11 +397,17 @@ public class NS2G implements EntryPoint {
                     }
                     switch (message.getType()) {
                     case USER_ENTERS:
+                        if (message.getContent().equals(myNick)) {
+                            break;
+                        }
                         addChatMessage(message.getContent() + " входит.", message.getTimestamp());
                         loadPlayers = true;
                         soundsToPlay.add(NS2Sound.USER_ENTERS);
                         break;
                     case USER_LEAVES:
+                        if (message.getContent().equals(myNick)) {
+                            break;
+                        }
                         addChatMessage(message.getContent() + " покидает нас.", message.getTimestamp());
                         votedPlayers.remove(message.getContent());
                         dataGrid_players.redraw();
@@ -418,14 +439,24 @@ public class NS2G implements EntryPoint {
                         resetHighlight();
                         if (message.getContent().equals("ok")) {
                             addChatMessage("Голосование завершено!", message.getTimestamp());
+                            soundsToPlay.add(NS2Sound.VOTE_END);
                         } else {
                             addChatMessage(message.getContent(), message.getTimestamp());
                             badVote = true;
                         }
-                        soundsToPlay.add(NS2Sound.VOTE_END);
                         break;
                     case GATHER_STATUS:
                         gatherStatusLabel.setGatherState(GatherState.values()[Integer.valueOf(message.getContent())]);
+                        break;
+                    case USER_KICKED:
+                        cookieSettingsManager.setStringCookie(CookieSettingsManager.KICKED, message.getContent());
+                        Location.reload();
+                        break;
+                    case RUN_TIMER:
+                        gatherStatusLabel.runTimer(Long.valueOf(message.getContent()));
+                        break;
+                    case STOP_TIMER:
+                        gatherStatusLabel.stopTimer();
                         break;
                     default:
                         break;

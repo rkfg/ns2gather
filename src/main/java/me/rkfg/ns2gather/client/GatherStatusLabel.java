@@ -3,10 +3,24 @@ package me.rkfg.ns2gather.client;
 import me.rkfg.ns2gather.dto.GatherState;
 
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.HTML;
 
 public class GatherStatusLabel extends HTML {
     GatherState gatherState = GatherState.OPEN;
+    Long timeLeft;
+    Timer timer = new Timer() {
+
+        @Override
+        public void run() {
+            setStyleName("gstatus gopen");
+            setText("СБОР [ДО КОНЦА ГОЛОСОВАНИЯ: " + timeLeft-- + " с]");
+            if (timeLeft == 0) {
+                cancel();
+                updateState();
+            }
+        }
+    };
 
     public GatherStatusLabel(ClickHandler clickHandler) {
         updateState();
@@ -16,6 +30,9 @@ public class GatherStatusLabel extends HTML {
     }
 
     private void updateState() {
+        if (timer.isRunning()) {
+            return;
+        }
         switch (gatherState) {
         case OPEN:
             setStyleName("gstatus gopen");
@@ -41,5 +58,15 @@ public class GatherStatusLabel extends HTML {
 
     public GatherState getGatherState() {
         return gatherState;
+    }
+
+    public void runTimer(Long startTime) {
+        this.timeLeft = startTime;
+        timer.scheduleRepeating(1000);
+    }
+
+    public void stopTimer() {
+        timer.cancel();
+        updateState();
     }
 }

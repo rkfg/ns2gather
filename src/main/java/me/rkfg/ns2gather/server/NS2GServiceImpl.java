@@ -3,10 +3,13 @@ package me.rkfg.ns2gather.server;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.TimerTask;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
@@ -24,6 +27,7 @@ import me.rkfg.ns2gather.dto.InitStateDTO;
 import me.rkfg.ns2gather.dto.MapDTO;
 import me.rkfg.ns2gather.dto.MessageDTO;
 import me.rkfg.ns2gather.dto.MessageType;
+import me.rkfg.ns2gather.dto.MessageVisibility;
 import me.rkfg.ns2gather.dto.PlayerDTO;
 import me.rkfg.ns2gather.dto.ServerDTO;
 import me.rkfg.ns2gather.dto.VoteResultDTO;
@@ -67,15 +71,13 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
         @Override
         public void playerRemoved(Long gatherId, PlayerDTO player) throws LogicException, ClientAuthException {
-            removeVotes(player.getId());
-            messageManager.postMessage(MessageType.USER_LEAVES, player.getName(), gatherId);
-            postVoteChangeMessage(gatherId);
-            updateGatherStateByPlayerNumber(getGatherById(gatherId));
+            removePlayer(gatherId, player.getId(), false);
         }
     });
 
     Long playerId = 1L;
     MessageManager messageManager = new MessageManager();
+    GatherCountdownManager gatherCountdownManager = new GatherCountdownManager();
     Object voteCountLock = new Object();
     Object findGatherLock = new Object();
     private boolean debug = false;
@@ -223,7 +225,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         } else {
             name = connectedPlayers.lookupNameBySteamId(steamId);
         }
-        ping();
         return name;
     }
 
@@ -263,15 +264,16 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         updateGatherStateByPlayerNumber(getCurrentGather());
     }
 
-    private void updateGatherStateByPlayerNumber(Gather gather) throws LogicException, ClientAuthException {
+    private void updateGatherStateByPlayerNumber(final Gather gather) throws LogicException, ClientAuthException {
         if (gather.getState() == GatherState.COMPLETED) {
             // nothing to do here
             return;
         }
-        Long gatherId = gather.getId();
-        if (connectedPlayers.getPlayersByGather(gatherId).size() >= Settings.GATHER_PLAYER_LIMIT) {
+        final Long gatherId = gather.getId();
+        int connectedPlayersCount = connectedPlayers.getPlayersByGather(gatherId).size();
+        if (connectedPlayersCount == Settings.GATHER_PLAYER_MAX) {
             if (gather.getState() == GatherState.OPEN) {
-                // close gather if 12 or more players here
+                // close gather if player limit reached
                 updateGatherState(gather, GatherState.CLOSED);
             }
         } else {
@@ -280,6 +282,65 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 updateGatherState(gather, GatherState.OPEN);
             }
         }
+        if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN) {
+            // minimum players count reached
+            if (connectedPlayersCount % 2 == 0) {
+                // even number, gather may be ready
+                if (getVotedPlayersCount(gatherId) < connectedPlayersCount) {
+                    // not everyone voted yet, run the timer
+                    gatherCountdownManager.scheduleGatherCountdownTask(gatherId, new TimerTask() {
+
+                        @Override
+                        public void run() {
+                            try {
+                                resolveGather(gather);
+                            } catch (LogicException | ClientAuthException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
+                        }
+                    }, Settings.GATHER_RESOLVE_DELAY);
+                    messageManager.postMessage(MessageType.RUN_TIMER, String.valueOf(Settings.GATHER_RESOLVE_DELAY / 1000), gatherId);
+                } else {
+                    // gather is fully ready, let's count votes
+                    stopGatherTimer(gatherId);
+                    countResults(gatherId);
+                }
+            } else {
+                // odd number, stop the timer and wait
+                stopGatherTimer(gatherId);
+            }
+        }
+    }
+
+    private void stopGatherTimer(final Long gatherId) throws LogicException, ClientAuthException {
+        messageManager.postMessage(MessageType.STOP_TIMER, "", gatherId);
+        gatherCountdownManager.cancelGatherCountdownTasks(gatherId);
+    }
+
+    protected void resolveGather(final Gather gather) throws LogicException, ClientAuthException {
+        HibernateUtil.exec(new HibernateCallback<Void>() {
+
+            @Override
+            public Void run(Session session) throws LogicException, ClientAuthException {
+                Long gatherId = gather.getId();
+                session.enableFilter("gatherId").setParameter("gid", gatherId);
+                @SuppressWarnings("unchecked")
+                Set<Long> votedSteamIds = new HashSet<>(session.createQuery(
+                        "select distinct(v.player.steamId) from Vote v left join v.gather").list());
+                GatherPlayers gatherPlayers = connectedPlayers.getPlayersByGather(gatherId);
+                Iterator<Entry<Long, PlayerDTO>> iter = gatherPlayers.entrySet().iterator();
+                while (iter.hasNext()) {
+                    Entry<Long, PlayerDTO> player = iter.next();
+                    if (!votedSteamIds.contains(player.getKey())) {
+                        iter.remove();
+                        removePlayer(gatherId, player.getKey(), true);
+                    }
+                }
+                return null;
+            }
+        });
+        updateGatherStateByPlayerNumber(gather);
     }
 
     private void updateGatherState(Gather gather, GatherState newState) throws LogicException, ClientAuthException {
@@ -347,7 +408,10 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         });
         postVoteChangeMessage();
         messageManager.postMessage(MessageType.USER_READY, getUserName(), gatherId);
-        if (getVotedPlayersCount(gatherId) == Settings.GATHER_PLAYER_LIMIT) {
+        int connectedPlayersCount = connectedPlayers.getPlayersByGather(gatherId).size();
+        if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN && getVotedPlayersCount(gatherId) == connectedPlayersCount
+                && connectedPlayersCount % 2 == 0) {
+            stopGatherTimer(gatherId);
             countResults(gatherId);
         }
     }
@@ -413,6 +477,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 resetVotes(gatherId, ResetType.ALL);
                 messageManager.postMessage(MessageType.VOTE_ENDED, e.getMessage(), gatherId);
                 postVoteChangeMessage();
+                updateGatherStateByPlayerNumber(gather);
                 return;
             }
             messageManager.postMessage(MessageType.VOTE_ENDED, "ok", gatherId);
@@ -484,7 +549,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public String getVoteStat() throws LogicException, ClientAuthException {
-        ping();
         return getVoteStat(getCurrentGatherId());
     }
 
@@ -626,5 +690,18 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         result.setVotedNames(getVotedPlayerNames());
         result.setVoteStat(getVoteStat());
         return result;
+    }
+
+    private void removePlayer(Long gatherId, Long steamId, boolean isKicked) throws LogicException, ClientAuthException {
+        removeVotes(steamId);
+        messageManager.postMessage(MessageType.USER_LEAVES, getUserName(steamId), gatherId);
+        if (isKicked) {
+            MessageDTO messageDTO = new MessageDTO(MessageType.USER_KICKED, "Вы были кикнуты из Gather по неактивности.", gatherId);
+            messageDTO.setVisibility(MessageVisibility.PERSONAL);
+            messageDTO.setToSteamId(steamId);
+            messageManager.postMessage(messageDTO);
+        }
+        postVoteChangeMessage(gatherId);
+        updateGatherStateByPlayerNumber(getGatherById(gatherId));
     }
 }
