@@ -37,9 +37,14 @@ public class VoteResultPanel extends DialogBox {
     private final Button button_close = new Button("Закрыть");
     private final HorizontalPanel horizontalPanel = new HorizontalPanel();
     private final Label label_2 = new Label("Вы сможете снова открыть это окно, щёлкнув по статусу gather'а.");
+    private final HorizontalPanel horizontalPanel_buttons = new HorizontalPanel();
+    private final Button button_mute = new Button("<img src=\"icons/mute.png\">");
+    private ListDataProvider<PlayerDTO> dataProvider_players;
+    private ListDataProvider<MapDTO> dataProvider_maps;
+    private ListDataProvider<ServerDTO> dataProvider_servers;
 
-    public VoteResultPanel(List<VoteResultDTO> voteResult, ListDataProvider<PlayerDTO> dataProvider_players,
-            ListDataProvider<MapDTO> dataProvider_maps, ListDataProvider<ServerDTO> dataProvider_servers) {
+    public VoteResultPanel(ListDataProvider<PlayerDTO> dataProvider_players, ListDataProvider<MapDTO> dataProvider_maps,
+            ListDataProvider<ServerDTO> dataProvider_servers) {
         setModal(false);
         setText("Результаты голосования");
         flexTable.setCellPadding(5);
@@ -78,18 +83,26 @@ public class VoteResultPanel extends DialogBox {
         horizontalPanel.add(label_2);
         horizontalPanel.setCellVerticalAlignment(label_2, HasVerticalAlignment.ALIGN_MIDDLE);
         flexTable.getCellFormatter().setWidth(5, 0, "");
-        button_close.addClickHandler(new Button_closeClickHandler());
 
-        flexTable.setWidget(6, 0, button_close);
-        flexTable.getFlexCellFormatter().setColSpan(6, 0, 2);
-        flexTable.getCellFormatter().setHorizontalAlignment(6, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        flexTable.setWidget(6, 0, horizontalPanel_buttons);
+        horizontalPanel_buttons.setWidth("100%");
+        horizontalPanel_buttons.add(button_close);
+        horizontalPanel_buttons.setCellVerticalAlignment(button_close, HasVerticalAlignment.ALIGN_MIDDLE);
+        horizontalPanel_buttons.setCellHorizontalAlignment(button_close, HasHorizontalAlignment.ALIGN_CENTER);
+
+        horizontalPanel_buttons.add(button_mute);
+        horizontalPanel_buttons.setCellWidth(button_mute, "48px");
+        horizontalPanel_buttons.setCellHorizontalAlignment(button_mute, HasHorizontalAlignment.ALIGN_RIGHT);
+        button_close.addClickHandler(new Button_closeClickHandler());
         flexTable.getFlexCellFormatter().setColSpan(5, 0, 2);
         html_connect.setStyleName("gwt-Label");
-        fillFields(voteResult, dataProvider_players, dataProvider_maps, dataProvider_servers);
+        flexTable.getFlexCellFormatter().setColSpan(6, 0, 2);
+        this.dataProvider_players = dataProvider_players;
+        this.dataProvider_maps = dataProvider_maps;
+        this.dataProvider_servers = dataProvider_servers;
     }
 
-    private void fillFields(List<VoteResultDTO> result, ListDataProvider<PlayerDTO> dataProvider_players,
-            ListDataProvider<MapDTO> dataProvider_maps, ListDataProvider<ServerDTO> dataProvider_servers) {
+    public void fillFields(List<VoteResultDTO> result) {
         // comms
         int i = 0;
         label_comm1.setText(formatVote(dataProvider_players, result.get(i)));
@@ -99,10 +112,10 @@ public class VoteResultPanel extends DialogBox {
         label_maps.setText(formatVote(dataProvider_maps, result.get(i)) + ", " + formatVote(dataProvider_maps, result.get(i + 1)));
         i += 2;
         label_server.setText(formatVote(dataProvider_servers, result.get(i)));
-        setSteamConnectUrl(dataProvider_servers, result.get(i));
+        setSteamConnectUrl(result.get(i));
     }
 
-    private void setSteamConnectUrl(ListDataProvider<ServerDTO> dataProvider_servers, VoteResultDTO voteResultDTO) {
+    private void setSteamConnectUrl(VoteResultDTO voteResultDTO) {
         ServerDTO item = SharedUtils.getObjectFromCollectionById(dataProvider_servers.getList(), voteResultDTO.getId());
         html_connect.setHTML("<a href=\"steam://connect/" + item.getIp() + (!item.getPassword().isEmpty() ? "/" + item.getPassword() : "")
                 + "\">Подключиться</a>");
@@ -131,5 +144,9 @@ public class VoteResultPanel extends DialogBox {
     public void center() {
         setAnimationEnabled(true);
         super.center();
+    }
+
+    public Button getButton_mute() {
+        return button_mute;
     }
 }

@@ -144,6 +144,7 @@ public class NS2G implements EntryPoint {
     private final Button button_enterNewGather = new Button("Зайти в новый сбор");
     private final Button button_logout = new Button("Выход");
     private Set<String> votedPlayers = new HashSet<String>();
+    private VoteResultPanel voteResultPanel = new VoteResultPanel(dataProvider_players, dataProvider_maps, dataProvider_servers);
 
     /**
      * This is the entry point method.
@@ -315,6 +316,7 @@ public class NS2G implements EntryPoint {
                 soundManager.stopSound(NS2Sound.VOTE_END);
             }
         });
+        soundManager.setLoop(NS2Sound.VOTE_END, true);
         loadVolume();
     }
 
@@ -462,7 +464,8 @@ public class NS2G implements EntryPoint {
 
             @Override
             public void onSuccess(List<VoteResultDTO> result) {
-                new VoteResultPanel(result, dataProvider_players, dataProvider_maps, dataProvider_servers).center();
+                voteResultPanel.fillFields(result);
+                voteResultPanel.center();
             }
         });
     }
