@@ -27,22 +27,18 @@ public class SoundManager {
 
     public void playSound(NS2Sound sound) {
         Audio audio = getSound(sound);
-        if (audio != null) {
-            audio.play();
-        }
+        audio.play();
     }
 
     private Audio getSound(NS2Sound sound) {
         if (sound.ordinal() >= audios.size()) {
-            return null;
+            throw new AlertRuntimeException("no such sound");
         }
         return audios.get(sound.ordinal());
     }
 
     public void setVolume(NS2Sound sound, double volume) {
         Audio audio = getSound(sound);
-        if (audio != null) {
-            audio.setVolume(volume);
-        }
+        audio.setVolume(volume);
     }
 }
