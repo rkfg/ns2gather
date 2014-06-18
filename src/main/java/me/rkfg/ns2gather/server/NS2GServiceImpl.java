@@ -20,6 +20,7 @@ import me.rkfg.ns2gather.domain.Vote;
 import me.rkfg.ns2gather.domain.VoteResult;
 import me.rkfg.ns2gather.domain.VoteType;
 import me.rkfg.ns2gather.dto.GatherState;
+import me.rkfg.ns2gather.dto.InitStateDTO;
 import me.rkfg.ns2gather.dto.MapDTO;
 import me.rkfg.ns2gather.dto.MessageDTO;
 import me.rkfg.ns2gather.dto.MessageType;
@@ -610,5 +611,17 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     @Override
     public GatherState getGatherState() throws LogicException, ClientAuthException {
         return getCurrentGather().getState();
+    }
+
+    @Override
+    public InitStateDTO getInitState() throws LogicException, ClientAuthException {
+        InitStateDTO result = new InitStateDTO();
+        result.setGatherState(getGatherState());
+        result.setMaps(getMaps());
+        result.setPlayers(getConnectedPlayers());
+        result.setServers(getServers());
+        result.setVotedNames(getVotedPlayerNames());
+        result.setVoteStat(getVoteStat());
+        return result;
     }
 }

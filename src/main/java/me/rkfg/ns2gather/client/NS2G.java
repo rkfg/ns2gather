@@ -12,6 +12,7 @@ import java.util.Set;
 import me.rkfg.ns2gather.dto.ChatMessageType;
 import me.rkfg.ns2gather.dto.CheckedDTO;
 import me.rkfg.ns2gather.dto.GatherState;
+import me.rkfg.ns2gather.dto.InitStateDTO;
 import me.rkfg.ns2gather.dto.MapDTO;
 import me.rkfg.ns2gather.dto.MessageDTO;
 import me.rkfg.ns2gather.dto.PlayerDTO;
@@ -220,6 +221,27 @@ public class NS2G implements EntryPoint {
 
         dataGrid_players.addColumn(column_voteComm);
         dataGrid_players.setColumnWidth(column_voteComm, "50px");
+        dataGrid_players.addColumn(textColumn_playerName, "Имя");
+
+        splitLayoutPanel_1.addEast(dataGrid_servers, 300.0);
+
+        dataGrid_servers.addColumn(column_voteServer);
+        dataGrid_servers.setColumnWidth(column_voteServer, "50px");
+        dataGrid_servers.addColumn(textColumn_serverName, "Сервер");
+
+        splitLayoutPanel_1.add(dataGrid_maps);
+
+        dataGrid_maps.addColumn(column_voteMap);
+        dataGrid_maps.setColumnWidth(column_voteMap, "50px");
+        dataGrid_maps.addColumn(textColumn_mapName, "Карта");
+        dataProvider_players.addDataDisplay(dataGrid_players);
+        dataProvider_maps.addDataDisplay(dataGrid_maps);
+        dataProvider_servers.addDataDisplay(dataGrid_servers);
+        init();
+        ready = true;
+    }
+
+    private void init() {
         column_voteComm.setFieldUpdater(new FieldUpdater<PlayerDTO, Boolean>() {
 
             @Override
@@ -228,12 +250,6 @@ public class NS2G implements EntryPoint {
             }
         });
 
-        dataGrid_players.addColumn(textColumn_playerName, "Имя");
-
-        splitLayoutPanel_1.addEast(dataGrid_servers, 300.0);
-
-        dataGrid_servers.addColumn(column_voteServer);
-        dataGrid_servers.setColumnWidth(column_voteServer, "50px");
         column_voteServer.setFieldUpdater(new FieldUpdater<ServerDTO, Boolean>() {
 
             @Override
@@ -242,12 +258,6 @@ public class NS2G implements EntryPoint {
             }
         });
 
-        dataGrid_servers.addColumn(textColumn_serverName, "Сервер");
-
-        splitLayoutPanel_1.add(dataGrid_maps);
-
-        dataGrid_maps.addColumn(column_voteMap);
-        dataGrid_maps.setColumnWidth(column_voteMap, "50px");
         column_voteMap.setFieldUpdater(new FieldUpdater<MapDTO, Boolean>() {
 
             @Override
@@ -256,10 +266,6 @@ public class NS2G implements EntryPoint {
             }
         });
 
-        dataGrid_maps.addColumn(textColumn_mapName, "Карта");
-        dataProvider_players.addDataDisplay(dataGrid_players);
-        dataProvider_maps.addDataDisplay(dataGrid_maps);
-        dataProvider_servers.addDataDisplay(dataGrid_servers);
         dataGrid_players.setRowStyles(new RowStyles<PlayerDTO>() {
 
             @Override
@@ -285,6 +291,7 @@ public class NS2G implements EntryPoint {
                 return "big-datagrid";
             }
         });
+
         ns2gService.getUserName(new AsyncCallback<String>() {
 
             @Override
@@ -292,12 +299,7 @@ public class NS2G implements EntryPoint {
                 label_nick.setText(result + ": ");
                 runPing();
                 runMessageListener();
-                loadMaps();
-                loadServers();
-                loadPlayers();
-                loadVoteStat();
-                loadVotedNames();
-                loadGatherState();
+                loadInitState();
                 postRulesAnnounce();
             }
 
@@ -306,8 +308,14 @@ public class NS2G implements EntryPoint {
                 login();
             }
         });
+        voteResultPanel.getButton_mute().addClickHandler(new ClickHandler() {
+
+            @Override
+            public void onClick(ClickEvent event) {
+                soundManager.stopSound(NS2Sound.VOTE_END);
+            }
+        });
         loadVolume();
-        ready = true;
     }
 
     protected void postRulesAnnounce() {
@@ -315,34 +323,17 @@ public class NS2G implements EntryPoint {
                 System.currentTimeMillis(), ChatMessageType.SYSTEM, false);
     }
 
-    protected void loadGatherState() {
-        ns2gService.getGatherState(new MyAsyncCallback<GatherState>() {
+    protected void loadInitState() {
+        ns2gService.getInitState(new MyAsyncCallback<InitStateDTO>() {
 
             @Override
-            public void onSuccess(GatherState result) {
-                gatherStatusLabel.setGatherState(result);
-            }
-        });
-    }
-
-    private void loadVotedNames() {
-        ns2gService.getVotedPlayerNames(new MyAsyncCallback<Set<String>>() {
-
-            @Override
-            public void onSuccess(Set<String> result) {
-                votedPlayers = result;
-                dataGrid_players.redraw();
-            }
-
-        });
-    }
-
-    protected void loadVoteStat() {
-        ns2gService.getVoteStat(new MyAsyncCallback<String>() {
-
-            @Override
-            public void onSuccess(String result) {
-                label_voted.setText(result);
+            public void onSuccess(InitStateDTO result) {
+                gatherStatusLabel.setGatherState(result.getGatherState());
+                votedPlayers = result.getVotedNames();
+                dataProvider_players.setList(result.getPlayers());
+                dataProvider_maps.setList(result.getMaps());
+                dataProvider_servers.setList(result.getServers());
+                label_voted.setText(result.getVoteStat());
             }
         });
     }
@@ -526,26 +517,6 @@ public class NS2G implements EntryPoint {
                 });
             }
         }.scheduleRepeating(5000);
-    }
-
-    private void loadServers() {
-        ns2gService.getServers(new MyAsyncCallback<List<ServerDTO>>() {
-
-            @Override
-            public void onSuccess(List<ServerDTO> result) {
-                dataProvider_servers.setList(result);
-            }
-        });
-    }
-
-    private void loadMaps() {
-        ns2gService.getMaps(new MyAsyncCallback<List<MapDTO>>() {
-
-            @Override
-            public void onSuccess(List<MapDTO> result) {
-                dataProvider_maps.setList(result);
-            }
-        });
     }
 
     protected void login() {

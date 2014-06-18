@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import me.rkfg.ns2gather.dto.GatherState;
+import me.rkfg.ns2gather.dto.InitStateDTO;
 import me.rkfg.ns2gather.dto.MapDTO;
 import me.rkfg.ns2gather.dto.MessageDTO;
 import me.rkfg.ns2gather.dto.PlayerDTO;
@@ -54,4 +55,6 @@ public interface NS2GService extends RemoteService {
     Set<String> getVotedPlayerNames() throws LogicException, ClientAuthException;
 
     GatherState getGatherState() throws LogicException, ClientAuthException;
+
+    InitStateDTO getInitState() throws LogicException, ClientAuthException;
 }
