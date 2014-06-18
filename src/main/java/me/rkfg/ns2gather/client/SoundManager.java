@@ -30,6 +30,12 @@ public class SoundManager {
         audio.play();
     }
 
+    public void stopSound(NS2Sound sound) {
+        Audio audio = getSound(sound);
+        audio.pause();
+        audio.setCurrentTime(0);
+    }
+
     private Audio getSound(NS2Sound sound) {
         if (sound.ordinal() >= audios.size()) {
             throw new AlertRuntimeException("no such sound");
@@ -40,5 +46,10 @@ public class SoundManager {
     public void setVolume(NS2Sound sound, double volume) {
         Audio audio = getSound(sound);
         audio.setVolume(volume);
+    }
+
+    public void setLoop(NS2Sound sound, boolean loop) {
+        Audio audio = getSound(sound);
+        audio.setLoop(loop);
     }
 }
