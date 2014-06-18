@@ -13,11 +13,13 @@ public class GatherStatusLabel extends HTML {
 
         @Override
         public void run() {
-            setStyleName("gstatus gopen");
-            setText("СБОР [ДО КОНЦА ГОЛОСОВАНИЯ: " + timeLeft-- + " с]");
-            if (timeLeft == 0) {
-                cancel();
+            if (gatherState != GatherState.COMPLETED) {
                 updateState();
+                setText(getText() + " [" + timeLeft-- + " сек]");
+                if (timeLeft == 0) {
+                    cancel();
+                    updateState();
+                }
             }
         }
     };
@@ -30,9 +32,6 @@ public class GatherStatusLabel extends HTML {
     }
 
     private void updateState() {
-        if (timer.isRunning()) {
-            return;
-        }
         switch (gatherState) {
         case OPEN:
             setStyleName("gstatus gopen");
