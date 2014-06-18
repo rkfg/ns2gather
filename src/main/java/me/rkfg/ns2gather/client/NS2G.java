@@ -71,7 +71,7 @@ public class NS2G implements EntryPoint {
     private boolean ready = false;
     private SoundManager soundManager = new SoundManager();
     private CookieSettingsManager cookieSettingsManager = new CookieSettingsManager();
-    public static RuleDTO[] voteRules = { new RuleDTO(1, 1, 2, "командира"), new RuleDTO(1, 2, 2, "карту"), new RuleDTO(1, 1, 1, "сервер") };
+    public static RuleDTO[] voteRules = { new RuleDTO(1, 1, 2, "командира"), new RuleDTO(1, 2, 1, "карту"), new RuleDTO(1, 1, 1, "сервер") };
     DateTimeFormat format = DateTimeFormat.getFormat("[HH:mm:ss]");
     private final NS2GServiceAsync ns2gService = GWT.create(NS2GService.class);
     private final Label label_nick = new Label("Ник");

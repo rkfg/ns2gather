@@ -29,7 +29,7 @@ public class VoteResultPanel extends DialogBox {
     private final Label label_comm1 = new Label("comm1");
     private final Label lblNewLabel_1 = new Label("Командир Б");
     private final Label label_comm2 = new Label("comm2");
-    private final Label label_3 = new Label("Карты");
+    private final Label label_3 = new Label("Карта");
     private final Label label_maps = new Label("maps");
     private final Label label_1 = new Label("Сервер");
     private final Label label_server = new Label("server");
@@ -109,8 +109,8 @@ public class VoteResultPanel extends DialogBox {
         i++;
         label_comm2.setText(formatVote(dataProvider_players, result.get(i)));
         i++;
-        label_maps.setText(formatVote(dataProvider_maps, result.get(i)) + ", " + formatVote(dataProvider_maps, result.get(i + 1)));
-        i += 2;
+        label_maps.setText(formatVote(dataProvider_maps, result.get(i)));
+        i++;
         label_server.setText(formatVote(dataProvider_servers, result.get(i)));
         setSteamConnectUrl(result.get(i));
     }
