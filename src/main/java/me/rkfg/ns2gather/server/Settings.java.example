@@ -8,5 +8,9 @@ public class Settings {
     static final long MESSAGE_CLEANUP_INTERVAL = 120000;
     static final long PLAYER_PING_TIMEOUT = 10000;
     static final String GATHER_ID = "gatherId";
-    static final int GATHER_PLAYER_LIMIT = 12;
+    static final int GATHER_PLAYER_MIN = 12;
+    static final int GATHER_PLAYER_MAX = 16;
+    static final long GATHER_RESOLVE_DELAY = 60000;
+    static final int REMEMBER_MAXAGE = 3650 * 24 * 3600;
+
 }

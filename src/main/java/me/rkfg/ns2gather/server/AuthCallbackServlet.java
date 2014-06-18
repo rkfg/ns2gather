@@ -32,7 +32,6 @@ public class AuthCallbackServlet extends HttpServlet {
      * 
      */
     private static final long serialVersionUID = 6146495372925195290L;
-    private static final int REMEMBER_MAXAGE = 30 * 24 * 3600;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -61,10 +60,10 @@ public class AuthCallbackServlet extends HttpServlet {
                     Long steamId = Long.valueOf(verified.getIdentifier().replaceAll("http://steamcommunity.com/openid/id/", ""));
                     req.getSession().setAttribute(Settings.STEAMID_SESSION, steamId);
                     Cookie rememberMeCookie = new Cookie(CookieSettingsManager.REMEMBER_STEAM_ID, rememberMe(steamId));
-                    rememberMeCookie.setMaxAge(REMEMBER_MAXAGE);
+                    rememberMeCookie.setMaxAge(Settings.REMEMBER_MAXAGE);
                     resp.addCookie(rememberMeCookie);
                     resp.getWriter().print(
-                            "<html><head><script>window.opener.location.reload(false); window.close();" + "</script></head></html>");
+                            "<html><head><script>window.opener.location.reload(false); window.close();</script></head></html>");
                 } catch (NumberFormatException e) {
                     resp.getWriter().print("Получен нечисловой Steam ID. GABEN PLZ!");
                 }
