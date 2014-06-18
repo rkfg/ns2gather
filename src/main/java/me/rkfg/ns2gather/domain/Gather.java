@@ -11,7 +11,7 @@ import ru.ppsrk.gwt.domain.BasicDomain;
 
 @Entity
 @FilterDef(name = "gatherId", parameters = @ParamDef(name = "gid", type = "long"))
-@Filter(name = "gatherId", condition = "gatherId = :gid")
+@Filter(name = "gatherId", condition = "id = :gid")
 public class Gather extends BasicDomain {
     String name;
     GatherState state = GatherState.OPEN;
