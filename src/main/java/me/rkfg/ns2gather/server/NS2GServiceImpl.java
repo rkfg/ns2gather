@@ -119,14 +119,15 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 if (type == ResetType.ALL || type == ResetType.VOTES) {
                     @SuppressWarnings("unchecked")
                     List<PlayerVote> playerVotes = session.createQuery(
-                            "select pv from PlayerVote pv left join pv.votes v left join v.gather").list();
+                            "select pv from PlayerVote pv left join pv.votes v left join v.gather g, Gather g2 where g = g2").list();
                     for (PlayerVote playerVote : playerVotes) {
                         session.delete(playerVote);
                     }
                 }
                 if (type == ResetType.ALL || type == ResetType.RESULTS) {
                     @SuppressWarnings("unchecked")
-                    List<VoteResult> voteResults = session.createQuery("select vr from VoteResult vr left join vr.gather").list();
+                    List<VoteResult> voteResults = session.createQuery(
+                            "select vr from VoteResult vr left join vr.gather g, Gather g2 where g = g2").list();
                     for (VoteResult voteResult : voteResults) {
                         session.delete(voteResult);
                     }
@@ -372,14 +373,15 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                         resetVotes(gatherId, ResetType.RESULTS);
                         for (VoteType voteType : VoteType.values()) {
                             @SuppressWarnings("unchecked")
-                            List<Vote> votesForType = session.createQuery("select v from Vote v left join v.gather where v.type = :vt")
+                            List<Vote> votesForType = session
+                                    .createQuery("select v from Vote v left join v.gather g, Gather g2 where v.type = :vt and g = g2")
                                     .setParameter("vt", voteType).list();
                             for (Vote vote : votesForType) {
                                 Long targetId = vote.getTargetId();
                                 try {
                                     VoteResult existingVoteResult = (VoteResult) session
                                             .createQuery(
-                                                    "select vr from VoteResult vr left join vr.gather where vr.type = :vt and vr.targetId = :tid")
+                                                    "select vr from VoteResult vr left join vr.gather g, Gather g2 where vr.type = :vt and vr.targetId = :tid and g = g2")
                                             .setParameter("vt", voteType).setLong("tid", targetId).uniqueResult();
                                     if (existingVoteResult == null) {
                                         existingVoteResult = (VoteResult) session.merge(new VoteResult(gather, voteType, targetId, 0L));
@@ -398,7 +400,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                             @SuppressWarnings("unchecked")
                             List<VoteResult> toCrop = session
                                     .createQuery(
-                                            "select vr from VoteResult vr left join vr.gather where vr.type = :vt and vr not in (:vrl)")
+                                            "select vr from VoteResult vr left join vr.gather g, Gather g2 where vr.type = :vt and vr not in (:vrl) and g = g2")
                                     .setParameter("vt", voteType).setParameterList("vrl", results).list();
                             for (VoteResult voteResult : toCrop) {
                                 session.delete(voteResult);
@@ -541,7 +543,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         @SuppressWarnings("unchecked")
         List<VoteResult> voteResults = session
                 .createQuery(
-                        "select vr from VoteResult vr left join vr.gather where vr.type = :vt order by vr.voteCount desc, vr.place, rand()")
+                        "select vr from VoteResult vr left join vr.gather g, Gather g2 where vr.type = :vt and g = g2 order by vr.voteCount desc, vr.place, rand()")
                 .setParameter("vt", voteType).setMaxResults(NS2G.voteRules[idx].getWinnerCount()).list();
         if (voteResults.size() < NS2G.voteRules[idx].getWinnerCount()) {
             throw LogicExceptionFormatted.format("Невозможно определить %s, переголосовка.", NS2G.voteRules[idx].getName());
@@ -595,7 +597,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 Long gatherId = getCurrentGatherId();
                 session.enableFilter("gatherId").setParameter("gid", gatherId);
                 @SuppressWarnings("unchecked")
-                List<Long> votedSteamIds = session.createQuery("select distinct(v.player.steamId) from Vote v left join v.gather").list();
+                List<Long> votedSteamIds = session.createQuery(
+                        "select distinct(v.player.steamId) from Vote v left join v.gather g, Gather g2 where g = g2").list();
                 GatherPlayers gatherPlayers = connectedPlayers.getPlayersByGather(gatherId);
                 for (Long voteSteamId : votedSteamIds) {
                     PlayerDTO playerDTO = gatherPlayers.get(voteSteamId);
