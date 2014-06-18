@@ -4,7 +4,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 
 public class MessageDTO implements IsSerializable {
     MessageVisibility visibility;
-    String to;
+    Long toSteamId;
     MessageType type;
     String content;
     Long timestamp;
@@ -30,12 +30,12 @@ public class MessageDTO implements IsSerializable {
         this.visibility = visibility;
     }
 
-    public String getTo() {
-        return to;
+    public Long getToSteamId() {
+        return toSteamId;
     }
 
-    public void setTo(String to) {
-        this.to = to;
+    public void setToSteamId(Long toSteamId) {
+        this.toSteamId = toSteamId;
     }
 
     public MessageType getType() {

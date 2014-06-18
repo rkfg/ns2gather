@@ -24,7 +24,7 @@ public class MessageManager {
         for (MessageDTO messageDTO : messages) {
             if (messageDTO.getTimestamp() > since) {
                 if (messageDTO.getVisibility() == MessageVisibility.BROADCAST && messageDTO.getGatherId() == gatherId
-                        || messageDTO.getVisibility() == MessageVisibility.PERSONAL && messageDTO.getTo().equals(steamId)) {
+                        || messageDTO.getVisibility() == MessageVisibility.PERSONAL && messageDTO.getToSteamId().equals(steamId)) {
                     result.add(messageDTO);
                 }
             }
