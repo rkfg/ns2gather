@@ -14,7 +14,7 @@ import java.util.TimerTask;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 
-import me.rkfg.ns2gather.client.NS2G;
+import me.rkfg.ns2gather.client.ClientSettings;
 import me.rkfg.ns2gather.client.NS2GService;
 import me.rkfg.ns2gather.domain.Gather;
 import me.rkfg.ns2gather.domain.PlayerVote;
@@ -575,13 +575,13 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     private void validateVoteNumbers(Long[][] votes) throws LogicException, ClientAuthException {
         int idx = 0;
         for (Long[] vote : votes) {
-            if (vote.length < NS2G.voteRules[idx].getVotesRequired() || vote.length > NS2G.voteRules[idx].getVotesLimit()) {
+            if (vote.length < ClientSettings.voteRules[idx].getVotesRequired() || vote.length > ClientSettings.voteRules[idx].getVotesLimit()) {
                 if (removeVotes(getSteamId())) {
                     postVoteChangeMessage();
                     messageManager.postMessage(MessageType.USER_UNREADY, getUserName(), getCurrentGatherId());
                 }
                 throw LogicExceptionFormatted.format("Ожидается %s голосов за %s, получено %d. Пожалуйста, переголосуйте.",
-                        NS2G.voteRules[idx].voteRange(), NS2G.voteRules[idx].getName(), vote.length);
+                        ClientSettings.voteRules[idx].voteRange(), ClientSettings.voteRules[idx].getName(), vote.length);
             }
             idx++;
         }
@@ -611,9 +611,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         List<VoteResult> voteResults = session
                 .createQuery(
                         "select vr from VoteResult vr left join vr.gather g, Gather g2 where vr.type = :vt and g = g2 order by vr.voteCount desc, vr.place, rand()")
-                .setParameter("vt", voteType).setMaxResults(NS2G.voteRules[idx].getWinnerCount()).list();
-        if (voteResults.size() < NS2G.voteRules[idx].getWinnerCount()) {
-            throw LogicExceptionFormatted.format("Невозможно определить %s, переголосовка.", NS2G.voteRules[idx].getName());
+                .setParameter("vt", voteType).setMaxResults(ClientSettings.voteRules[idx].getWinnerCount()).list();
+        if (voteResults.size() < ClientSettings.voteRules[idx].getWinnerCount()) {
+            throw LogicExceptionFormatted.format("Невозможно определить %s, переголосовка.", ClientSettings.voteRules[idx].getName());
         }
         return voteResults;
     }

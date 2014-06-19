@@ -16,7 +16,6 @@ import me.rkfg.ns2gather.dto.InitStateDTO;
 import me.rkfg.ns2gather.dto.MapDTO;
 import me.rkfg.ns2gather.dto.MessageDTO;
 import me.rkfg.ns2gather.dto.PlayerDTO;
-import me.rkfg.ns2gather.dto.RuleDTO;
 import me.rkfg.ns2gather.dto.ServerDTO;
 import me.rkfg.ns2gather.dto.VoteResultDTO;
 import ru.ppsrk.gwt.client.AlertRuntimeException;
@@ -66,7 +65,6 @@ public class NS2G implements EntryPoint {
     private boolean ready = false;
     private SoundManager soundManager = new SoundManager();
     private CookieSettingsManager cookieSettingsManager = new CookieSettingsManager();
-    public static RuleDTO[] voteRules = { new RuleDTO(1, 1, 2, "командира"), new RuleDTO(1, 2, 1, "карту"), new RuleDTO(1, 1, 1, "сервер") };
     DateTimeFormat format = DateTimeFormat.getFormat("[HH:mm:ss]");
     private final NS2GServiceAsync ns2gService = GWT.create(NS2GService.class);
     private final Label label_nick = new Label("Ник");
@@ -250,7 +248,7 @@ public class NS2G implements EntryPoint {
 
             @Override
             public void update(int index, PlayerDTO object, Boolean value) {
-                checkLimit(value, object, dataProvider_players, voteRules[0].getVotesLimit());
+                checkLimit(value, object, dataProvider_players, ClientSettings.voteRules[0].getVotesLimit());
             }
         });
 
@@ -258,7 +256,7 @@ public class NS2G implements EntryPoint {
 
             @Override
             public void update(int index, ServerDTO object, Boolean value) {
-                checkLimit(value, object, dataProvider_servers, voteRules[2].getVotesLimit());
+                checkLimit(value, object, dataProvider_servers, ClientSettings.voteRules[2].getVotesLimit());
             }
         });
 
@@ -266,7 +264,7 @@ public class NS2G implements EntryPoint {
 
             @Override
             public void update(int index, MapDTO object, Boolean value) {
-                checkLimit(value, object, dataProvider_maps, voteRules[1].getVotesLimit());
+                checkLimit(value, object, dataProvider_maps, ClientSettings.voteRules[1].getVotesLimit());
             }
         });
 
@@ -542,7 +540,7 @@ public class NS2G implements EntryPoint {
                     }
                 });
             }
-        }.scheduleRepeating(5000);
+        }.scheduleRepeating(ClientSettings.PING_INTERVAL);
     }
 
     protected void login() {
@@ -594,9 +592,9 @@ public class NS2G implements EntryPoint {
                     voteRow.add(checkedDTO.getId());
                 }
             }
-            if (voteRow.size() > voteRules[i].getVotesLimit()) {
-                throw new AlertRuntimeException("Слишком много голосов за " + voteRules[i].getName() + ", ожидается "
-                        + voteRules[i].getVotesRequired() + ", получено " + voteRow.size());
+            if (voteRow.size() > ClientSettings.voteRules[i].getVotesLimit()) {
+                throw new AlertRuntimeException("Слишком много голосов за " + ClientSettings.voteRules[i].getName() + ", ожидается "
+                        + ClientSettings.voteRules[i].getVotesRequired() + ", получено " + voteRow.size());
             }
             result[i++] = (Long[]) voteRow.toArray(new Long[0]);
         }
