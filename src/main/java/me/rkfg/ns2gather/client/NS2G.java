@@ -51,24 +51,18 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.view.client.ListDataProvider;
-import com.kiouri.sliderbar.client.event.BarValueChangedEvent;
-import com.kiouri.sliderbar.client.event.BarValueChangedHandler;
-import com.kiouri.sliderbar.client.solution.adv.AdvancedSliderBar;
-import com.kiouri.sliderbar.client.view.SliderBar;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class NS2G implements EntryPoint {
 
-    private boolean ready = false;
     private SoundManager soundManager = new SoundManager();
     private CookieSettingsManager cookieSettingsManager = new CookieSettingsManager();
     public static RuleDTO[] voteRules = { new RuleDTO(1, 1, 2, "командира"), new RuleDTO(1, 2, 1, "карту"), new RuleDTO(1, 1, 1, "сервер") };
@@ -129,8 +123,14 @@ public class NS2G implements EntryPoint {
     private final FlexTable flexTable = new FlexTable();
     private final Label lblNewLabel = new Label("Проголосовали:");
     private final Label label_voted = new Label("0/0");
-    private final SliderBar sliderBar_chatVolume = new AdvancedSliderBar();
-    private final Image image_soundIcon = new Image("icons/sound.png");
+    private final VolumeButton volumeControl = new VolumeButton(cookieSettingsManager) {
+
+        @Override
+        public void volumeChanged(int newVolume) {
+            setChatVolume(newVolume);
+            soundManager.playSound(NS2Sound.CHAT);
+        }
+    };
     private final HorizontalPanel horizontalPanel_1 = new HorizontalPanel();
     private final GatherStatusLabel gatherStatusLabel = new GatherStatusLabel(new ClickHandler() {
 
@@ -175,17 +175,10 @@ public class NS2G implements EntryPoint {
         dockLayoutPanel.addNorth(horizontalPanel, 3.0);
         horizontalPanel.setSize("100%", "100%");
         button_vote.addClickHandler(new Button_voteClickHandler());
-        sliderBar_chatVolume.setWidth("200px");
-        sliderBar_chatVolume.setMaxValue(200);
-        sliderBar_chatVolume.addBarValueChangedHandler(new SliderBar_chatVolumeBarValueChangedHandler());
 
-        horizontalPanel.add(sliderBar_chatVolume);
-        horizontalPanel.setCellWidth(sliderBar_chatVolume, "1px");
-        horizontalPanel.setCellVerticalAlignment(sliderBar_chatVolume, HasVerticalAlignment.ALIGN_MIDDLE);
-
-        horizontalPanel.add(image_soundIcon);
-        horizontalPanel.setCellVerticalAlignment(image_soundIcon, HasVerticalAlignment.ALIGN_MIDDLE);
-        horizontalPanel.setCellWidth(image_soundIcon, "1px");
+        horizontalPanel.add(volumeControl);
+        horizontalPanel.setCellVerticalAlignment(volumeControl, HasVerticalAlignment.ALIGN_MIDDLE);
+        horizontalPanel.setCellWidth(volumeControl, "1px");
         horizontalPanel.add(button_vote);
         horizontalPanel.setCellVerticalAlignment(button_vote, HasVerticalAlignment.ALIGN_MIDDLE);
         horizontalPanel.setCellHorizontalAlignment(button_vote, HasHorizontalAlignment.ALIGN_CENTER);
@@ -241,7 +234,6 @@ public class NS2G implements EntryPoint {
         dataProvider_maps.addDataDisplay(dataGrid_maps);
         dataProvider_servers.addDataDisplay(dataGrid_servers);
         init();
-        ready = true;
     }
 
     private void init() {
@@ -332,7 +324,6 @@ public class NS2G implements EntryPoint {
             }
         });
         soundManager.setLoop(NS2Sound.VOTE_END, true);
-        loadVolume();
     }
 
     protected void postRulesAnnounce() {
@@ -357,12 +348,6 @@ public class NS2G implements EntryPoint {
 
     protected void fakeLogin() {
         openPopupPanel(new FakeLoginBox());
-    }
-
-    private void loadVolume() {
-        int volume = cookieSettingsManager.getLongCookie(CookieSettingsManager.CHAT_VOLUME_COOKIE, 70L).intValue();
-        setChatVolume(volume);
-        sliderBar_chatVolume.setValue(volume);
     }
 
     protected void checkLimit(Boolean value, CheckedDTO object, final ListDataProvider<? extends CheckedDTO> dataProvider, int limit) {
@@ -625,17 +610,6 @@ public class NS2G implements EntryPoint {
             if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
                 button_sendChat.click();
             }
-        }
-    }
-
-    private class SliderBar_chatVolumeBarValueChangedHandler implements BarValueChangedHandler {
-        public void onBarValueChanged(BarValueChangedEvent event) {
-            if (!ready) {
-                return;
-            }
-            setChatVolume(event.getValue());
-            cookieSettingsManager.setStringCookie(CookieSettingsManager.CHAT_VOLUME_COOKIE, String.valueOf(event.getValue()));
-            soundManager.playSound(NS2Sound.CHAT);
         }
     }
 

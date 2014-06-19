@@ -5,6 +5,7 @@ import com.google.gwt.user.client.Cookies;
 public class CookieSettingsManager {
 
     public static final String CHAT_VOLUME_COOKIE = "chat_volume";
+    public static final String CHAT_MUTE_COOKIE = "chat_mute";
     public static final String REMEMBER_STEAM_ID = "rememberSteamId";
     public static final String KICKED = "kicked";
 
@@ -25,12 +26,20 @@ public class CookieSettingsManager {
 
     }
 
+    public boolean getBooleanCookie(String name, Boolean defaultValue) {
+        return getStringCookie(name, defaultValue ? "1" : "0").equals("1");
+    }
+
     public void setStringCookie(String name, String value) {
         Cookies.setCookie(name, value);
     }
 
     public void setLongCookie(String name, Long value) {
         setStringCookie(name, value.toString());
+    }
+
+    public void setBooleanCookie(String name, Boolean value) {
+        setStringCookie(name, value ? "1" : "0");
     }
 
     public void removeCookie(String name) {
