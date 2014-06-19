@@ -22,10 +22,8 @@ public class LoginBox extends DialogBox {
         flexTable.setSize("100%", "100%");
 
         flexTable.setWidget(0, 0, html_loginButton);
-        html_loginButton
-                .setHTML("<a href=\""
-                        + url
-                        + "\" target=\"_blank\"><img src=\"http://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_large_border.png\"/></a>");
+        html_loginButton.setHTML("<a href=\"" + url
+                + "\"><img src=\"http://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_large_border.png\"/></a>");
         flexTable.getCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
         flexTable.getCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_MIDDLE);
     }

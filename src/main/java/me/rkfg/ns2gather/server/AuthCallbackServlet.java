@@ -62,8 +62,7 @@ public class AuthCallbackServlet extends HttpServlet {
                     Cookie rememberMeCookie = new Cookie(CookieSettingsManager.REMEMBER_STEAM_ID, rememberMe(steamId));
                     rememberMeCookie.setMaxAge(Settings.REMEMBER_MAXAGE);
                     resp.addCookie(rememberMeCookie);
-                    resp.getWriter().print(
-                            "<html><head><script>window.opener.location.reload(false); window.close();</script></head></html>");
+                    resp.sendRedirect("..");
                 } catch (NumberFormatException e) {
                     resp.getWriter().print("Получен нечисловой Steam ID. GABEN PLZ!");
                 }
