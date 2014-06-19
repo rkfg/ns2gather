@@ -22,6 +22,7 @@ import ru.ppsrk.gwt.client.AlertRuntimeException;
 import ru.ppsrk.gwt.client.ClientUtils.MyAsyncCallback;
 import ru.ppsrk.gwt.client.LongPollingClient;
 
+import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.EntryPoint;
@@ -77,10 +78,17 @@ public class NS2G implements EntryPoint {
     private final SplitLayoutPanel splitLayoutPanel_1 = new SplitLayoutPanel();
     private final ListDataProvider<PlayerDTO> dataProvider_players = new ListDataProvider<PlayerDTO>();
     private final DataGrid<PlayerDTO> dataGrid_players = new DataGrid<PlayerDTO>();
-    private final TextColumn<PlayerDTO> textColumn_playerName = new TextColumn<PlayerDTO>() {
+    private final Column<PlayerDTO, PlayerDTO> textColumn_playerName = new Column<PlayerDTO, PlayerDTO>(new AbstractCell<PlayerDTO>() {
+
         @Override
-        public String getValue(PlayerDTO object) {
-            return object.getName();
+        public void render(Context context, PlayerDTO value, SafeHtmlBuilder sb) {
+            sb.appendHtmlConstant("<a href=\"http://steamcommunity.com/id/" + value.getId() + "\" target=\"_blank\">")
+                    .appendEscaped(value.getName()).appendHtmlConstant("</a>");
+        }
+    }) {
+        @Override
+        public PlayerDTO getValue(PlayerDTO object) {
+            return object;
         }
     };
     private final Column<PlayerDTO, Boolean> column_voteComm = new Column<PlayerDTO, Boolean>(new CheckboxCell(true, false)) {
