@@ -63,6 +63,7 @@ import com.google.gwt.view.client.ListDataProvider;
  */
 public class NS2G implements EntryPoint {
 
+    private boolean ready = false;
     private SoundManager soundManager = new SoundManager();
     private CookieSettingsManager cookieSettingsManager = new CookieSettingsManager();
     public static RuleDTO[] voteRules = { new RuleDTO(1, 1, 2, "командира"), new RuleDTO(1, 2, 1, "карту"), new RuleDTO(1, 1, 1, "сервер") };
@@ -128,7 +129,9 @@ public class NS2G implements EntryPoint {
         @Override
         public void volumeChanged(int newVolume) {
             setChatVolume(newVolume);
-            soundManager.playSound(NS2Sound.CHAT);
+            if (ready) {
+                soundManager.playSound(NS2Sound.CHAT);
+            }
         }
     };
     private final HorizontalPanel horizontalPanel_1 = new HorizontalPanel();
@@ -234,6 +237,7 @@ public class NS2G implements EntryPoint {
         dataProvider_maps.addDataDisplay(dataGrid_maps);
         dataProvider_servers.addDataDisplay(dataGrid_servers);
         init();
+        ready = true;
     }
 
     private void init() {
