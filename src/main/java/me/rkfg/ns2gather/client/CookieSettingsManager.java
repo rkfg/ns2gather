@@ -1,5 +1,7 @@
 package me.rkfg.ns2gather.client;
 
+import java.util.Date;
+
 import com.google.gwt.user.client.Cookies;
 
 public class CookieSettingsManager {
@@ -8,6 +10,7 @@ public class CookieSettingsManager {
     public static final String CHAT_MUTE_COOKIE = "chat_mute";
     public static final String REMEMBER_STEAM_ID = "rememberSteamId";
     public static final String KICKED = "kicked";
+    public static final long COOKIE_AGE = 3650 * 24 * 3600;
 
     public String getStringCookie(String name, String defaultValue) {
         String result = Cookies.getCookie(name);
@@ -31,7 +34,7 @@ public class CookieSettingsManager {
     }
 
     public void setStringCookie(String name, String value) {
-        Cookies.setCookie(name, value);
+        Cookies.setCookie(name, value, new Date(System.currentTimeMillis() + COOKIE_AGE * 1000));
     }
 
     public void setLongCookie(String name, Long value) {

@@ -60,7 +60,7 @@ public class AuthCallbackServlet extends HttpServlet {
                     Long steamId = Long.valueOf(verified.getIdentifier().replaceAll("http://steamcommunity.com/openid/id/", ""));
                     req.getSession().setAttribute(Settings.STEAMID_SESSION, steamId);
                     Cookie rememberMeCookie = new Cookie(CookieSettingsManager.REMEMBER_STEAM_ID, rememberMe(steamId));
-                    rememberMeCookie.setMaxAge(Settings.REMEMBER_MAXAGE);
+                    rememberMeCookie.setMaxAge((int) CookieSettingsManager.COOKIE_AGE);
                     resp.addCookie(rememberMeCookie);
                     resp.sendRedirect("..");
                 } catch (NumberFormatException e) {
