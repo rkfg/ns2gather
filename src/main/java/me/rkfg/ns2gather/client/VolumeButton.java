@@ -9,6 +9,7 @@ import com.kiouri.sliderbar.client.event.BarValueChangedEvent;
 import com.kiouri.sliderbar.client.event.BarValueChangedHandler;
 import com.kiouri.sliderbar.client.solution.adv.AdvancedSliderBar;
 import com.kiouri.sliderbar.client.view.SliderBar;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
 
 public abstract class VolumeButton extends HorizontalPanel {
     private static final String SOUND_ON_ICON = "icons/sound.png";
@@ -20,6 +21,7 @@ public abstract class VolumeButton extends HorizontalPanel {
     private final CookieSettingsManager cookieSettingsManager;
 
     public VolumeButton(final CookieSettingsManager cookieSettingsManager) {
+        setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
         this.cookieSettingsManager = cookieSettingsManager;
         mute = cookieSettingsManager.getBooleanCookie(CookieSettingsManager.CHAT_MUTE_COOKIE, false);
         volume = cookieSettingsManager.getLongCookie(CookieSettingsManager.CHAT_VOLUME_COOKIE, 170L).intValue();
