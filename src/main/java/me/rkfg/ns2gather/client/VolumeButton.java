@@ -25,7 +25,6 @@ public abstract class VolumeButton extends HorizontalPanel {
         volume = cookieSettingsManager.getLongCookie(CookieSettingsManager.CHAT_VOLUME_COOKIE, 170L).intValue();
         muteIcon.getElement().getStyle().setCursor(Cursor.POINTER);
         muteIcon.addClickHandler(new VolumeButtonClickHandler());
-        updateAppearance(true);
         sliderBar_chatVolume.setWidth("200px");
         sliderBar_chatVolume.setMaxValue(200);
         sliderBar_chatVolume.addBarValueChangedHandler(new BarValueChangedHandler() {
@@ -47,6 +46,7 @@ public abstract class VolumeButton extends HorizontalPanel {
                 volumeChanged(event.getValue());
             }
         });
+        updateAppearance(true);
         add(sliderBar_chatVolume);
         add(muteIcon);
     }
@@ -56,7 +56,6 @@ public abstract class VolumeButton extends HorizontalPanel {
         @Override
         public void onClick(ClickEvent event) {
             mute = !mute;
-            cookieSettingsManager.setBooleanCookie(CookieSettingsManager.CHAT_MUTE_COOKIE, mute);
             updateAppearance(true);
         }
     }
@@ -67,6 +66,7 @@ public abstract class VolumeButton extends HorizontalPanel {
 
     public void updateAppearance(boolean setVolume) {
         muteIcon.setUrl(mute ? SOUND_OFF_ICON : SOUND_ON_ICON);
+        cookieSettingsManager.setBooleanCookie(CookieSettingsManager.CHAT_MUTE_COOKIE, mute);
         if (setVolume) {
             if (mute) {
                 setVolume(0);
