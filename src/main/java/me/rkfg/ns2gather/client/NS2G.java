@@ -520,10 +520,13 @@ public class NS2G implements EntryPoint {
     }
 
     protected void addChatMessage(String text, long timestamp, ChatMessageType messageType, boolean escape) {
+        boolean shouldScroll = scrollPanel.getVerticalScrollPosition() == scrollPanel.getMaximumVerticalScrollPosition();
         html_chat.setHTML(html_chat.getHTML() + "<br/>" + format.format(new Date(timestamp)) + " <span class=\""
                 + getCSSClassByMessageType(messageType) + "\">"
                 + (escape ? new SafeHtmlBuilder().appendEscaped(text).toSafeHtml().asString() : text) + "</span>");
-        scrollPanel.scrollToBottom();
+        if (shouldScroll) {
+            scrollPanel.scrollToBottom();
+        }
     }
 
     private String getCSSClassByMessageType(ChatMessageType messageType) {
