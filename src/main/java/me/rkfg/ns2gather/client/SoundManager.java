@@ -27,6 +27,9 @@ public class SoundManager {
 
     public void playSound(NS2Sound sound) {
         Audio audio = getSound(sound);
+        if (!audio.isPaused()) {
+            stopSound(sound);
+        }
         audio.play();
     }
 
