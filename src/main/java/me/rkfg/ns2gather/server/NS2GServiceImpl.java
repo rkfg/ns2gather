@@ -304,7 +304,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                         messageManager.postMessage(MessageType.RUN_TIMER, String.valueOf(Settings.GATHER_RESOLVE_DELAY / 1000), gatherId);
                     } else {
                         // gather is fully ready, let's count votes
-                        stopGatherTimer(gatherId);
                         countResults(gatherId);
                     }
                 } else {
@@ -415,7 +414,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         int connectedPlayersCount = connectedPlayers.getPlayersByGather(gatherId).size();
         if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN && getVotedPlayersCount(gatherId) == connectedPlayersCount
                 && connectedPlayersCount % 2 == 0) {
-            stopGatherTimer(gatherId);
             countResults(gatherId);
         }
     }
@@ -431,6 +429,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private void countResults(final Long gatherId) throws LogicException, ClientAuthException {
         synchronized (voteCountLock) {
+            stopGatherTimer(gatherId);
             final Gather gather = getGatherById(gatherId);
             try {
                 HibernateUtil.exec(new HibernateCallback<Void>() {
