@@ -389,13 +389,13 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         }
         validateVoteNumbers(votes);
         Long gatherId = getCurrentGatherId();
-        HibernateUtil.exec(new HibernateCallback<Void>() {
+        boolean showVote = HibernateUtil.exec(new HibernateCallback<Boolean>() {
 
             @Override
-            public Void run(Session session) throws LogicException, ClientAuthException {
+            public Boolean run(Session session) throws LogicException, ClientAuthException {
                 Long steamId = getSteamId();
                 // delete all previous votes
-                removeVotes(steamId);
+                boolean showVote = !removeVotes(steamId);
                 PlayerVote playerVote = new PlayerVote(steamId);
                 for (int i = 0; i < 3; i++) {
                     Long[] votesCat = votes[i];
@@ -405,11 +405,13 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     }
                 }
                 session.merge(playerVote);
-                return null;
+                return showVote;
             }
         });
-        postVoteChangeMessage();
-        messageManager.postMessage(MessageType.USER_READY, getUserName(), gatherId);
+        if (showVote) {
+            postVoteChangeMessage();
+            messageManager.postMessage(MessageType.USER_READY, getUserName(), gatherId);
+        }
         int connectedPlayersCount = connectedPlayers.getPlayersByGather(gatherId).size();
         if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN && getVotedPlayersCount(gatherId) == connectedPlayersCount
                 && connectedPlayersCount % 2 == 0) {
