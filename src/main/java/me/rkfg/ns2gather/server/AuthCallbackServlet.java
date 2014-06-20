@@ -59,9 +59,7 @@ public class AuthCallbackServlet extends HttpServlet {
                 try {
                     Long steamId = Long.valueOf(verified.getIdentifier().replaceAll("http://steamcommunity.com/openid/id/", ""));
                     req.getSession().setAttribute(Settings.STEAMID_SESSION, steamId);
-                    Cookie rememberMeCookie = new Cookie(CookieSettingsManager.REMEMBER_STEAM_ID, rememberMe(steamId));
-                    rememberMeCookie.setMaxAge((int) CookieSettingsManager.COOKIE_AGE);
-                    resp.addCookie(rememberMeCookie);
+                    updateRememberCookie(resp, rememberMe(steamId));
                     resp.sendRedirect("..");
                 } catch (NumberFormatException e) {
                     resp.getWriter().print("Получен нечисловой Steam ID. GABEN PLZ!");
@@ -73,6 +71,12 @@ public class AuthCallbackServlet extends HttpServlet {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    public static void updateRememberCookie(HttpServletResponse resp, String rememberIdStr) {
+        Cookie rememberMeCookie = new Cookie(CookieSettingsManager.REMEMBER_STEAM_ID, rememberIdStr);
+        rememberMeCookie.setMaxAge((int) CookieSettingsManager.COOKIE_AGE);
+        resp.addCookie(rememberMeCookie);
     }
 
     private String rememberMe(final Long steamId) {

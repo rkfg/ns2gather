@@ -197,6 +197,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                         steamId = (Long) session.createQuery("select r.steamId from Remembered r where r.rememberId = :rid")
                                 .setLong("rid", rid).uniqueResult();
                         getSession().setAttribute(Settings.STEAMID_SESSION, steamId);
+                        AuthCallbackServlet.updateRememberCookie(getThreadLocalResponse(), rid.toString());
                     } catch (NonUniqueResultException e) {
                         throw new LogicException("Дублирующийся id в БД, автовход отклонён.");
                     }
@@ -575,7 +576,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     private void validateVoteNumbers(Long[][] votes) throws LogicException, ClientAuthException {
         int idx = 0;
         for (Long[] vote : votes) {
-            if (vote.length < ClientSettings.voteRules[idx].getVotesRequired() || vote.length > ClientSettings.voteRules[idx].getVotesLimit()) {
+            if (vote.length < ClientSettings.voteRules[idx].getVotesRequired()
+                    || vote.length > ClientSettings.voteRules[idx].getVotesLimit()) {
                 if (removeVotes(getSteamId())) {
                     postVoteChangeMessage();
                     messageManager.postMessage(MessageType.USER_UNREADY, getUserName(), getCurrentGatherId());
