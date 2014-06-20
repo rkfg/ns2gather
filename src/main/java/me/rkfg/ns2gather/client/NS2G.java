@@ -214,6 +214,7 @@ public class NS2G implements EntryPoint {
         horizontalPanel.add(button_vote);
         horizontalPanel.setCellVerticalAlignment(button_vote, HasVerticalAlignment.ALIGN_MIDDLE);
         horizontalPanel.setCellHorizontalAlignment(button_vote, HasHorizontalAlignment.ALIGN_CENTER);
+        button_enterNewGather.setVisible(false);
         button_enterNewGather.addClickHandler(new Button_enterNewGatherClickHandler());
 
         horizontalPanel.add(button_enterNewGather);
@@ -371,6 +372,7 @@ public class NS2G implements EntryPoint {
             @Override
             public void onSuccess(InitStateDTO result) {
                 gatherStatusLabel.setGatherState(result.getGatherState());
+                updateEnterNewButtonVisibility();
                 votedPlayers = result.getVotedNames();
                 dataProvider_players.setList(result.getPlayers());
                 dataProvider_maps.setList(result.getMaps());
@@ -466,6 +468,7 @@ public class NS2G implements EntryPoint {
                         break;
                     case GATHER_STATUS:
                         gatherStatusLabel.setGatherState(GatherState.values()[Integer.valueOf(message.getContent())]);
+                        updateEnterNewButtonVisibility();
                         break;
                     case USER_KICKED:
                         cookieSettingsManager.setStringCookie(CookieSettingsManager.KICKED, message.getContent());
@@ -663,5 +666,9 @@ public class NS2G implements EntryPoint {
                 }
             });
         }
+    }
+
+    public void updateEnterNewButtonVisibility() {
+        button_enterNewGather.setVisible(gatherStatusLabel.getState() == GatherState.COMPLETED);
     }
 }
