@@ -57,6 +57,7 @@ import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.view.client.ListDataProvider;
+import com.google.gwt.user.client.ui.VerticalPanel;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -180,6 +181,8 @@ public class NS2G implements EntryPoint {
     private Set<String> votedPlayers = new HashSet<String>();
     private VoteResultPanel voteResultPanel = new VoteResultPanel(dataProvider_players, dataProvider_maps, dataProvider_servers);
     private String myNick;
+    private final VerticalPanel verticalPanel = new VerticalPanel();
+    private final Label label_version = new Label();
 
     /**
      * This is the entry point method.
@@ -196,11 +199,18 @@ public class NS2G implements EntryPoint {
         horizontalPanel_1.add(gatherStatusLabel);
         horizontalPanel_1.setCellVerticalAlignment(gatherStatusLabel, HasVerticalAlignment.ALIGN_MIDDLE);
         horizontalPanel_1.setCellHorizontalAlignment(gatherStatusLabel, HasHorizontalAlignment.ALIGN_CENTER);
-        button_logout.addClickHandler(new Button_logoutClickHandler());
 
-        horizontalPanel_1.add(button_logout);
+        horizontalPanel_1.add(verticalPanel);
+        horizontalPanel_1.setCellWidth(verticalPanel, "1px");
+        verticalPanel.add(button_logout);
+        verticalPanel.setCellHorizontalAlignment(button_logout, HasHorizontalAlignment.ALIGN_RIGHT);
+        button_logout.addClickHandler(new Button_logoutClickHandler());
         horizontalPanel_1.setCellWidth(button_logout, "1px");
         horizontalPanel_1.setCellHorizontalAlignment(button_logout, HasHorizontalAlignment.ALIGN_RIGHT);
+        label_version.setWordWrap(false);
+
+        label_version.addStyleName("version");
+        verticalPanel.add(label_version);
 
         splitLayoutPanel.addSouth(dockLayoutPanel, 300.0);
         horizontalPanel.setSpacing(5);
@@ -378,6 +388,7 @@ public class NS2G implements EntryPoint {
                 dataProvider_maps.setList(result.getMaps());
                 dataProvider_servers.setList(result.getServers());
                 label_voted.setText(result.getVoteStat());
+                label_version.setText(result.getVersion());
             }
         });
     }

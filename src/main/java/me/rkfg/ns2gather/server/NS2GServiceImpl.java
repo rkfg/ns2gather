@@ -1,5 +1,6 @@
 package me.rkfg.ns2gather.server;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -8,6 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.TimerTask;
@@ -714,7 +716,18 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         result.setServers(getServers());
         result.setVotedNames(getVotedPlayerNames());
         result.setVoteStat(getVoteStat());
+        result.setVersion(getVersion());
         return result;
+    }
+
+    private String getVersion() {
+        try {
+            Properties properties = new Properties();
+            properties.load(getClass().getResourceAsStream("/buildNumber.properties"));
+            return "build " + properties.getProperty("version", "no version");
+        } catch (IOException e) {
+            return "no version";
+        }
     }
 
     private void removePlayer(Long gatherId, Long steamId, boolean isKicked) throws LogicException, ClientAuthException {

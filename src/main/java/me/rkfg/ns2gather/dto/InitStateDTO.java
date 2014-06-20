@@ -12,6 +12,7 @@ public class InitStateDTO implements IsSerializable {
     String voteStat;
     Set<String> votedNames;
     GatherState gatherState;
+    String version;
 
     public List<MapDTO> getMaps() {
         return maps;
@@ -59,6 +60,14 @@ public class InitStateDTO implements IsSerializable {
 
     public void setGatherState(GatherState gatherState) {
         this.gatherState = gatherState;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
 }
