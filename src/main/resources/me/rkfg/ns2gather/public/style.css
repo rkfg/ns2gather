@@ -55,3 +55,9 @@ body {
 h1 {
     text-align: center;
 }
+
+.snd {
+    text-decoration: underline;
+    font-weight: bold;
+    cursor: pointer;
+}
