@@ -135,7 +135,7 @@ public class NS2G implements EntryPoint {
 
                 @Override
                 public void onSuccess(Void result) {
-
+                    switchState();
                 }
             });
         }
@@ -146,7 +146,7 @@ public class NS2G implements EntryPoint {
 
                 @Override
                 public void onSuccess(Void result) {
-
+                    switchState();
                 }
 
             });
@@ -484,6 +484,8 @@ public class NS2G implements EntryPoint {
                         } else {
                             addChatMessage(message.getContent(), message.getTimestamp());
                             badVote = true;
+                            button_vote.setState(true);
+                            button_vote.switchState();
                         }
                         break;
                     case GATHER_STATUS:

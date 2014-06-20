@@ -15,16 +15,26 @@ public abstract class VoteButton extends Button {
 
             @Override
             public void onClick(ClickEvent event) {
-                voted = !voted;
-                if (voted) {
+                if (!voted) {
                     vote();
-                    setText(UNVOTE);
                 } else {
                     unvote();
-                    setText(VOTE);
                 }
             }
         });
+    }
+
+    public void switchState() {
+        voted = !voted;
+        if (voted) {
+            setText(UNVOTE);
+        } else {
+            setText(VOTE);
+        }
+    }
+
+    public void setState(boolean isVoted) {
+        voted = isVoted;
     }
 
     protected abstract void vote();
