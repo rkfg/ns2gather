@@ -57,7 +57,6 @@ import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.user.client.ui.VerticalPanel;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -181,9 +180,9 @@ public class NS2G implements EntryPoint {
     private VoteResultPanel voteResultPanel = new VoteResultPanel(dataProvider_players, dataProvider_maps, dataProvider_servers);
     private String myNick;
     private final HorizontalPanel horizontalPanel_voteButton = new HorizontalPanel();
-    private final VerticalPanel verticalPanel = new VerticalPanel();
     private final Label label_version = new Label();
     private final Button button_rules = new Button("Правила");
+    private final FlexTable flexTable_cornerControls = new FlexTable();
 
     /**
      * This is the entry point method.
@@ -195,29 +194,34 @@ public class NS2G implements EntryPoint {
         rootLayoutPanel.add(splitLayoutPanel);
         horizontalPanel_1.setSpacing(5);
 
-        splitLayoutPanel.addNorth(horizontalPanel_1, 50.0);
+        splitLayoutPanel.addNorth(horizontalPanel_1, 65.0);
         horizontalPanel_1.setSize("100%", "100%");
 
         horizontalPanel_1.add(gatherStatusLabel);
         horizontalPanel_1.setCellVerticalAlignment(gatherStatusLabel, HasVerticalAlignment.ALIGN_MIDDLE);
         horizontalPanel_1.setCellHorizontalAlignment(gatherStatusLabel, HasHorizontalAlignment.ALIGN_CENTER);
-        button_rules.addClickHandler(new Button_rulesClickHandler());
+        flexTable_cornerControls.setCellPadding(3);
 
-        horizontalPanel_1.add(button_rules);
+        horizontalPanel_1.add(flexTable_cornerControls);
+        horizontalPanel_1.setCellWidth(flexTable_cornerControls, "1px");
+        horizontalPanel_1.setCellHorizontalAlignment(flexTable_cornerControls, HasHorizontalAlignment.ALIGN_RIGHT);
+        flexTable_cornerControls.setWidget(0, 0, button_rules);
+        button_rules.addClickHandler(new Button_rulesClickHandler());
         horizontalPanel_1.setCellWidth(button_rules, "1px");
         horizontalPanel_1.setCellHorizontalAlignment(button_rules, HasHorizontalAlignment.ALIGN_RIGHT);
-
-        horizontalPanel_1.add(verticalPanel);
-        horizontalPanel_1.setCellWidth(verticalPanel, "1px");
-        verticalPanel.add(button_logout);
-        verticalPanel.setCellHorizontalAlignment(button_logout, HasHorizontalAlignment.ALIGN_RIGHT);
+        flexTable_cornerControls.setWidget(0, 1, button_logout);
         button_logout.addClickHandler(new Button_logoutClickHandler());
         horizontalPanel_1.setCellWidth(button_logout, "1px");
         horizontalPanel_1.setCellHorizontalAlignment(button_logout, HasHorizontalAlignment.ALIGN_RIGHT);
+        flexTable_cornerControls.getCellFormatter().setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_RIGHT);
+        label_version.setText("Версия");
+        flexTable_cornerControls.setWidget(1, 0, label_version);
         label_version.setWordWrap(false);
 
         label_version.addStyleName("version");
-        verticalPanel.add(label_version);
+        flexTable_cornerControls.getFlexCellFormatter().setColSpan(1, 0, 2);
+        flexTable_cornerControls.getCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        flexTable_cornerControls.getCellFormatter().setHorizontalAlignment(0, 1, HasHorizontalAlignment.ALIGN_RIGHT);
 
         splitLayoutPanel.addSouth(dockLayoutPanel, 300.0);
         horizontalPanel.setSpacing(5);
