@@ -311,6 +311,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     // odd number, stop the timer and wait
                     stopGatherTimer(gatherId);
                 }
+            } else {
+                stopGatherTimer(gatherId);
             }
         }
     }
