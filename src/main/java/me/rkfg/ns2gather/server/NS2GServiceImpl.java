@@ -253,6 +253,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 if (existing == null) {
                     return;
                 }
+                existing.setLastPing(System.currentTimeMillis());
                 connectedPlayers.addPlayer(gatherId, existing);
                 messageManager.postMessage(MessageType.USER_ENTERS, existing.getName(), gatherId);
                 postVoteChangeMessage();
