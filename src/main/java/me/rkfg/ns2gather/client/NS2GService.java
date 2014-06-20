@@ -26,7 +26,7 @@ public interface NS2GService extends RemoteService {
 
     Long getSteamId() throws ClientAuthException, LogicException;
 
-    String getUserName() throws LogicException, ClientAuthException;
+    PlayerDTO getUserName() throws LogicException, ClientAuthException;
 
     List<ServerDTO> getServers() throws LogicException, ClientAuthException;
 

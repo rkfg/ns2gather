@@ -2,6 +2,7 @@ package me.rkfg.ns2gather.dto;
 
 public class PlayerDTO extends CheckedDTO {
     Long lastPing;
+    String profileUrl;
 
     public PlayerDTO(Long id, String name, Long lastPing) {
         super();
@@ -19,6 +20,14 @@ public class PlayerDTO extends CheckedDTO {
 
     public void setLastPing(Long lastPing) {
         this.lastPing = lastPing;
+    }
+
+    public String getProfileUrl() {
+        return profileUrl;
+    }
+
+    public void setProfileUrl(String profileUrl) {
+        this.profileUrl = profileUrl;
     }
 
 }

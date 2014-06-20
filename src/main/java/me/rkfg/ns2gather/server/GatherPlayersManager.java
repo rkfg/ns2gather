@@ -29,7 +29,7 @@ import ru.ppsrk.gwt.client.LogicException;
 public class GatherPlayersManager {
 
     HashMap<Long, GatherPlayers> gatherToPlayers = new HashMap<>();
-    HashMap<Long, String> steamIdName = new HashMap<>();
+    HashMap<Long, PlayerDTO> steamIdName = new HashMap<>();
 
     private CleanupCallback cleanupCallback;
 
@@ -58,7 +58,7 @@ public class GatherPlayersManager {
     public void addPlayer(Long gatherId, PlayerDTO playerDTO) {
         GatherPlayers gatherPlayers = getPlayersByGather(gatherId);
         gatherPlayers.put(playerDTO.getId(), playerDTO);
-        addNameBySteamId(playerDTO.getId(), playerDTO.getName());
+        addPlayerBySteamId(playerDTO.getId(), playerDTO);
     }
 
     public PlayerDTO getPlayerByGatherSteamId(Long gatherId, Long steamId) {
@@ -74,19 +74,19 @@ public class GatherPlayersManager {
         return result;
     }
 
-    public String getNameBySteamId(Long steamId) {
+    public PlayerDTO getNameBySteamId(Long steamId) {
         return steamIdName.get(steamId);
     }
 
-    public void addNameBySteamId(Long steamId, String name) {
-        steamIdName.put(steamId, name);
+    public void addPlayerBySteamId(Long steamId, PlayerDTO player) {
+        steamIdName.put(steamId, player);
     }
 
     public Set<Long> getGathers() {
         return gatherToPlayers.keySet();
     }
 
-    public String lookupNameBySteamId(Long steamId) throws LogicException {
+    public PlayerDTO lookupPlayerBySteamId(Long steamId) throws LogicException {
         String name;
         HttpClient client = getHTTPClient();
         HttpUriRequest request = new HttpGet(String.format(
@@ -110,8 +110,14 @@ public class GatherPlayersManager {
             if (name == null) {
                 throw new LogicException("no persona name");
             }
-            addNameBySteamId(steamId, name);
-            return name;
+            String profileUrl = jsonPlayer.optString("profileurl");
+            if (profileUrl == null) {
+                throw new LogicException("no profile url");
+            }
+            PlayerDTO player = new PlayerDTO(steamId, name, System.currentTimeMillis());
+            player.setProfileUrl(profileUrl);
+            addPlayerBySteamId(steamId, player);
+            return player;
         } catch (IOException | IllegalStateException e) {
             throw new LogicException("can't get player data");
         } catch (JSONException e) {

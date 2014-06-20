@@ -69,7 +69,7 @@ public class NS2G implements EntryPoint {
     private CookieSettingsManager cookieSettingsManager = new CookieSettingsManager();
     DateTimeFormat format = DateTimeFormat.getFormat("[HH:mm:ss]");
     private final NS2GServiceAsync ns2gService = GWT.create(NS2GService.class);
-    private final Label label_nick = new Label("Ник");
+    private final HTML label_nick = new HTML("Ник");
     private final SplitLayoutPanel splitLayoutPanel = new SplitLayoutPanel();
     private final DockLayoutPanel dockLayoutPanel = new DockLayoutPanel(Unit.EM);
     private final ScrollPanel scrollPanel = new ScrollPanel();
@@ -83,8 +83,8 @@ public class NS2G implements EntryPoint {
 
         @Override
         public void render(Context context, PlayerDTO value, SafeHtmlBuilder sb) {
-            sb.appendHtmlConstant("<a href=\"http://steamcommunity.com/id/" + value.getId() + "\" target=\"_blank\">")
-                    .appendEscaped(value.getName()).appendHtmlConstant("</a>");
+            sb.appendHtmlConstant("<a href=\"" + value.getProfileUrl() + "\" target=\"_blank\">").appendEscaped(value.getName())
+                    .appendHtmlConstant("</a>");
         }
     }) {
         @Override
@@ -340,12 +340,11 @@ public class NS2G implements EntryPoint {
             }
         });
 
-        ns2gService.getUserName(new AsyncCallback<String>() {
+        ns2gService.getUserName(new AsyncCallback<PlayerDTO>() {
 
             @Override
-            public void onSuccess(String result) {
-                myNick = result;
-                label_nick.setText(result + ": ");
+            public void onSuccess(PlayerDTO result) {
+                label_nick.setHTML("<a href=\"" + result.getProfileUrl() + "\" target=\"_blank\">" + result.getName() + "</a>: ");
                 // send initial ping to show our presence
                 ns2gService.ping(new MyAsyncCallback<Void>() {
 
