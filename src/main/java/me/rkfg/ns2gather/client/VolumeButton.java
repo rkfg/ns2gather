@@ -21,6 +21,7 @@ public abstract class VolumeButton extends HorizontalPanel {
     private final CookieSettingsManager cookieSettingsManager;
 
     public VolumeButton(final CookieSettingsManager cookieSettingsManager) {
+        setTitle("Громкость чата не связана с громкостью оповещения о начале игры. Вы будете оповещены при любой громкости чата.");
         setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
         this.cookieSettingsManager = cookieSettingsManager;
         mute = cookieSettingsManager.getBooleanCookie(CookieSettingsManager.CHAT_MUTE_COOKIE, false);
