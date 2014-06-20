@@ -345,6 +345,12 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         updateGatherStateByPlayerNumber(gather);
     }
 
+    @Override
+    public void unvote() throws LogicException, ClientAuthException {
+        removeVotes(getSteamId());
+        sendReadiness(getUserName(), getCurrentGatherId(), false);
+    }
+
     private void updateGatherState(Gather gather, GatherState newState) throws LogicException, ClientAuthException {
         gather.setState(newState);
         messageManager.postMessage(MessageType.GATHER_STATUS, String.valueOf(newState.ordinal()), gather.getId());
@@ -409,8 +415,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             }
         });
         if (showVote) {
-            postVoteChangeMessage();
-            messageManager.postMessage(MessageType.USER_READY, getUserName(), gatherId);
+            sendReadiness(getUserName(), gatherId, true);
         }
         int connectedPlayersCount = connectedPlayers.getPlayersByGather(gatherId).size();
         if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN && getVotedPlayersCount(gatherId) == connectedPlayersCount
@@ -579,14 +584,18 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             if (vote.length < ClientSettings.voteRules[idx].getVotesRequired()
                     || vote.length > ClientSettings.voteRules[idx].getVotesLimit()) {
                 if (removeVotes(getSteamId())) {
-                    postVoteChangeMessage();
-                    messageManager.postMessage(MessageType.USER_UNREADY, getUserName(), getCurrentGatherId());
+                    sendReadiness(getUserName(), getCurrentGatherId(), false);
                 }
                 throw LogicExceptionFormatted.format("Ожидается %s голосов за %s, получено %d. Пожалуйста, переголосуйте.",
                         ClientSettings.voteRules[idx].voteRange(), ClientSettings.voteRules[idx].getName(), vote.length);
             }
             idx++;
         }
+    }
+
+    private void sendReadiness(String username, Long gatherId, boolean ready) throws LogicException, ClientAuthException {
+        postVoteChangeMessage();
+        messageManager.postMessage(ready ? MessageType.USER_READY : MessageType.USER_UNREADY, username, gatherId);
     }
 
     private Boolean removeVotes(final Long steamId) throws LogicException, ClientAuthException {

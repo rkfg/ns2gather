@@ -126,7 +126,31 @@ public class NS2G implements EntryPoint {
         }
     };
     private final HorizontalPanel horizontalPanel = new HorizontalPanel();
-    private final Button button_vote = new Button("Голосовать и подтвердить готовность");
+    private final VoteButton button_vote = new VoteButton() {
+
+        @Override
+        protected void vote() {
+            ns2gService.vote(collectVotes(), new MyAsyncCallback<Void>() {
+
+                @Override
+                public void onSuccess(Void result) {
+
+                }
+            });
+        }
+
+        @Override
+        protected void unvote() {
+            ns2gService.unvote(new MyAsyncCallback<Void>() {
+
+                @Override
+                public void onSuccess(Void result) {
+
+                }
+
+            });
+        }
+    };
     private final FlexTable flexTable = new FlexTable();
     private final Label lblNewLabel = new Label("Проголосовали:");
     private final Label label_voted = new Label("0/0");
@@ -183,7 +207,6 @@ public class NS2G implements EntryPoint {
 
         dockLayoutPanel.addNorth(horizontalPanel, 3.0);
         horizontalPanel.setSize("100%", "100%");
-        button_vote.addClickHandler(new Button_voteClickHandler());
 
         horizontalPanel.add(volumeControl);
         horizontalPanel.setCellVerticalAlignment(volumeControl, HasVerticalAlignment.ALIGN_MIDDLE);
@@ -194,6 +217,7 @@ public class NS2G implements EntryPoint {
         button_enterNewGather.addClickHandler(new Button_enterNewGatherClickHandler());
 
         horizontalPanel.add(button_enterNewGather);
+        horizontalPanel.setCellWidth(button_enterNewGather, "300px");
         horizontalPanel.setCellVerticalAlignment(button_enterNewGather, HasVerticalAlignment.ALIGN_MIDDLE);
         horizontalPanel.setCellHorizontalAlignment(button_enterNewGather, HasHorizontalAlignment.ALIGN_RIGHT);
         flexTable.setCellPadding(5);
@@ -574,18 +598,6 @@ public class NS2G implements EntryPoint {
                 });
                 textBox_chatText.setText("");
             }
-        }
-    }
-
-    private class Button_voteClickHandler implements ClickHandler {
-        public void onClick(ClickEvent event) {
-            ns2gService.vote(collectVotes(), new MyAsyncCallback<Void>() {
-
-                @Override
-                public void onSuccess(Void result) {
-
-                }
-            });
         }
     }
 

@@ -57,4 +57,6 @@ public interface NS2GService extends RemoteService {
     GatherState getGatherState() throws LogicException, ClientAuthException;
 
     InitStateDTO getInitState() throws LogicException, ClientAuthException;
+
+    void unvote() throws LogicException, ClientAuthException;
 }
