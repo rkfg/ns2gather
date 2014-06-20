@@ -114,8 +114,7 @@ public class GatherPlayersManager {
             if (profileUrl == null) {
                 throw new LogicException("no profile url");
             }
-            PlayerDTO player = new PlayerDTO(steamId, name, System.currentTimeMillis());
-            player.setProfileUrl(profileUrl);
+            PlayerDTO player = new PlayerDTO(steamId, name, profileUrl, System.currentTimeMillis());
             addPlayerBySteamId(steamId, player);
             return player;
         } catch (IOException | IllegalStateException e) {
