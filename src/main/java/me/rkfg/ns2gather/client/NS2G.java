@@ -183,6 +183,7 @@ public class NS2G implements EntryPoint {
     private final HorizontalPanel horizontalPanel_voteButton = new HorizontalPanel();
     private final VerticalPanel verticalPanel = new VerticalPanel();
     private final Label label_version = new Label();
+    private final Button button_rules = new Button("Правила");
 
     /**
      * This is the entry point method.
@@ -192,6 +193,7 @@ public class NS2G implements EntryPoint {
         RootLayoutPanel rootLayoutPanel = RootLayoutPanel.get();
 
         rootLayoutPanel.add(splitLayoutPanel);
+        horizontalPanel_1.setSpacing(5);
 
         splitLayoutPanel.addNorth(horizontalPanel_1, 50.0);
         horizontalPanel_1.setSize("100%", "100%");
@@ -199,6 +201,11 @@ public class NS2G implements EntryPoint {
         horizontalPanel_1.add(gatherStatusLabel);
         horizontalPanel_1.setCellVerticalAlignment(gatherStatusLabel, HasVerticalAlignment.ALIGN_MIDDLE);
         horizontalPanel_1.setCellHorizontalAlignment(gatherStatusLabel, HasHorizontalAlignment.ALIGN_CENTER);
+        button_rules.addClickHandler(new Button_rulesClickHandler());
+
+        horizontalPanel_1.add(button_rules);
+        horizontalPanel_1.setCellWidth(button_rules, "1px");
+        horizontalPanel_1.setCellHorizontalAlignment(button_rules, HasHorizontalAlignment.ALIGN_RIGHT);
 
         horizontalPanel_1.add(verticalPanel);
         horizontalPanel_1.setCellWidth(verticalPanel, "1px");
@@ -683,5 +690,11 @@ public class NS2G implements EntryPoint {
 
     public void updateEnterNewButtonVisibility() {
         button_enterNewGather.setVisible(gatherStatusLabel.getState() == GatherState.COMPLETED);
+    }
+
+    private class Button_rulesClickHandler implements ClickHandler {
+        public void onClick(ClickEvent event) {
+            openWindowRootRelative("rules.html");
+        }
     }
 }
