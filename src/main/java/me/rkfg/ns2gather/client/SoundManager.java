@@ -9,7 +9,7 @@ import com.google.gwt.dom.client.MediaElement;
 import com.google.gwt.media.client.Audio;
 
 public class SoundManager {
-    String[] soundURLs = { "chat.ogg", "vote.ogg", "enter.ogg", "leave.ogg" };
+    String[] soundURLs = { "chat.ogg", "vote.ogg", "enter.ogg", "leave.ogg", "timer.ogg", "more.ogg" };
     List<Audio> audios = new ArrayList<>();
 
     public SoundManager() {

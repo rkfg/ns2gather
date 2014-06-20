@@ -45,6 +45,9 @@ public class GatherStatusLabel extends HTML {
             setStyleName("gstatus gcompleted");
             setHTML("ПРОВЕДЁН");
             break;
+        case ONTIMER:
+            setStyleName("gstatus gopen");
+            setText("ОЖИДАНИЕ");
         default:
             break;
         }
@@ -67,5 +70,9 @@ public class GatherStatusLabel extends HTML {
     public void stopTimer() {
         timer.cancel();
         updateState();
+    }
+
+    public GatherState getState() {
+        return gatherState;
     }
 }
