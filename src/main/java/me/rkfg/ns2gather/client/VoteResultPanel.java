@@ -136,6 +136,7 @@ public class VoteResultPanel extends DialogBox {
 
     private class Button_closeClickHandler implements ClickHandler {
         public void onClick(ClickEvent event) {
+            button_mute.click();
             hide();
         }
     }
