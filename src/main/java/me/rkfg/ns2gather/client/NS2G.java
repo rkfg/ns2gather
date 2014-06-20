@@ -153,7 +153,6 @@ public class NS2G implements EntryPoint {
         }
     };
     private final FlexTable flexTable = new FlexTable();
-    private final Label lblNewLabel = new Label("Проголосовали:");
     private final Label label_voted = new Label("0/0");
     private final VolumeButton volumeControl = new VolumeButton(cookieSettingsManager) {
 
@@ -181,6 +180,7 @@ public class NS2G implements EntryPoint {
     private Set<String> votedPlayers = new HashSet<String>();
     private VoteResultPanel voteResultPanel = new VoteResultPanel(dataProvider_players, dataProvider_maps, dataProvider_servers);
     private String myNick;
+    private final HorizontalPanel horizontalPanel_voteButton = new HorizontalPanel();
     private final VerticalPanel verticalPanel = new VerticalPanel();
     private final Label label_version = new Label();
 
@@ -221,9 +221,17 @@ public class NS2G implements EntryPoint {
         horizontalPanel.add(volumeControl);
         horizontalPanel.setCellVerticalAlignment(volumeControl, HasVerticalAlignment.ALIGN_MIDDLE);
         horizontalPanel.setCellWidth(volumeControl, "1px");
-        horizontalPanel.add(button_vote);
+        horizontalPanel_voteButton.setSpacing(5);
+
+        horizontalPanel.add(horizontalPanel_voteButton);
+        horizontalPanel.setCellHorizontalAlignment(horizontalPanel_voteButton, HasHorizontalAlignment.ALIGN_CENTER);
+        horizontalPanel.setCellVerticalAlignment(horizontalPanel_voteButton, HasVerticalAlignment.ALIGN_MIDDLE);
+        horizontalPanel_voteButton.add(button_vote);
+        horizontalPanel_voteButton.setCellVerticalAlignment(button_vote, HasVerticalAlignment.ALIGN_MIDDLE);
         horizontalPanel.setCellVerticalAlignment(button_vote, HasVerticalAlignment.ALIGN_MIDDLE);
         horizontalPanel.setCellHorizontalAlignment(button_vote, HasHorizontalAlignment.ALIGN_CENTER);
+        horizontalPanel_voteButton.add(label_voted);
+        horizontalPanel_voteButton.setCellVerticalAlignment(label_voted, HasVerticalAlignment.ALIGN_MIDDLE);
         button_enterNewGather.setVisible(false);
         button_enterNewGather.addClickHandler(new Button_enterNewGatherClickHandler());
 
@@ -233,7 +241,7 @@ public class NS2G implements EntryPoint {
         horizontalPanel.setCellHorizontalAlignment(button_enterNewGather, HasHorizontalAlignment.ALIGN_RIGHT);
         flexTable.setCellPadding(5);
 
-        dockLayoutPanel.addSouth(flexTable, 6.0);
+        dockLayoutPanel.addSouth(flexTable, 3.0);
         flexTable.setSize("100%", "100%");
         label_nick.setWordWrap(false);
         flexTable.setWidget(0, 0, label_nick);
@@ -242,11 +250,6 @@ public class NS2G implements EntryPoint {
         flexTable.getCellFormatter().setWidth(0, 1, "100%");
         textBox_chatText.setWidth("100%");
         flexTable.setWidget(0, 2, button_sendChat);
-
-        flexTable.setWidget(1, 0, lblNewLabel);
-
-        flexTable.setWidget(1, 1, label_voted);
-        flexTable.getCellFormatter().setHorizontalAlignment(1, 1, HasHorizontalAlignment.ALIGN_LEFT);
         button_sendChat.addClickHandler(new Button_sendChatClickHandler());
         scrollPanel.setStyleName("border-bs");
 
