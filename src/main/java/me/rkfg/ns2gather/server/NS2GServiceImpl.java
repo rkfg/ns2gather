@@ -372,6 +372,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     @Override
     public List<MessageDTO> getNewMessages(Long since) {
         try {
+            if (since < 0) {
+                since += System.currentTimeMillis();
+            }
             return new MessagePollingServer(30000, 100, since).start();
         } catch (InterruptedException | LogicException | ClientAuthException e) {
             return null;

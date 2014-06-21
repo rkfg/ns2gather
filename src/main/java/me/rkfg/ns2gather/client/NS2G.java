@@ -441,7 +441,7 @@ public class NS2G implements EntryPoint {
     private void runMessageListener() {
         LongPollingClient<List<MessageDTO>> client = new LongPollingClient<List<MessageDTO>>(1000) {
 
-            Long lastMessageUpdate = System.currentTimeMillis() - 5000;
+            Long lastMessageUpdate = -ClientSettings.MESSAGES_ROLLBACK;
 
             @Override
             public void success(List<MessageDTO> result) {
