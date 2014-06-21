@@ -727,6 +727,6 @@ public class NS2G implements EntryPoint {
                 cookieSettingsManager.setDoubleCookie(CookieSettingsManager.CHAT_PANEL_COOKIE,
                         splitLayoutPanel_main.getWidgetSize(dockLayoutPanel_chat));
             }
-        }.scheduleRepeating(10000);
+        }.scheduleRepeating(ClientSettings.SIZE_SAVE_INTERVAL);
     }
 }
