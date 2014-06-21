@@ -11,6 +11,9 @@ public class CookieSettingsManager {
     public static final String REMEMBER_STEAM_ID = "rememberSteamId";
     public static final String KICKED = "kicked";
     public static final long COOKIE_AGE = 3650 * 24 * 3600;
+    public static final String PLAYER_PANEL_COOKIE = "playerpanel_size";
+    public static final String SERVER_PANEL_COOKIE = "serverpanel_size";
+    public static final String CHAT_PANEL_COOKIE = "chatpanel_size";
 
     public String getStringCookie(String name, String defaultValue) {
         String result = Cookies.getCookie(name);
@@ -33,6 +36,10 @@ public class CookieSettingsManager {
         return getStringCookie(name, defaultValue ? "1" : "0").equals("1");
     }
 
+    public double getDoubleCookie(String name, Double defaultValue) {
+        return Double.valueOf(getStringCookie(name, defaultValue.toString()));
+    }
+
     public void setStringCookie(String name, String value) {
         Cookies.setCookie(name, value, new Date(System.currentTimeMillis() + COOKIE_AGE * 1000));
     }
@@ -48,4 +55,9 @@ public class CookieSettingsManager {
     public void removeCookie(String name) {
         Cookies.removeCookie(name);
     }
+
+    public void setDoubleCookie(String name, Double value) {
+        setStringCookie(name, value.toString());
+    }
+
 }

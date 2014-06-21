@@ -69,13 +69,13 @@ public class NS2G implements EntryPoint {
     DateTimeFormat format = DateTimeFormat.getFormat("[HH:mm:ss]");
     private final NS2GServiceAsync ns2gService = GWT.create(NS2GService.class);
     private final HTML label_nick = new HTML("Ник");
-    private final SplitLayoutPanel splitLayoutPanel = new SplitLayoutPanel();
-    private final DockLayoutPanel dockLayoutPanel = new DockLayoutPanel(Unit.EM);
+    private final SplitLayoutPanel splitLayoutPanel_main = new SplitLayoutPanel();
+    private final DockLayoutPanel dockLayoutPanel_chat = new DockLayoutPanel(Unit.EM);
     private final ScrollPanel scrollPanel = new ScrollPanel();
     private final HTML html_chat = new HTML("Чат<p/>", true);
     private final TextBox textBox_chatText = new TextBox();
     private final Button button_sendChat = new Button("Отправить");
-    private final SplitLayoutPanel splitLayoutPanel_1 = new SplitLayoutPanel();
+    private final SplitLayoutPanel splitLayoutPanel_data = new SplitLayoutPanel();
     private final ListDataProvider<PlayerDTO> dataProvider_players = new ListDataProvider<PlayerDTO>();
     private final DataGrid<PlayerDTO> dataGrid_players = new DataGrid<PlayerDTO>();
     private final Column<PlayerDTO, PlayerDTO> textColumn_playerName = new Column<PlayerDTO, PlayerDTO>(new AbstractCell<PlayerDTO>() {
@@ -191,10 +191,10 @@ public class NS2G implements EntryPoint {
         setupExceptionHandler();
         RootLayoutPanel rootLayoutPanel = RootLayoutPanel.get();
 
-        rootLayoutPanel.add(splitLayoutPanel);
+        rootLayoutPanel.add(splitLayoutPanel_main);
         horizontalPanel_1.setSpacing(5);
 
-        splitLayoutPanel.addNorth(horizontalPanel_1, 65.0);
+        splitLayoutPanel_main.addNorth(horizontalPanel_1, 65.0);
         horizontalPanel_1.setSize("100%", "100%");
 
         horizontalPanel_1.add(gatherStatusLabel);
@@ -223,10 +223,10 @@ public class NS2G implements EntryPoint {
         flexTable_cornerControls.getCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
         flexTable_cornerControls.getCellFormatter().setHorizontalAlignment(0, 1, HasHorizontalAlignment.ALIGN_RIGHT);
 
-        splitLayoutPanel.addSouth(dockLayoutPanel, 300.0);
+        splitLayoutPanel_main.addSouth(dockLayoutPanel_chat, 300.0);
         horizontalPanel.setSpacing(5);
 
-        dockLayoutPanel.addNorth(horizontalPanel, 3.0);
+        dockLayoutPanel_chat.addNorth(horizontalPanel, 3.0);
         horizontalPanel.setSize("100%", "100%");
 
         horizontalPanel.add(volumeControl);
@@ -252,7 +252,7 @@ public class NS2G implements EntryPoint {
         horizontalPanel.setCellHorizontalAlignment(button_enterNewGather, HasHorizontalAlignment.ALIGN_RIGHT);
         flexTable.setCellPadding(5);
 
-        dockLayoutPanel.addSouth(flexTable, 3.0);
+        dockLayoutPanel_chat.addSouth(flexTable, 3.0);
         flexTable.setSize("100%", "100%");
         label_nick.setWordWrap(false);
         flexTable.setWidget(0, 0, label_nick);
@@ -264,26 +264,26 @@ public class NS2G implements EntryPoint {
         button_sendChat.addClickHandler(new Button_sendChatClickHandler());
         scrollPanel.setStyleName("border-bs");
 
-        dockLayoutPanel.add(scrollPanel);
+        dockLayoutPanel_chat.add(scrollPanel);
 
         scrollPanel.setWidget(html_chat);
         html_chat.setSize("100%", "100%");
 
-        splitLayoutPanel.add(splitLayoutPanel_1);
+        splitLayoutPanel_main.add(splitLayoutPanel_data);
 
-        splitLayoutPanel_1.addWest(dataGrid_players, 400.0);
+        splitLayoutPanel_data.addWest(dataGrid_players, 400.0);
 
         dataGrid_players.addColumn(column_voteComm);
         dataGrid_players.setColumnWidth(column_voteComm, "50px");
         dataGrid_players.addColumn(textColumn_playerName, "Имя");
 
-        splitLayoutPanel_1.addEast(dataGrid_servers, 300.0);
+        splitLayoutPanel_data.addEast(dataGrid_servers, 300.0);
 
         dataGrid_servers.addColumn(column_voteServer);
         dataGrid_servers.setColumnWidth(column_voteServer, "50px");
         dataGrid_servers.addColumn(textColumn_serverName, "Сервер");
 
-        splitLayoutPanel_1.add(dataGrid_maps);
+        splitLayoutPanel_data.add(dataGrid_maps);
 
         dataGrid_maps.addColumn(column_voteMap);
         dataGrid_maps.setColumnWidth(column_voteMap, "50px");
@@ -365,6 +365,7 @@ public class NS2G implements EntryPoint {
                         runMessageListener();
                         loadInitState();
                         postRulesAnnounce();
+                        runSizeSaver();
                     }
                 });
             }
@@ -382,6 +383,16 @@ public class NS2G implements EntryPoint {
             }
         });
         soundManager.setLoop(NS2Sound.VOTE_END, true);
+        restorePanelsSize();
+    }
+
+    private void restorePanelsSize() {
+        splitLayoutPanel_data.setWidgetSize(dataGrid_players,
+                cookieSettingsManager.getDoubleCookie(CookieSettingsManager.PLAYER_PANEL_COOKIE, 400.0));
+        splitLayoutPanel_data.setWidgetSize(dataGrid_servers,
+                cookieSettingsManager.getDoubleCookie(CookieSettingsManager.SERVER_PANEL_COOKIE, 300.0));
+        splitLayoutPanel_main.setWidgetSize(dockLayoutPanel_chat,
+                cookieSettingsManager.getDoubleCookie(CookieSettingsManager.CHAT_PANEL_COOKIE, 300.0));
     }
 
     protected void postRulesAnnounce() {
@@ -702,5 +713,20 @@ public class NS2G implements EntryPoint {
         public void onClick(ClickEvent event) {
             openWindowRootRelative("rules.html");
         }
+    }
+
+    public void runSizeSaver() {
+        new Timer() {
+
+            @Override
+            public void run() {
+                cookieSettingsManager.setDoubleCookie(CookieSettingsManager.PLAYER_PANEL_COOKIE,
+                        splitLayoutPanel_data.getWidgetSize(dataGrid_players));
+                cookieSettingsManager.setDoubleCookie(CookieSettingsManager.SERVER_PANEL_COOKIE,
+                        splitLayoutPanel_data.getWidgetSize(dataGrid_servers));
+                cookieSettingsManager.setDoubleCookie(CookieSettingsManager.CHAT_PANEL_COOKIE,
+                        splitLayoutPanel_main.getWidgetSize(dockLayoutPanel_chat));
+            }
+        }.scheduleRepeating(10000);
     }
 }
