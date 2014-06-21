@@ -173,7 +173,7 @@
 				</executions>
 				<configuration>
 					<shortRevisionLength>10</shortRevisionLength>
-					<format>{0,date,dd-MM-yyyy HH:mm:ss}/{1}</format>
+					<format>{0,date,dd-MM-yyyy HH:mm:ssX}/{1}</format>
 					<items>
 						<item>timestamp</item>
 						<item>scmVersion</item>
