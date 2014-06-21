@@ -14,6 +14,7 @@ import me.rkfg.ns2gather.dto.CheckedDTO;
 import me.rkfg.ns2gather.dto.GatherState;
 import me.rkfg.ns2gather.dto.InitStateDTO;
 import me.rkfg.ns2gather.dto.MapDTO;
+import me.rkfg.ns2gather.dto.MementoCheckedDTO;
 import me.rkfg.ns2gather.dto.MessageDTO;
 import me.rkfg.ns2gather.dto.PlayerDTO;
 import me.rkfg.ns2gather.dto.ServerDTO;
@@ -574,7 +575,10 @@ public class NS2G implements EntryPoint {
 
             @Override
             public void onSuccess(List<PlayerDTO> result) {
+                MementoCheckedDTO<PlayerDTO> memento = new MementoCheckedDTO<PlayerDTO>();
+                memento.storeChecks(dataProvider_players.getList());
                 dataProvider_players.setList(result);
+                memento.restoreChecks(result);
             }
         });
     }
