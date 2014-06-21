@@ -257,6 +257,7 @@ public class NS2G implements EntryPoint {
         flexTable.setSize("100%", "100%");
         label_nick.setWordWrap(false);
         flexTable.setWidget(0, 0, label_nick);
+        textBox_chatText.setMaxLength(ClientSettings.CHAT_MAX_LENGTH);
         textBox_chatText.addKeyDownHandler(new TextBox_chatTextKeyDownHandler());
         flexTable.setWidget(0, 1, textBox_chatText);
         flexTable.getCellFormatter().setWidth(0, 1, "100%");
