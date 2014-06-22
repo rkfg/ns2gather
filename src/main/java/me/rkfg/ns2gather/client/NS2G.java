@@ -515,14 +515,14 @@ public class NS2G implements EntryPoint {
                         break;
                     case RUN_TIMER:
                         gatherStatusLabel.runTimer(Long.valueOf(message.getContent()));
-                        soundManager.playSound(NS2Sound.TIMER);
+                        soundsToPlay.add(NS2Sound.TIMER);
                         break;
                     case STOP_TIMER:
                         gatherStatusLabel.stopTimer();
                         break;
                     case MORE_PLAYERS:
                         addChatMessage("Происходит донабор человека для игры в формате 7x7 (8x8)", message.getTimestamp());
-                        soundManager.playSound(NS2Sound.MORE);
+                        soundsToPlay.add(NS2Sound.MORE);
                         break;
                     default:
                         break;
