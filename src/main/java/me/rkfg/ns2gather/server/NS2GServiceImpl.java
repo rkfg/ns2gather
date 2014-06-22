@@ -604,16 +604,20 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private void validateVoteNumbers(Long[][] votes) throws LogicException, ClientAuthException {
         int idx = 0;
-        for (Long[] vote : votes) {
-            if (vote.length < ClientSettings.voteRules[idx].getVotesRequired()
-                    || vote.length > ClientSettings.voteRules[idx].getVotesLimit()) {
-                if (removeVotes(getSteamId())) {
-                    sendReadiness(getUserName().getName(), getCurrentGatherId(), false);
+        try {
+            for (Long[] vote : votes) {
+                if (vote.length < ClientSettings.voteRules[idx].getVotesRequired()
+                        || vote.length > ClientSettings.voteRules[idx].getVotesLimit()) {
+                    throw LogicExceptionFormatted.format("Ожидается %s голосов за %s, получено %d. Пожалуйста, переголосуйте.",
+                            ClientSettings.voteRules[idx].voteRange(), ClientSettings.voteRules[idx].getName(), vote.length);
                 }
-                throw LogicExceptionFormatted.format("Ожидается %s голосов за %s, получено %d. Пожалуйста, переголосуйте.",
-                        ClientSettings.voteRules[idx].voteRange(), ClientSettings.voteRules[idx].getName(), vote.length);
+                idx++;
             }
-            idx++;
+        } catch (LogicException e) {
+            if (removeVotes(getSteamId())) {
+                sendReadiness(getUserName().getName(), getCurrentGatherId(), false);
+            }
+            throw e;
         }
     }
 
