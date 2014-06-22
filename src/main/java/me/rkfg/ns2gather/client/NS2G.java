@@ -408,6 +408,9 @@ public class NS2G implements EntryPoint {
             @Override
             public void onSuccess(InitStateDTO result) {
                 gatherStatusLabel.setGatherState(result.getGatherState());
+                if (result.getGatherState() == GatherState.COMPLETED) {
+                    button_vote.setEnabled(false);
+                }
                 updateEnterNewButtonVisibility();
                 votedPlayers = result.getVotedNames();
                 dataProvider_players.setList(result.getPlayers());
@@ -498,6 +501,7 @@ public class NS2G implements EntryPoint {
                         if (message.getContent().equals("ok")) {
                             addChatMessage("Голосование завершено!", message.getTimestamp());
                             soundsToPlay.add(NS2Sound.VOTE_END);
+                            button_vote.setEnabled(false);
                         } else {
                             addChatMessage(message.getContent(), message.getTimestamp());
                             badVote = true;
