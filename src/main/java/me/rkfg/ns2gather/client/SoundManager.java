@@ -1,7 +1,9 @@
 package me.rkfg.ns2gather.client;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ru.ppsrk.gwt.client.AlertRuntimeException;
 
@@ -11,6 +13,7 @@ import com.google.gwt.media.client.Audio;
 public class SoundManager {
     String[] soundURLs = { "chat.ogg", "vote.ogg", "enter.ogg", "leave.ogg", "timer.ogg", "more.ogg" };
     List<Audio> audios = new ArrayList<>();
+    Set<NS2Sound> soundsToPlay = new HashSet<NS2Sound>();
 
     public SoundManager() {
         for (String soundURL : soundURLs) {
@@ -54,5 +57,20 @@ public class SoundManager {
     public void setLoop(NS2Sound sound, boolean loop) {
         Audio audio = getSound(sound);
         audio.setLoop(loop);
+    }
+
+    public void queue(NS2Sound sound) {
+        soundsToPlay.add(sound);
+    }
+
+    public void playQueued() {
+        for (NS2Sound sound : soundsToPlay) {
+            playSound(sound);
+        }
+        clearQueue();
+    }
+
+    public void clearQueue() {
+        soundsToPlay.clear();
     }
 }

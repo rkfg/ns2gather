@@ -451,7 +451,7 @@ public class NS2G implements EntryPoint {
                 boolean loadPlayers = false;
                 boolean voteEnded = false;
                 boolean badVote = false;
-                Set<NS2Sound> soundsToPlay = new HashSet<NS2Sound>();
+                soundManager.clearQueue();
                 for (MessageDTO message : result) {
                     if (message.getTimestamp() > lastMessageUpdate) {
                         lastMessageUpdate = message.getTimestamp();
@@ -463,7 +463,7 @@ public class NS2G implements EntryPoint {
                         }
                         addChatMessage(message.getContent() + " входит.", message.getTimestamp());
                         loadPlayers = true;
-                        soundsToPlay.add(NS2Sound.USER_ENTERS);
+                        soundManager.queue(NS2Sound.USER_ENTERS);
                         break;
                     case USER_LEAVES:
                         if (message.getContent().equals(myNick)) {
@@ -472,7 +472,7 @@ public class NS2G implements EntryPoint {
                         addChatMessage(message.getContent() + " покидает нас.", message.getTimestamp());
                         votedPlayers.remove(message.getContent());
                         dataGrid_players.redraw();
-                        soundsToPlay.add(NS2Sound.USER_LEAVES);
+                        soundManager.queue(NS2Sound.USER_LEAVES);
                         loadPlayers = true;
                         break;
                     case USER_READY:
@@ -490,7 +490,7 @@ public class NS2G implements EntryPoint {
                         break;
                     case CHAT_MESSAGE:
                         addChatMessage(message.getContent(), message.getTimestamp(), ChatMessageType.CHAT);
-                        soundsToPlay.add(NS2Sound.CHAT);
+                        soundManager.queue(NS2Sound.CHAT);
                         break;
                     case VOTE_CHANGE:
                         label_voted.setText(message.getContent());
@@ -500,7 +500,7 @@ public class NS2G implements EntryPoint {
                         resetHighlight();
                         if (message.getContent().equals("ok")) {
                             addChatMessage("Голосование завершено!", message.getTimestamp());
-                            soundsToPlay.add(NS2Sound.VOTE_END);
+                            soundManager.queue(NS2Sound.VOTE_END);
                             button_vote.setEnabled(false);
                         } else {
                             addChatMessage(message.getContent(), message.getTimestamp());
@@ -519,14 +519,14 @@ public class NS2G implements EntryPoint {
                         break;
                     case RUN_TIMER:
                         gatherStatusLabel.runTimer(Long.valueOf(message.getContent()));
-                        soundsToPlay.add(NS2Sound.TIMER);
+                        soundManager.queue(NS2Sound.TIMER);
                         break;
                     case STOP_TIMER:
                         gatherStatusLabel.stopTimer();
                         break;
                     case MORE_PLAYERS:
                         addChatMessage("Происходит донабор человека для игры в формате 7x7 (8x8)", message.getTimestamp());
-                        soundsToPlay.add(NS2Sound.MORE);
+                        soundManager.queue(NS2Sound.MORE);
                         break;
                     default:
                         break;
@@ -540,11 +540,7 @@ public class NS2G implements EntryPoint {
                         loadVoteResult();
                     }
                 }
-                if (!soundsToPlay.isEmpty()) {
-                    for (NS2Sound sound : soundsToPlay) {
-                        soundManager.playSound(sound);
-                    }
-                }
+                soundManager.playQueued();
             }
 
             @Override
