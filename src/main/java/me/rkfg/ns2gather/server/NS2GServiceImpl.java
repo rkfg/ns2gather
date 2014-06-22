@@ -153,6 +153,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     for (PlayerVote playerVote : playerVotes) {
                         session.delete(playerVote);
                     }
+                    messageManager.postMessage(MessageType.RESET_HIGHLIGHT, "", gatherId);
                 }
                 if (type == ResetType.ALL || type == ResetType.RESULTS) {
                     @SuppressWarnings("unchecked")

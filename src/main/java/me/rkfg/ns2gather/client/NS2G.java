@@ -496,7 +496,6 @@ public class NS2G implements EntryPoint {
                         break;
                     case VOTE_ENDED:
                         voteEnded = true;
-                        resetHighlight();
                         if (message.getContent().equals("ok")) {
                             addChatMessage("Голосование завершено!", message.getTimestamp());
                             soundManager.queue(NS2Sound.VOTE_END);
@@ -527,6 +526,9 @@ public class NS2G implements EntryPoint {
                     case MORE_PLAYERS:
                         addChatMessage("Происходит донабор человека для игры в формате 7x7 (8x8)", message.getTimestamp());
                         soundManager.queue(NS2Sound.MORE);
+                        break;
+                    case RESET_HIGHLIGHT:
+                        resetHighlight();
                         break;
                     default:
                         break;
