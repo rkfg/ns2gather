@@ -212,13 +212,10 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public PlayerDTO getUserName() throws LogicException, ClientAuthException {
-        return getUserName(null);
+        return getUserName(getSteamId());
     }
 
     public PlayerDTO getUserName(Long steamId) throws LogicException, ClientAuthException {
-        if (steamId == null) {
-            steamId = getSteamId();
-        }
         PlayerDTO player = connectedPlayers.getPlayerBySteamId(steamId);
         if (player != null) {
             return player;
@@ -256,16 +253,12 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 existing.setLastPing(System.currentTimeMillis());
                 connectedPlayers.addPlayer(gatherId, existing);
                 messageManager.postMessage(MessageType.USER_ENTERS, existing.getName(), gatherId);
-                postVoteChangeMessage();
-                updateGatherStateByPlayerNumber();
+                postVoteChangeMessage(gatherId);
+                updateGatherStateByPlayerNumber(getCurrentGather());
             } else {
                 existing.setLastPing(System.currentTimeMillis());
             }
         }
-    }
-
-    private void updateGatherStateByPlayerNumber() throws LogicException, ClientAuthException {
-        updateGatherStateByPlayerNumber(getCurrentGather());
     }
 
     private void updateGatherStateByPlayerNumber(final Gather gather) throws LogicException, ClientAuthException {
@@ -572,10 +565,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         }
     }
 
-    private void postVoteChangeMessage() throws LogicException, ClientAuthException {
-        postVoteChangeMessage(getCurrentGatherId());
-    }
-
     private void postVoteChangeMessage(Long gatherId) throws LogicException, ClientAuthException {
         messageManager.postMessage(MessageType.VOTE_CHANGE, getVoteStat(gatherId), gatherId);
     }
@@ -622,7 +611,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void sendReadiness(String username, Long gatherId, boolean ready) throws LogicException, ClientAuthException {
-        postVoteChangeMessage();
+        postVoteChangeMessage(gatherId);
         messageManager.postMessage(ready ? MessageType.USER_READY : MessageType.USER_UNREADY, username, gatherId);
     }
 
