@@ -1,13 +1,12 @@
 package me.rkfg.ns2gather.client;
 
+import java.util.Arrays;
 import java.util.List;
 
-import me.rkfg.ns2gather.dto.CheckedDTO;
-import me.rkfg.ns2gather.dto.MapDTO;
-import me.rkfg.ns2gather.dto.PlayerDTO;
 import me.rkfg.ns2gather.dto.ServerDTO;
 import me.rkfg.ns2gather.dto.VoteResultDTO;
-import ru.ppsrk.gwt.shared.SharedUtils;
+import me.rkfg.ns2gather.dto.VoteType;
+import ru.ppsrk.gwt.client.AlertRuntimeException;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -16,11 +15,10 @@ import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
-import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.user.client.ui.HasVerticalAlignment;
 
 public class VoteResultPanel extends DialogBox {
     private final SimplePanel rootPanel = new SimplePanel();
@@ -39,12 +37,8 @@ public class VoteResultPanel extends DialogBox {
     private final Label label_2 = new Label("Вы сможете снова открыть это окно, щёлкнув по статусу gather'а.");
     private final HorizontalPanel horizontalPanel_buttons = new HorizontalPanel();
     private final Button button_mute = new Button("<img src=\"icons/mute.png\">");
-    private ListDataProvider<PlayerDTO> dataProvider_players;
-    private ListDataProvider<MapDTO> dataProvider_maps;
-    private ListDataProvider<ServerDTO> dataProvider_servers;
 
-    public VoteResultPanel(ListDataProvider<PlayerDTO> dataProvider_players, ListDataProvider<MapDTO> dataProvider_maps,
-            ListDataProvider<ServerDTO> dataProvider_servers) {
+    public VoteResultPanel() {
         setModal(false);
         setText("Результаты голосования");
         flexTable.setCellPadding(5);
@@ -97,41 +91,25 @@ public class VoteResultPanel extends DialogBox {
         flexTable.getFlexCellFormatter().setColSpan(5, 0, 2);
         html_connect.setStyleName("gwt-Label");
         flexTable.getFlexCellFormatter().setColSpan(6, 0, 2);
-        this.dataProvider_players = dataProvider_players;
-        this.dataProvider_maps = dataProvider_maps;
-        this.dataProvider_servers = dataProvider_servers;
     }
 
     public void fillFields(List<VoteResultDTO> result) {
-        // comms
+        List<Label> labels = Arrays.asList(label_comm1, label_comm2, label_maps, label_server);
         int i = 0;
-        label_comm1.setText(formatVote(dataProvider_players, result.get(i)));
-        i++;
-        label_comm2.setText(formatVote(dataProvider_players, result.get(i)));
-        i++;
-        label_maps.setText(formatVote(dataProvider_maps, result.get(i)));
-        i++;
-        label_server.setText(formatVote(dataProvider_servers, result.get(i)));
-        setSteamConnectUrl(result.get(i));
+        for (Label label : labels) {
+            label.setText(result.get(i++).getTarget().getName());
+        }
+        setSteamConnectUrl(result.get(i - 1));
     }
 
     private void setSteamConnectUrl(VoteResultDTO voteResultDTO) {
-        ServerDTO item = SharedUtils.getObjectFromCollectionById(dataProvider_servers.getList(), voteResultDTO.getId());
+        if (voteResultDTO.getType() != VoteType.SERVER) {
+            throw new AlertRuntimeException("Неверный тип результата голосования, ожидался голос за сервер, получено "
+                    + voteResultDTO.getType());
+        }
+        ServerDTO item = (ServerDTO) voteResultDTO.getTarget();
         html_connect.setHTML("<a href=\"steam://connect/" + item.getIp() + (!item.getPassword().isEmpty() ? "/" + item.getPassword() : "")
                 + "\">Подключиться</a>");
-    }
-
-    private String getItemNameById(ListDataProvider<? extends CheckedDTO> dataProvider, VoteResultDTO voteResult) {
-        CheckedDTO item = SharedUtils.getObjectFromCollectionById(dataProvider.getList(), voteResult.getId());
-        if (item != null) {
-            return item.getName();
-        } else {
-            return "id = " + voteResult.getId();
-        }
-    }
-
-    private String formatVote(ListDataProvider<? extends CheckedDTO> dataProvider, VoteResultDTO voteResult) {
-        return getItemNameById(dataProvider, voteResult) + " [" + voteResult.getVoteCount() + "]";
     }
 
     private class Button_closeClickHandler implements ClickHandler {

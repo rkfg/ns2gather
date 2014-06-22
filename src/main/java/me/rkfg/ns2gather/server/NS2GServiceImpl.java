@@ -528,7 +528,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 for (VoteType voteType : VoteType.values()) {
                     List<VoteResult> voteResults = getVoteResultsByType(gatherId, session, voteType);
                     for (VoteResult voteResult : voteResults) {
-                        result.add(new VoteResultDTO(voteResult.getTargetId(), voteResult.getVoteCount()));
+                        result.add(voteResult.toDTO(session, connectedPlayers));
                     }
                 }
                 return result;

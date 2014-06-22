@@ -178,7 +178,7 @@ public class NS2G implements EntryPoint {
     private final Button button_enterNewGather = new Button("Зайти в новый сбор");
     private final Button button_logout = new Button("Выход");
     private Set<String> votedPlayers = new HashSet<String>();
-    private VoteResultPanel voteResultPanel = new VoteResultPanel(dataProvider_players, dataProvider_maps, dataProvider_servers);
+    private VoteResultPanel voteResultPanel = new VoteResultPanel();
     private String myNick;
     private final HorizontalPanel horizontalPanel_voteButton = new HorizontalPanel();
     private final Label label_version = new Label();
