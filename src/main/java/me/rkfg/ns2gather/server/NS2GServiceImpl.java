@@ -359,6 +359,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public void unvote() throws LogicException, ClientAuthException {
+        requiresOngoingGather();
         removeVotes(getSteamId());
         sendReadiness(getUserName().getName(), getCurrentGatherId(), false);
     }
@@ -405,9 +406,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public void vote(final Long[][] votes) throws LogicException, ClientAuthException {
-        if (getCurrentGather().getState() == GatherState.COMPLETED) {
-            throw new LogicException("Голосование уже завершено.");
-        }
+        requiresOngoingGather();
         if (votes.length != 3) {
             throw LogicExceptionFormatted.format("invalid vote size, expected %d, got %d", 3, votes.length);
         }
@@ -439,6 +438,12 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN && getVotedPlayersCount(gatherId) == connectedPlayersCount
                 && connectedPlayersCount % 2 == 0) {
             countResults(gatherId);
+        }
+    }
+
+    private void requiresOngoingGather() throws LogicException, ClientAuthException {
+        if (getCurrentGather().getState() == GatherState.COMPLETED) {
+            throw new LogicException("Голосование уже завершено.");
         }
     }
 
