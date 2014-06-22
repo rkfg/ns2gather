@@ -29,7 +29,7 @@ import ru.ppsrk.gwt.client.LogicException;
 public class GatherPlayersManager {
 
     HashMap<Long, GatherPlayers> gatherToPlayers = new HashMap<>();
-    HashMap<Long, PlayerDTO> steamIdName = new HashMap<>();
+    HashMap<Long, PlayerDTO> steamIdPlayer = new HashMap<>();
 
     private CleanupCallback cleanupCallback;
 
@@ -74,12 +74,12 @@ public class GatherPlayersManager {
         return result;
     }
 
-    public PlayerDTO getNameBySteamId(Long steamId) {
-        return steamIdName.get(steamId);
+    public PlayerDTO getPlayerBySteamId(Long steamId) {
+        return steamIdPlayer.get(steamId);
     }
 
     public void addPlayerBySteamId(Long steamId, PlayerDTO player) {
-        steamIdName.put(steamId, player);
+        steamIdPlayer.put(steamId, player);
     }
 
     public Set<Long> getGathers() {

@@ -219,7 +219,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         if (steamId == null) {
             steamId = getSteamId();
         }
-        PlayerDTO player = connectedPlayers.getNameBySteamId(steamId);
+        PlayerDTO player = connectedPlayers.getPlayerBySteamId(steamId);
         if (player != null) {
             return player;
         }
@@ -249,7 +249,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             Long gatherId = getCurrentGatherId();
             PlayerDTO existing = connectedPlayers.getPlayerByGatherSteamId(gatherId, steamId);
             if (existing == null) {
-                existing = connectedPlayers.getNameBySteamId(steamId);
+                existing = connectedPlayers.getPlayerBySteamId(steamId);
                 if (existing == null) {
                     return;
                 }
