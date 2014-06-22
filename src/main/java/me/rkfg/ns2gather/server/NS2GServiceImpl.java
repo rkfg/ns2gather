@@ -113,6 +113,30 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         }
     }
 
+    protected void removeVotesForPlayer(final Long gatherId, final Long playerLeftId) throws LogicException, ClientAuthException {
+        List<Long> votes = HibernateUtil.exec(new HibernateCallback<List<Long>>() {
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public List<Long> run(Session session) throws LogicException, ClientAuthException {
+                session.enableFilter("gatherId").setParameter("gid", gatherId);
+                return session
+                        .createQuery(
+                                "select pv.steamId from PlayerVote pv, Vote v, Gather g2 where v in elements (pv.votes) and v.gather = g2 and v.type = :comm and v.targetId = :tid")
+                        .setParameter("comm", VoteType.COMM).setLong("tid", playerLeftId).list();
+            }
+        });
+        for (Long steamId : votes) {
+            removeVotes(steamId);
+            MessageDTO messageDTO = new MessageDTO(MessageType.VOTE_ENDED,
+                    "Игрок, за которого вы голосовали, ушёл. Пожалуйста, переголосуйте.", gatherId);
+            messageDTO.setVisibility(MessageVisibility.PERSONAL);
+            messageDTO.setToSteamId(steamId);
+            messageManager.postMessage(messageDTO);
+            unvote(gatherId, steamId);
+        }
+    }
+
     private void resetVotes(final Long gatherId, final ResetType type) throws LogicException, ClientAuthException {
         HibernateUtil.exec(new HibernateCallback<Void>() {
 
@@ -353,8 +377,12 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     @Override
     public void unvote() throws LogicException, ClientAuthException {
         requiresOngoingGather();
-        removeVotes(getSteamId());
-        sendReadiness(getUserName().getName(), getCurrentGatherId(), false);
+        unvote(getCurrentGatherId(), getSteamId());
+    }
+
+    private void unvote(Long gatherId, Long steamId) throws LogicException, ClientAuthException {
+        removeVotes(steamId);
+        sendReadiness(getUserName(steamId).getName(), gatherId, false);
     }
 
     private void updateGatherState(Gather gather, GatherState newState) throws LogicException, ClientAuthException {
@@ -736,6 +764,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private void removePlayer(Long gatherId, Long steamId, boolean isKicked) throws LogicException, ClientAuthException {
         removeVotes(steamId);
+        removeVotesForPlayer(gatherId, steamId);
         messageManager.postMessage(MessageType.USER_LEAVES, getUserName(steamId).getName(), gatherId);
         if (isKicked) {
             MessageDTO messageDTO = new MessageDTO(MessageType.USER_KICKED, "Вы были кикнуты из Gather по неактивности.", gatherId);
