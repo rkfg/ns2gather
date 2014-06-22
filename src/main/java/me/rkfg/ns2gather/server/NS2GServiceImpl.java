@@ -559,7 +559,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 for (VoteType voteType : VoteType.values()) {
                     List<VoteResult> voteResults = getVoteResultsByType(gatherId, session, voteType);
                     for (VoteResult voteResult : voteResults) {
-                        result.add(voteResult.toDTO(session, connectedPlayers));
+                        result.add(voteResult.toDTO(session, connectedPlayers.getPlayersByGather(gatherId)));
                     }
                 }
                 return result;
@@ -629,17 +629,27 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         });
     }
 
-    private void validateVoteNumbers(Long[][] votes) throws LogicException, ClientAuthException {
-        int idx = 0;
+    private void validateVoteNumbers(final Long[][] votes) throws LogicException, ClientAuthException {
         try {
-            for (Long[] vote : votes) {
-                if (vote.length < ClientSettings.voteRules[idx].getVotesRequired()
-                        || vote.length > ClientSettings.voteRules[idx].getVotesLimit()) {
-                    throw LogicExceptionFormatted.format("Ожидается %s голосов за %s, получено %d. Пожалуйста, переголосуйте.",
-                            ClientSettings.voteRules[idx].voteRange(), ClientSettings.voteRules[idx].getName(), vote.length);
+            HibernateUtil.exec(new HibernateCallback<Void>() {
+                @Override
+                public Void run(Session session) throws LogicException, ClientAuthException {
+                    int idx = 0;
+                    Long gatherId = getCurrentGatherId();
+                    for (Long[] vote : votes) {
+                        if (vote.length < ClientSettings.voteRules[idx].getVotesRequired()
+                                || vote.length > ClientSettings.voteRules[idx].getVotesLimit()) {
+                            throw LogicExceptionFormatted.format("Ожидается %s голосов за %s, получено %d. Пожалуйста, переголосуйте.",
+                                    ClientSettings.voteRules[idx].voteRange(), ClientSettings.voteRules[idx].getName(), vote.length);
+                        }
+                        for (Long targetId : vote) {
+                            VoteResult.getTarget(session, connectedPlayers.getPlayersByGather(gatherId), VoteType.values()[idx], targetId);
+                        }
+                        idx++;
+                    }
+                    return null;
                 }
-                idx++;
-            }
+            });
         } catch (LogicException e) {
             if (removeVotes(getSteamId())) {
                 sendReadiness(getUserName().getName(), getCurrentGatherId(), false);

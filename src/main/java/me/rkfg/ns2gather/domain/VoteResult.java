@@ -3,17 +3,19 @@ package me.rkfg.ns2gather.domain;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 
-import org.hibernate.Session;
-
 import me.rkfg.ns2gather.dto.CheckedDTO;
 import me.rkfg.ns2gather.dto.MapDTO;
 import me.rkfg.ns2gather.dto.ServerDTO;
 import me.rkfg.ns2gather.dto.VoteResultDTO;
 import me.rkfg.ns2gather.dto.VoteType;
-import me.rkfg.ns2gather.server.GatherPlayersManager;
+import me.rkfg.ns2gather.server.GatherPlayersManager.GatherPlayers;
+
+import org.hibernate.Session;
+
 import ru.ppsrk.gwt.client.LogicException;
 import ru.ppsrk.gwt.domain.BasicDomain;
 import ru.ppsrk.gwt.server.HibernateUtil;
+import ru.ppsrk.gwt.server.LogicExceptionFormatted;
 import ru.ppsrk.gwt.server.ServerUtils;
 
 @Entity
@@ -80,21 +82,30 @@ public class VoteResult extends BasicDomain {
         setVoteCount(getVoteCount() + 1);
     }
 
-    public VoteResultDTO toDTO(Session session, GatherPlayersManager connectedPlayers) throws LogicException {
+    public VoteResultDTO toDTO(Session session, GatherPlayers gatherPlayers) throws LogicException {
+        CheckedDTO target = getTarget(session, gatherPlayers, getType(), getTargetId());
+        return new VoteResultDTO(getTargetId(), getVoteCount(), getType(), target);
+    }
+
+    public static CheckedDTO getTarget(Session session, GatherPlayers gatherPlayers, VoteType type, Long targetId)
+            throws LogicException {
         CheckedDTO target = null;
-        switch (getType()) {
+        switch (type) {
         case COMM:
-            target = connectedPlayers.getPlayerBySteamId(getTargetId());
+            target = gatherPlayers.get(targetId);
+            if (target == null) {
+                throw LogicExceptionFormatted.format("Игрок %d не найден.", targetId);
+            }
             break;
         case MAP:
-            Map map = HibernateUtil.tryGetObject(getTargetId(), Map.class, session, "Карта не найдена.");
+            Map map = HibernateUtil.tryGetObject(targetId, Map.class, session, "Карта не найдена.");
             target = ServerUtils.mapModel(map, MapDTO.class);
             break;
         case SERVER:
-            Server server = HibernateUtil.tryGetObject(getTargetId(), Server.class, session, "Сервер не найден.");
+            Server server = HibernateUtil.tryGetObject(targetId, Server.class, session, "Сервер не найден.");
             target = ServerUtils.mapModel(server, ServerDTO.class);
             break;
         }
-        return new VoteResultDTO(getTargetId(), getVoteCount(), getType(), target);
+        return target;
     }
 }
