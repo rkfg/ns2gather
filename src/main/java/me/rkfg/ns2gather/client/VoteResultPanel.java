@@ -107,7 +107,8 @@ public class VoteResultPanel extends DialogBox {
         List<Label> labels = Arrays.asList(label_comm1, label_comm2, label_maps, label_server);
         int i = 0;
         for (Label label : labels) {
-            label.setText(result.get(i++).getTarget().getName());
+            VoteResultDTO voteResultDTO = result.get(i++);
+            label.setText(voteResultDTO.getTarget().getName() + " [" + voteResultDTO.getVoteCount() + "]");
         }
         setSteamConnectUrl(result.get(i - 1));
     }
