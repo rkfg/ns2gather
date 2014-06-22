@@ -59,4 +59,6 @@ public interface NS2GService extends RemoteService {
     InitStateDTO getInitState() throws LogicException, ClientAuthException;
 
     void unvote() throws LogicException, ClientAuthException;
+
+    String getGatherPlayersList() throws LogicException, ClientAuthException;
 }

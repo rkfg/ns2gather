@@ -31,4 +31,9 @@ public class PlayerDTO extends CheckedDTO {
         this.profileUrl = profileUrl;
     }
 
+    @Override
+    public String toString() {
+        return name;
+    }
+
 }

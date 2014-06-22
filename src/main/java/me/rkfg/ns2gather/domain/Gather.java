@@ -15,6 +15,7 @@ import ru.ppsrk.gwt.domain.BasicDomain;
 public class Gather extends BasicDomain {
     String name;
     GatherState state = GatherState.OPEN;
+    String playersList;
 
     public String getName() {
         return name;
@@ -30,6 +31,14 @@ public class Gather extends BasicDomain {
 
     public void setState(GatherState state) {
         this.state = state;
+    }
+
+    public String getPlayersList() {
+        return playersList;
+    }
+
+    public void setPlayersList(String playersList) {
+        this.playersList = playersList;
     }
 
 }

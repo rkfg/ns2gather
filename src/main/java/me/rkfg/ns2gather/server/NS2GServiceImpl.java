@@ -37,6 +37,7 @@ import me.rkfg.ns2gather.dto.VoteType;
 import me.rkfg.ns2gather.server.GatherPlayersManager.CleanupCallback;
 import me.rkfg.ns2gather.server.GatherPlayersManager.GatherPlayers;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.openid4java.consumer.ConsumerException;
@@ -472,6 +473,11 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         return getGatherById(getCurrentGatherId());
     }
 
+    @Override
+    public String getGatherPlayersList() throws LogicException, ClientAuthException {
+        return getCurrentGather().getPlayersList();
+    }
+
     protected Gather getGatherById(Long gatherId) throws LogicException, ClientAuthException {
         return HibernateUtil.tryGetObject(gatherId, Gather.class, "Не удалось найти gather id=" + gatherId
                 + " в БД. Операция не выполнена.");
@@ -523,6 +529,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                                 session.delete(voteResult);
                             }
                         }
+                        String playersList = StringUtils.join(connectedPlayers.getPlayersByGather(gatherId).values(), ", ");
+                        gather.setPlayersList(playersList);
+                        session.merge(gather);
                         return null;
                     }
                 });

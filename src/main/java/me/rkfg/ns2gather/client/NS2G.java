@@ -18,7 +18,6 @@ import me.rkfg.ns2gather.dto.MementoCheckedDTO;
 import me.rkfg.ns2gather.dto.MessageDTO;
 import me.rkfg.ns2gather.dto.PlayerDTO;
 import me.rkfg.ns2gather.dto.ServerDTO;
-import me.rkfg.ns2gather.dto.VoteResultDTO;
 import ru.ppsrk.gwt.client.AlertRuntimeException;
 import ru.ppsrk.gwt.client.ClientUtils.MyAsyncCallback;
 import ru.ppsrk.gwt.client.LongPollingClient;
@@ -558,14 +557,7 @@ public class NS2G implements EntryPoint {
     }
 
     protected void loadVoteResult() {
-        ns2gService.getVoteResults(new MyAsyncCallback<List<VoteResultDTO>>() {
-
-            @Override
-            public void onSuccess(List<VoteResultDTO> result) {
-                voteResultPanel.fillFields(result);
-                voteResultPanel.center();
-            }
-        });
+        voteResultPanel.center();
     }
 
     protected void addChatMessage(String text, Long timestamp) {

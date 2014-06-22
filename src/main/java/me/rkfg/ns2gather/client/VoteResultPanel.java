@@ -7,6 +7,7 @@ import me.rkfg.ns2gather.dto.ServerDTO;
 import me.rkfg.ns2gather.dto.VoteResultDTO;
 import me.rkfg.ns2gather.dto.VoteType;
 import ru.ppsrk.gwt.client.AlertRuntimeException;
+import ru.ppsrk.gwt.client.ClientUtils.MyAsyncCallback;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -37,6 +38,9 @@ public class VoteResultPanel extends DialogBox {
     private final Label label_2 = new Label("Вы сможете снова открыть это окно, щёлкнув по статусу gather'а.");
     private final HorizontalPanel horizontalPanel_buttons = new HorizontalPanel();
     private final Button button_mute = new Button("<img src=\"icons/mute.png\">");
+    private final Label label_4 = new Label("Список участников:");
+    private final Label label_playersList = new Label("");
+    private NS2GServiceAsync ns2gService = NS2GServiceAsync.Util.getInstance();
 
     public VoteResultPanel() {
         setModal(false);
@@ -44,7 +48,6 @@ public class VoteResultPanel extends DialogBox {
         flexTable.setCellPadding(5);
 
         setWidget(rootPanel);
-        rootPanel.setSize("500px", "300px");
         rootPanel.setWidget(flexTable);
         flexTable.setSize("100%", "100%");
         label.setWordWrap(false);
@@ -71,14 +74,18 @@ public class VoteResultPanel extends DialogBox {
         flexTable.getFlexCellFormatter().setColSpan(4, 0, 2);
         flexTable.getCellFormatter().setHorizontalAlignment(4, 0, HasHorizontalAlignment.ALIGN_CENTER);
 
-        flexTable.setWidget(5, 0, horizontalPanel);
+        flexTable.setWidget(5, 0, label_4);
+
+        flexTable.setWidget(6, 0, label_playersList);
+
+        flexTable.setWidget(7, 0, horizontalPanel);
         horizontalPanel.setSize("100%", "50px");
 
         horizontalPanel.add(label_2);
         horizontalPanel.setCellVerticalAlignment(label_2, HasVerticalAlignment.ALIGN_MIDDLE);
-        flexTable.getCellFormatter().setWidth(5, 0, "");
+        flexTable.getCellFormatter().setWidth(7, 0, "");
 
-        flexTable.setWidget(6, 0, horizontalPanel_buttons);
+        flexTable.setWidget(8, 0, horizontalPanel_buttons);
         horizontalPanel_buttons.setWidth("100%");
         horizontalPanel_buttons.add(button_close);
         horizontalPanel_buttons.setCellVerticalAlignment(button_close, HasVerticalAlignment.ALIGN_MIDDLE);
@@ -88,8 +95,11 @@ public class VoteResultPanel extends DialogBox {
         horizontalPanel_buttons.setCellWidth(button_mute, "48px");
         horizontalPanel_buttons.setCellHorizontalAlignment(button_mute, HasHorizontalAlignment.ALIGN_RIGHT);
         button_close.addClickHandler(new Button_closeClickHandler());
-        flexTable.getFlexCellFormatter().setColSpan(5, 0, 2);
+        flexTable.getFlexCellFormatter().setColSpan(7, 0, 2);
         html_connect.setStyleName("gwt-Label");
+        flexTable.getFlexCellFormatter().setColSpan(8, 0, 2);
+        flexTable.getFlexCellFormatter().setColSpan(5, 0, 2);
+        flexTable.getCellFormatter().setHorizontalAlignment(5, 0, HasHorizontalAlignment.ALIGN_CENTER);
         flexTable.getFlexCellFormatter().setColSpan(6, 0, 2);
     }
 
@@ -122,7 +132,21 @@ public class VoteResultPanel extends DialogBox {
     @Override
     public void center() {
         setAnimationEnabled(true);
-        super.center();
+        ns2gService.getVoteResults(new MyAsyncCallback<List<VoteResultDTO>>() {
+
+            @Override
+            public void onSuccess(List<VoteResultDTO> result) {
+                fillFields(result);
+                VoteResultPanel.super.center();
+            }
+        });
+        ns2gService.getGatherPlayersList(new MyAsyncCallback<String>() {
+
+            @Override
+            public void onSuccess(String result) {
+                label_playersList.setText(result);
+            }
+        });
     }
 
     public Button getButton_mute() {
