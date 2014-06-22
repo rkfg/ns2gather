@@ -533,6 +533,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 updateGatherStateByPlayerNumber(gather);
                 return;
             }
+            resetVotes(gatherId, ResetType.VOTES);
             messageManager.postMessage(MessageType.VOTE_ENDED, "ok", gatherId);
             updateGatherState(gather, GatherState.COMPLETED);
         }
