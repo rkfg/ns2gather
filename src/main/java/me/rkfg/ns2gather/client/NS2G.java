@@ -507,6 +507,7 @@ public class NS2G implements EntryPoint {
                             badVote = true;
                             button_vote.setState(true);
                             button_vote.switchState();
+                            soundManager.queue(NS2Sound.REVOTE);
                         }
                         break;
                     case GATHER_STATUS:

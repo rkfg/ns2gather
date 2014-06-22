@@ -11,7 +11,7 @@ import com.google.gwt.dom.client.MediaElement;
 import com.google.gwt.media.client.Audio;
 
 public class SoundManager {
-    String[] soundURLs = { "chat.ogg", "vote.ogg", "enter.ogg", "leave.ogg", "timer.ogg", "more.ogg" };
+    String[] soundURLs = { "chat.ogg", "vote.ogg", "enter.ogg", "leave.ogg", "timer.ogg", "more.ogg", "revote.ogg" };
     List<Audio> audios = new ArrayList<>();
     Set<NS2Sound> soundsToPlay = new HashSet<NS2Sound>();
 
