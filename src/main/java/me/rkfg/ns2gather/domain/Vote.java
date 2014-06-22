@@ -3,6 +3,7 @@ package me.rkfg.ns2gather.domain;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 
+import me.rkfg.ns2gather.dto.VoteType;
 import ru.ppsrk.gwt.domain.BasicDomain;
 
 @Entity

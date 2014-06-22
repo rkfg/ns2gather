@@ -24,7 +24,6 @@ import me.rkfg.ns2gather.domain.PlayerVote;
 import me.rkfg.ns2gather.domain.Remembered;
 import me.rkfg.ns2gather.domain.Vote;
 import me.rkfg.ns2gather.domain.VoteResult;
-import me.rkfg.ns2gather.domain.VoteType;
 import me.rkfg.ns2gather.dto.GatherState;
 import me.rkfg.ns2gather.dto.InitStateDTO;
 import me.rkfg.ns2gather.dto.MapDTO;
@@ -34,6 +33,7 @@ import me.rkfg.ns2gather.dto.MessageVisibility;
 import me.rkfg.ns2gather.dto.PlayerDTO;
 import me.rkfg.ns2gather.dto.ServerDTO;
 import me.rkfg.ns2gather.dto.VoteResultDTO;
+import me.rkfg.ns2gather.dto.VoteType;
 import me.rkfg.ns2gather.server.GatherPlayersManager.CleanupCallback;
 import me.rkfg.ns2gather.server.GatherPlayersManager.GatherPlayers;
 
