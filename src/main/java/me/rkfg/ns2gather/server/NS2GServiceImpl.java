@@ -569,6 +569,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         Long serverId = servers.get(0).getTargetId();
         Server server = HibernateUtil.tryGetObject(serverId, Server.class, session, "Выбранный сервер с id " + serverId
                 + " не найден в БД.");
+        if (server.getWebLogin() == null || server.getWebPassword() == null || server.getWebPort() == null) {
+            return;
+        }
         Long mapId = maps.get(0).getTargetId();
         Map map = HibernateUtil.tryGetObject(mapId, Map.class, session, "Выбранная карта с id " + mapId + " не найдена в БД.");
         server.setPassword(genPassword(Settings.SERVER_PASSWORD_LENGTH));
