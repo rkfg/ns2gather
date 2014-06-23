@@ -417,6 +417,9 @@ public class NS2G implements EntryPoint {
                 dataProvider_servers.setList(result.getServers());
                 label_voted.setText(result.getVoteStat());
                 label_version.setText(result.getVersion());
+                if (result.getPasswords() != null) {
+                    addChatMessage(result.getPasswords(), System.currentTimeMillis(), ChatMessageType.SYSTEM, false);
+                }
             }
         });
     }

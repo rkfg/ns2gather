@@ -24,6 +24,7 @@ import me.rkfg.ns2gather.domain.Map;
 import me.rkfg.ns2gather.domain.PlayerVote;
 import me.rkfg.ns2gather.domain.Remembered;
 import me.rkfg.ns2gather.domain.Server;
+import me.rkfg.ns2gather.domain.Streamer;
 import me.rkfg.ns2gather.domain.Vote;
 import me.rkfg.ns2gather.domain.VoteResult;
 import me.rkfg.ns2gather.dto.GatherState;
@@ -826,7 +827,38 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         result.setVotedNames(getVotedPlayerNames());
         result.setVoteStat(getVoteStat());
         result.setVersion(getVersion());
+        result.setPasswords(getPasswordsForStreamer());
         return result;
+    }
+
+    private String getPasswordsForStreamer() throws LogicException, ClientAuthException {
+        return HibernateUtil.exec(new HibernateCallback<String>() {
+            @Override
+            public String run(Session session) throws LogicException, ClientAuthException {
+                @SuppressWarnings("unchecked")
+                List<Streamer> streamers = session.createQuery("from Streamer s where s.steamId = :sid").setLong("sid", getSteamId())
+                        .list();
+                if (streamers.size() == 0) {
+                    return null;
+                }
+                StringBuilder result = new StringBuilder();
+                result.append("Вы являетесь стримером [").append(streamers.get(0).getName())
+                        .append("]. Данные для подключения к серверам:<br/>");
+                @SuppressWarnings("unchecked")
+                List<Server> servers = session.createQuery("from Server s").list();
+                for (Server server : servers) {
+                    result.append("Сервер: ").append(server.getName()).append("; ");
+                    String password = server.getPassword();
+                    if (password != null && !password.isEmpty()) {
+                        result.append("пароль: ").append(server.getPassword());
+                    } else {
+                        result.append("пароля нет");
+                    }
+                    result.append("<br/>");
+                }
+                return result.toString();
+            }
+        });
     }
 
     private String getVersion() {

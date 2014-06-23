@@ -21,6 +21,7 @@
   <mapping class="me.rkfg.ns2gather.domain.PlayerVote"/>
   <mapping class="me.rkfg.ns2gather.domain.Remembered"/>
   <mapping class="me.rkfg.ns2gather.domain.Server"/>
+  <mapping class="me.rkfg.ns2gather.domain.Streamer" />
   <mapping class="me.rkfg.ns2gather.domain.Vote"/>
   <mapping class="me.rkfg.ns2gather.domain.VoteResult"/>
  </session-factory>
