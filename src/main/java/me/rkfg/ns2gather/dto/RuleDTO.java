@@ -1,6 +1,8 @@
 package me.rkfg.ns2gather.dto;
 
-public class RuleDTO {
+import com.google.gwt.user.client.rpc.IsSerializable;
+
+public class RuleDTO implements IsSerializable {
     int votesRequired;
     int votesLimit;
     int winnerCount;

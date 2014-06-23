@@ -1,5 +1,7 @@
 package me.rkfg.ns2gather.dto;
 
-public enum MessageVisibility {
+import com.google.gwt.user.client.rpc.IsSerializable;
+
+public enum MessageVisibility implements IsSerializable {
     BROADCAST, PERSONAL;
 }
