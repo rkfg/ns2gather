@@ -1,9 +1,6 @@
 package me.rkfg.ns2gather.server;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -15,10 +12,8 @@ import me.rkfg.ns2gather.dto.PlayerDTO;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -88,12 +83,12 @@ public class GatherPlayersManager {
 
     public PlayerDTO lookupPlayerBySteamId(Long steamId) throws LogicException {
         String name;
-        HttpClient client = getHTTPClient();
+        HttpClient client = NetworkUtils.getHTTPClient();
         HttpUriRequest request = new HttpGet(String.format(
                 "http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=%s&steamids=%s", Settings.STEAM_API_KEY, steamId));
         try {
             HttpResponse response = client.execute(request);
-            JSONObject jsonRootObject = new JSONObject(readStream(response.getEntity().getContent()));
+            JSONObject jsonRootObject = new JSONObject(NetworkUtils.readStream(response.getEntity().getContent()));
             JSONObject jsonResponse = jsonRootObject.optJSONObject("response");
             if (jsonResponse == null) {
                 throw new LogicException("no response");
@@ -122,25 +117,6 @@ public class GatherPlayersManager {
         } catch (JSONException e) {
             throw new LogicException("invalid player data");
         }
-    }
-
-    private HttpClient getHTTPClient() {
-        RequestConfig config = RequestConfig.custom().setConnectionRequestTimeout(Settings.TIMEOUT).setConnectTimeout(Settings.TIMEOUT)
-                .setSocketTimeout(Settings.TIMEOUT).build();
-        return HttpClientBuilder.create().setDefaultRequestConfig(config)
-                .setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36")
-                .build();
-    }
-
-    private String readStream(InputStream stream) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            builder.append(line);
-        }
-        reader.close();
-        return builder.toString();
     }
 
     private void runPlayersCleanup() {

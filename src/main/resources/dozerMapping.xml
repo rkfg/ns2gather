@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mappings xmlns="http://dozer.sourceforge.net" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://dozer.sourceforge.net http://dozer.sourceforge.net/schema/beanmapping.xsd">
+	<configuration>
+		<custom-converters>
+			<converter type="me.rkfg.ns2gather.server.mapping.ServerMapper">
+				<class-a>me.rkfg.ns2gather.domain.Server</class-a>
+				<class-b>me.rkfg.ns2gather.dto.ServerDTO</class-b>
+			</converter>
+		</custom-converters>
+	</configuration>
+</mappings>

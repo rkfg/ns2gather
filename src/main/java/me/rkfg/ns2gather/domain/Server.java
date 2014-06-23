@@ -8,6 +8,10 @@ import ru.ppsrk.gwt.domain.BasicDomain;
 public class Server extends BasicDomain {
     String name;
     String ip;
+    Integer port;
+    Integer webPort;
+    String webLogin;
+    String webPassword;
     String password;
 
     public String getName() {
@@ -24,6 +28,38 @@ public class Server extends BasicDomain {
 
     public void setIp(String ip) {
         this.ip = ip;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public void setPort(Integer port) {
+        this.port = port;
+    }
+
+    public Integer getWebPort() {
+        return webPort;
+    }
+
+    public void setWebPort(Integer webPort) {
+        this.webPort = webPort;
+    }
+
+    public String getWebLogin() {
+        return webLogin;
+    }
+
+    public void setWebLogin(String webLogin) {
+        this.webLogin = webLogin;
+    }
+
+    public String getWebPassword() {
+        return webPassword;
+    }
+
+    public void setWebPassword(String webPassword) {
+        this.webPassword = webPassword;
     }
 
     public String getPassword() {

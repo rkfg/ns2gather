@@ -20,8 +20,10 @@ import javax.servlet.http.HttpSession;
 import me.rkfg.ns2gather.client.ClientSettings;
 import me.rkfg.ns2gather.client.NS2GService;
 import me.rkfg.ns2gather.domain.Gather;
+import me.rkfg.ns2gather.domain.Map;
 import me.rkfg.ns2gather.domain.PlayerVote;
 import me.rkfg.ns2gather.domain.Remembered;
+import me.rkfg.ns2gather.domain.Server;
 import me.rkfg.ns2gather.domain.Vote;
 import me.rkfg.ns2gather.domain.VoteResult;
 import me.rkfg.ns2gather.dto.GatherState;
@@ -38,6 +40,9 @@ import me.rkfg.ns2gather.server.GatherPlayersManager.CleanupCallback;
 import me.rkfg.ns2gather.server.GatherPlayersManager.GatherPlayers;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.openid4java.consumer.ConsumerException;
@@ -54,6 +59,7 @@ import ru.ppsrk.gwt.server.HibernateCallback;
 import ru.ppsrk.gwt.server.HibernateUtil;
 import ru.ppsrk.gwt.server.LogicExceptionFormatted;
 import ru.ppsrk.gwt.server.LongPollingServer;
+import ru.ppsrk.gwt.server.ServerUtils;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -106,6 +112,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     public NS2GServiceImpl() {
+        ServerUtils.setMappingFile("dozerMapping.xml");
         debug = HibernateUtil.initSessionFactoryDebugRelease(forceDebug, forceRelease, "hibernate_dev.cfg.xml", "hibernate.cfg.xml");
         try {
             resetVotes(null, ResetType.ALL);
@@ -533,6 +540,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                         String playersList = StringUtils.join(connectedPlayers.getPlayersByGather(gatherId).values(), ", ");
                         gather.setPlayersList(playersList);
                         session.merge(gather);
+                        setupServer(gatherId, session);
                         return null;
                     }
                 });
@@ -547,6 +555,51 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             messageManager.postMessage(MessageType.VOTE_ENDED, "ok", gatherId);
             updateGatherState(gather, GatherState.COMPLETED);
         }
+    }
+
+    private void setupServer(Long gatherId, Session session) throws LogicException, ClientAuthException {
+        List<VoteResult> servers = getVoteResultsByType(gatherId, session, VoteType.SERVER);
+        if (servers.size() == 0) {
+            throw new LogicException("Серверы не выбраны, невозможно сменить пароль и карту.");
+        }
+        List<VoteResult> maps = getVoteResultsByType(gatherId, session, VoteType.MAP);
+        if (maps.size() == 0) {
+            throw new LogicException("Карты не выбраны, невозможно сменить пароль и карту.");
+        }
+        Long serverId = servers.get(0).getTargetId();
+        Server server = HibernateUtil.tryGetObject(serverId, Server.class, session, "Выбранный сервер с id " + serverId
+                + " не найден в БД.");
+        Long mapId = maps.get(0).getTargetId();
+        Map map = HibernateUtil.tryGetObject(mapId, Map.class, session, "Выбранная карта с id " + mapId + " не найдена в БД.");
+        server.setPassword(genPassword(Settings.SERVER_PASSWORD_LENGTH));
+        HttpClient webClient = NetworkUtils.getHTTPClient(server.getIp(), server.getWebPort(), server.getWebLogin(),
+                server.getWebPassword());
+        try {
+            HttpUriRequest changePasswordRequest = buildWebAdminGetRequest(server, "sv_password+" + server.getPassword());
+            webClient.execute(changePasswordRequest);
+        } catch (IOException e) {
+            throw new LogicException("Не удалось сменить пароль на сервере " + server.getName());
+        }
+        try {
+            HttpUriRequest changeMapRequest = buildWebAdminGetRequest(server, "sv_changemap+" + map.getName());
+            webClient.execute(changeMapRequest);
+        } catch (IOException e) {
+            throw new LogicException("Не удалось сменить пароль на сервере " + server.getName());
+        }
+    }
+
+    private HttpUriRequest buildWebAdminGetRequest(Server server, String command) {
+        return new HttpGet("http://" + server.getIp() + ":" + server.getWebPort() + "/?command=Send&rcon=" + command);
+    }
+
+    private String genPassword(int length) {
+        Random random = new Random();
+        String chars = "123456789qwertyuiopasdfghkzxcvbnm";
+        StringBuilder result = new StringBuilder(length);
+        for (; length > 0; length--) {
+            result.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return result.toString();
     }
 
     @Override
