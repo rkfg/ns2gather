@@ -11,4 +11,5 @@ public class Settings {
     static final int GATHER_PLAYER_MIN = 12;
     static final int GATHER_PLAYER_MAX = 16;
     static final long GATHER_RESOLVE_DELAY = 60000;
+    static final int SERVER_PASSWORD_LENGTH = 6;
 }
