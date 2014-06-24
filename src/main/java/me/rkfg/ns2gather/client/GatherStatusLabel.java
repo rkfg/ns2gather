@@ -48,6 +48,15 @@ public class GatherStatusLabel extends HTML {
         case ONTIMER:
             setStyleName("gstatus gopen");
             setText("ОЖИДАНИЕ");
+            break;
+        case SIDEPICK:
+            setStyleName("gstatus gcompleted");
+            setHTML("ВЫБОР СТОРОН");
+            break;
+        case PLAYERS:
+            setStyleName("gstatus gcompleted");
+            setHTML("ВЫБОР ИГРОКОВ");
+            break;
         default:
             break;
         }

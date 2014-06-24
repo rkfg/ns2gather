@@ -1,14 +1,18 @@
 package me.rkfg.ns2gather.server;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import me.rkfg.ns2gather.dto.PlayerDTO;
+import me.rkfg.ns2gather.dto.Side;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -20,6 +24,7 @@ import org.json.JSONObject;
 
 import ru.ppsrk.gwt.client.ClientAuthException;
 import ru.ppsrk.gwt.client.LogicException;
+import ru.ppsrk.gwt.server.LogicExceptionFormatted;
 
 public class GatherPlayersManager {
 
@@ -32,13 +37,53 @@ public class GatherPlayersManager {
         public void playerRemoved(Long gatherId, PlayerDTO player) throws LogicException, ClientAuthException;
     }
 
-    public class GatherPlayers extends HashMap<Long, PlayerDTO> {
+    public class GatherPlayers {
+        HashMap<Long, PlayerDTO> gatherPlayers = new HashMap<>();
+        List<Long> comms = new ArrayList<Long>();
 
-        /**
-         * 
-         */
-        private static final long serialVersionUID = 6870663843149554308L;
+        public void putPlayer(Long id, PlayerDTO playerDTO) {
+            gatherPlayers.put(id, playerDTO);
+        }
 
+        public PlayerDTO getPlayer(Long steamId) {
+            return gatherPlayers.get(steamId);
+        }
+
+        public Set<Entry<Long, PlayerDTO>> playersEntrySet() {
+            return gatherPlayers.entrySet();
+        }
+
+        public Collection<PlayerDTO> getPlayers() {
+            return gatherPlayers.values();
+        }
+
+        public int playerCount() {
+            return gatherPlayers.size();
+        }
+
+        public Long getCommId(int i) {
+            return comms.get(i);
+        }
+
+        public void setComms(List<Long> comms) {
+            this.comms = comms;
+        }
+
+        public void pickSide(final Long steamId, final Side side) throws LogicException, ClientAuthException {
+            if (!getCommId(0).equals(steamId)) {
+                throw new LogicException("Вам нельзя голосовать за сторону.");
+            }
+            Side commSide = side;
+            for (int i = 0; i < 2; i++) {
+                Long commId = getCommId(i);
+                PlayerDTO comm = getPlayer(commId);
+                if (comm == null) {
+                    throw LogicExceptionFormatted.format("Не найден командир в списке участников: %d", commId);
+                }
+                comm.setSide(commSide);
+                commSide = commSide == Side.MARINES ? Side.ALIENS : Side.MARINES;
+            }
+        }
     }
 
     public GatherPlayersManager() {
@@ -52,12 +97,12 @@ public class GatherPlayersManager {
 
     public void addPlayer(Long gatherId, PlayerDTO playerDTO) {
         GatherPlayers gatherPlayers = getPlayersByGather(gatherId);
-        gatherPlayers.put(playerDTO.getId(), playerDTO);
+        gatherPlayers.putPlayer(playerDTO.getId(), playerDTO);
         addPlayerBySteamId(playerDTO.getId(), playerDTO);
     }
 
     public PlayerDTO getPlayerByGatherSteamId(Long gatherId, Long steamId) {
-        return getPlayersByGather(gatherId).get(steamId);
+        return getPlayersByGather(gatherId).getPlayer(steamId);
     }
 
     public GatherPlayers getPlayersByGather(Long gatherId) {
@@ -126,7 +171,7 @@ public class GatherPlayersManager {
             public void run() {
                 synchronized (this) {
                     for (Long gatherId : getGathers()) {
-                        Iterator<Entry<Long, PlayerDTO>> iterator = getPlayersByGather(gatherId).entrySet().iterator();
+                        Iterator<Entry<Long, PlayerDTO>> iterator = getPlayersByGather(gatherId).playersEntrySet().iterator();
                         while (iterator.hasNext()) {
                             Entry<Long, PlayerDTO> entry = iterator.next();
                             if (System.currentTimeMillis() - entry.getValue().getLastPing() > Settings.PLAYER_PING_TIMEOUT) {

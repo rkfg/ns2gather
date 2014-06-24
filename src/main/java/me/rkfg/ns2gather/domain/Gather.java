@@ -2,11 +2,12 @@ package me.rkfg.ns2gather.domain;
 
 import javax.persistence.Entity;
 
+import me.rkfg.ns2gather.dto.GatherState;
+
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 
-import me.rkfg.ns2gather.dto.GatherState;
 import ru.ppsrk.gwt.domain.BasicDomain;
 
 @Entity
@@ -15,7 +16,6 @@ import ru.ppsrk.gwt.domain.BasicDomain;
 public class Gather extends BasicDomain {
     String name;
     GatherState state = GatherState.OPEN;
-    String playersList;
 
     public String getName() {
         return name;
@@ -32,13 +32,4 @@ public class Gather extends BasicDomain {
     public void setState(GatherState state) {
         this.state = state;
     }
-
-    public String getPlayersList() {
-        return playersList;
-    }
-
-    public void setPlayersList(String playersList) {
-        this.playersList = playersList;
-    }
-
 }
