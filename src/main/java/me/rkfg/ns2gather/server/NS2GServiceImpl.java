@@ -372,12 +372,14 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     Set<Long> votedSteamIds = new HashSet<>(session.createQuery(
                             "select distinct(v.player.steamId) from Vote v left join v.gather").list());
                     GatherPlayers gatherPlayers = connectedPlayers.getPlayersByGather(gatherId);
-                    Iterator<Entry<Long, PlayerDTO>> iter = gatherPlayers.playersEntrySet().iterator();
-                    while (iter.hasNext()) {
-                        Entry<Long, PlayerDTO> player = iter.next();
-                        if (!votedSteamIds.contains(player.getKey())) {
-                            iter.remove();
-                            removePlayer(gatherId, player.getKey(), true);
+                    synchronized (gatherPlayers) {
+                        Iterator<Entry<Long, PlayerDTO>> iter = gatherPlayers.playersEntrySet().iterator();
+                        while (iter.hasNext()) {
+                            Entry<Long, PlayerDTO> player = iter.next();
+                            if (!votedSteamIds.contains(player.getKey())) {
+                                iter.remove();
+                                removePlayer(gatherId, player.getKey(), true);
+                            }
                         }
                     }
                     return null;

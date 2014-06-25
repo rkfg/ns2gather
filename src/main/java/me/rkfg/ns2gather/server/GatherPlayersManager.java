@@ -231,9 +231,10 @@ public class GatherPlayersManager {
 
             @Override
             public void run() {
-                synchronized (this) {
-                    for (Long gatherId : getGathers()) {
-                        Iterator<Entry<Long, PlayerDTO>> iterator = getPlayersByGather(gatherId).playersEntrySet().iterator();
+                for (Long gatherId : getGathers()) {
+                    GatherPlayers players = getPlayersByGather(gatherId);
+                    synchronized (players) {
+                        Iterator<Entry<Long, PlayerDTO>> iterator = players.playersEntrySet().iterator();
                         while (iterator.hasNext()) {
                             Entry<Long, PlayerDTO> entry = iterator.next();
                             if (System.currentTimeMillis() - entry.getValue().getLastPing() > Settings.PLAYER_PING_TIMEOUT) {
