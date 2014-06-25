@@ -6,10 +6,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
@@ -385,14 +383,10 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     Set<Long> votedSteamIds = new HashSet<>(session.createQuery(
                             "select distinct(v.player.steamId) from Vote v left join v.gather").list());
                     GatherPlayers gatherPlayers = connectedPlayers.getPlayersByGather(gatherId);
-                    synchronized (gatherPlayers) {
-                        Iterator<Entry<Long, PlayerDTO>> iter = gatherPlayers.playersEntrySet().iterator();
-                        while (iter.hasNext()) {
-                            Entry<Long, PlayerDTO> player = iter.next();
-                            if (!votedSteamIds.contains(player.getKey())) {
-                                iter.remove();
-                                removePlayer(gatherId, player.getKey(), true);
-                            }
+                    for (PlayerDTO player : gatherPlayers.getPlayers()) {
+                        if (!votedSteamIds.contains(player.getId())) {
+                            gatherPlayers.remove(player);
+                            removePlayer(gatherId, player.getId(), true);
                         }
                     }
                     return null;

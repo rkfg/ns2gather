@@ -3,13 +3,11 @@ package me.rkfg.ns2gather.server;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
 import me.rkfg.ns2gather.dto.PlayerDTO;
 import me.rkfg.ns2gather.dto.Side;
@@ -32,8 +30,8 @@ public class GatherPlayersManager {
         EQUALITY, NOFREE
     }
 
-    HashMap<Long, GatherPlayers> gatherToPlayers = new HashMap<>();
-    HashMap<Long, PlayerDTO> steamIdPlayer = new HashMap<>();
+    ConcurrentHashMap<Long, GatherPlayers> gatherToPlayers = new ConcurrentHashMap<>();
+    ConcurrentHashMap<Long, PlayerDTO> steamIdPlayer = new ConcurrentHashMap<>();
 
     private CleanupCallback cleanupCallback;
 
@@ -42,8 +40,8 @@ public class GatherPlayersManager {
     }
 
     public class GatherPlayers {
-        HashMap<Long, PlayerDTO> gatherPlayers = new HashMap<>();
-        HashMap<Long, PlayerDTO> gatherParticipants = new HashMap<>();
+        ConcurrentHashMap<Long, PlayerDTO> gatherPlayers = new ConcurrentHashMap<>();
+        ConcurrentHashMap<Long, PlayerDTO> gatherParticipants = new ConcurrentHashMap<>();
         List<Long> comms = new ArrayList<Long>();
 
         public void putPlayer(PlayerDTO playerDTO) {
@@ -52,10 +50,6 @@ public class GatherPlayersManager {
 
         public PlayerDTO getPlayer(Long steamId) {
             return gatherPlayers.get(steamId);
-        }
-
-        public Set<Entry<Long, PlayerDTO>> playersEntrySet() {
-            return gatherPlayers.entrySet();
         }
 
         public Collection<PlayerDTO> getPlayers() {
@@ -136,7 +130,7 @@ public class GatherPlayersManager {
 
         // clone players to fix them for the current gather
         public void playersToParticipants() {
-            gatherParticipants = new HashMap<>();
+            gatherParticipants = new ConcurrentHashMap<>();
             for (PlayerDTO playerDTO : getPlayers()) {
                 gatherParticipants.put(playerDTO.getId(), playerDTO.clone());
             }
@@ -148,6 +142,10 @@ public class GatherPlayersManager {
 
         public PlayerDTO getParticipant(Long steamId) {
             return gatherParticipants.get(steamId);
+        }
+
+        public void remove(PlayerDTO player) {
+            gatherPlayers.remove(player.getId());
         }
 
     }
@@ -236,19 +234,15 @@ public class GatherPlayersManager {
             @Override
             public void run() {
                 for (Long gatherId : getGathers()) {
-                    GatherPlayers players = getPlayersByGather(gatherId);
-                    synchronized (players) {
-                        Iterator<Entry<Long, PlayerDTO>> iterator = players.playersEntrySet().iterator();
-                        while (iterator.hasNext()) {
-                            Entry<Long, PlayerDTO> entry = iterator.next();
-                            if (System.currentTimeMillis() - entry.getValue().getLastPing() > Settings.PLAYER_PING_TIMEOUT) {
-                                iterator.remove();
-                                if (cleanupCallback != null) {
-                                    try {
-                                        cleanupCallback.playerRemoved(gatherId, entry.getValue());
-                                    } catch (LogicException | ClientAuthException e) {
-                                        e.printStackTrace();
-                                    }
+                    GatherPlayers gatherPlayers = getPlayersByGather(gatherId);
+                    for (PlayerDTO player : gatherPlayers.getPlayers()) {
+                        if (System.currentTimeMillis() - player.getLastPing() > Settings.PLAYER_PING_TIMEOUT) {
+                            gatherPlayers.remove(player);
+                            if (cleanupCallback != null) {
+                                try {
+                                    cleanupCallback.playerRemoved(gatherId, player);
+                                } catch (LogicException | ClientAuthException e) {
+                                    e.printStackTrace();
                                 }
                             }
                         }
