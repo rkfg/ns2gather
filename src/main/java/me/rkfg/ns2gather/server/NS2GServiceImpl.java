@@ -259,7 +259,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         }
         if (debug) {
             player = new PlayerDTO(steamId, "fake" + steamId.toString(), "http://steamcommunity.com", System.currentTimeMillis());
-            connectedPlayers.addPlayerBySteamId(steamId, player);
+            connectedPlayers.addPlayerBySteamId(player);
         } else {
             player = connectedPlayers.lookupPlayerBySteamId(steamId);
         }
