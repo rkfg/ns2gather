@@ -489,7 +489,7 @@ public class NS2G implements EntryPoint {
                             break;
                         }
                         addChatMessage(message.getContent() + " покидает нас.", message.getTimestamp());
-                        votedPlayers.remove(message.getContent());
+                        votedPlayers.remove(getIdByName(dataProvider_players.getList(), message.getContent()));
                         dataGrid_players.redraw();
                         soundManager.queue(NS2Sound.USER_LEAVES);
                         loadPlayers = true;
@@ -577,6 +577,15 @@ public class NS2G implements EntryPoint {
             }
         };
         client.start();
+    }
+
+    protected Long getIdByName(List<? extends CheckedDTO> list, String content) {
+        for (CheckedDTO checkedDTO : list) {
+            if (checkedDTO.getName().equals(content)) {
+                return checkedDTO.getId();
+            }
+        }
+        return null;
     }
 
     protected void loadServers() {
