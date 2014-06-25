@@ -79,7 +79,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     private static final boolean forceDebug = false;
     private static final boolean forceRelease = false;
 
-    static ConsumerManager manager = new ConsumerManager();
+    static ConsumerManager consumerManager = new ConsumerManager();
     GatherPlayersManager connectedPlayers = new GatherPlayersManager(new CleanupCallback() {
 
         @Override
