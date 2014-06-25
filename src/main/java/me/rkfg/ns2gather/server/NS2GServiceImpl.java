@@ -300,7 +300,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private void updateGatherStateByPlayerNumber(final Gather gather) throws LogicException, ClientAuthException {
         synchronized (gatherCountdownManager) {
-            if (Arrays.asList(GatherState.COMPLETED, GatherState.SIDEPICK, GatherState.PLAYERS).contains(gather.getState())) {
+            if (isGatherClosed(gather)) {
                 // nothing to do here
                 return;
             }
@@ -477,9 +477,13 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void requiresOngoingGather() throws LogicException, ClientAuthException {
-        if (getCurrentGather().getState() == GatherState.COMPLETED) {
+        if (isGatherClosed(getCurrentGather())) {
             throw new LogicException("Голосование уже завершено.");
         }
+    }
+
+    private boolean isGatherClosed(Gather gather) {
+        return Arrays.asList(GatherState.COMPLETED, GatherState.SIDEPICK, GatherState.PLAYERS).contains(gather.getState());
     }
 
     protected Gather getCurrentGather() throws LogicException, ClientAuthException {
