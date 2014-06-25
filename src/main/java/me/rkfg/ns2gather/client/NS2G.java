@@ -500,7 +500,7 @@ public class NS2G implements EntryPoint {
                         addChatMessage(message.getContent() + " готов начать игру!", message.getTimestamp());
                         break;
                     case USER_UNREADY:
-                        votedPlayers.remove(message.getContent());
+                        votedPlayers.remove(Long.valueOf(message.getContent()));
                         dataGrid_players.redraw();
                         addChatMessage(message.getContent() + " отменил готовность начать игру.", message.getTimestamp());
                         break;
