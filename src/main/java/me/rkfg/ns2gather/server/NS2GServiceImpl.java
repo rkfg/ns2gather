@@ -41,6 +41,7 @@ import me.rkfg.ns2gather.dto.VoteResultDTO;
 import me.rkfg.ns2gather.dto.VoteType;
 import me.rkfg.ns2gather.server.GatherPlayersManager.CleanupCallback;
 import me.rkfg.ns2gather.server.GatherPlayersManager.GatherPlayers;
+import me.rkfg.ns2gather.server.GatherPlayersManager.TeamStatType;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -484,8 +485,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     @Override
-    public List<PlayerDTO> getGatherPlayersList() throws LogicException, ClientAuthException {
-        return new ArrayList<>(connectedPlayers.getPlayersByGather(getCurrentGatherId()).getPlayers());
+    public List<PlayerDTO> getGatherParticipantsList() throws LogicException, ClientAuthException {
+        return new ArrayList<>(connectedPlayers.getPlayersByGather(getCurrentGatherId()).getParticipants());
     }
 
     protected Gather getGatherById(Long gatherId) throws LogicException, ClientAuthException {
@@ -544,7 +545,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                         for (VoteResult voteResult : getVoteResultsByType(gatherId, session, VoteType.COMM)) {
                             commsId.add(voteResult.getTargetId());
                         }
-                        connectedPlayers.getPlayersByGather(gatherId).setComms(commsId);
+                        GatherPlayers players = connectedPlayers.getPlayersByGather(gatherId);
+                        players.setComms(commsId);
+                        players.fixPlayers();
                         setupServer(gatherId, session);
                         return null;
                     }
@@ -892,9 +895,29 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     @Override
     public void pickSide(final Side side) throws LogicException, ClientAuthException {
         Gather gather = getCurrentGather();
+        requiresGatherState(gather, GatherState.SIDEPICK, "Сейчас нельзя выбирать строну.");
         Long gatherId = gather.getId();
         connectedPlayers.getPlayersByGather(gatherId).pickSide(getSteamId(), side);
-        messageManager.postMessage(MessageType.SIDE_PICKED, "", gatherId);
+        messageManager.postMessage(MessageType.PICKED, "", gatherId);
         updateGatherState(gather, GatherState.PLAYERS);
+    }
+
+    private void requiresGatherState(Gather gather, GatherState state, String errorMessage) throws LogicException {
+        if (gather.getState() != state) {
+            throw new LogicException(errorMessage);
+        }
+    }
+
+    @Override
+    public void pickPlayer(Long playerSteamId) throws LogicException, ClientAuthException {
+        Gather gather = getCurrentGather();
+        requiresGatherState(gather, GatherState.PLAYERS, "Сейчас нельзя выбирать игроков.");
+        Long gatherId = gather.getId();
+        GatherPlayers gatherPlayers = connectedPlayers.getPlayersByGather(gatherId);
+        gatherPlayers.pickPlayer(getSteamId(), playerSteamId);
+        messageManager.postMessage(MessageType.PICKED, "", gatherId);
+        if (gatherPlayers.getTeamsStat(TeamStatType.NOFREE)) {
+            updateGatherState(gather, GatherState.COMPLETED);
+        }
     }
 }

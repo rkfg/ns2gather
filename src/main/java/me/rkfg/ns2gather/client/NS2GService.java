@@ -61,7 +61,9 @@ public interface NS2GService extends RemoteService {
 
     void unvote() throws LogicException, ClientAuthException;
 
-    List<PlayerDTO> getGatherPlayersList() throws LogicException, ClientAuthException;
+    List<PlayerDTO> getGatherParticipantsList() throws LogicException, ClientAuthException;
 
     void pickSide(Side side) throws LogicException, ClientAuthException;
+
+    void pickPlayer(Long playerSteamId) throws LogicException, ClientAuthException;
 }

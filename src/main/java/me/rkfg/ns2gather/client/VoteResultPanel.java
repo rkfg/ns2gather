@@ -68,6 +68,7 @@ public class VoteResultPanel extends DialogBox {
     private final Label lblAliens = new Label("Aliens");
     private final ScrollPanel scrollPanel_nonDistributed = new ScrollPanel();
     private final Label label_5 = new Label("Участники");
+    private Long myId = null;
 
     public VoteResultPanel() {
         setModal(false);
@@ -142,6 +143,7 @@ public class VoteResultPanel extends DialogBox {
         flexTable_sides.getFlexCellFormatter().setColSpan(3, 0, 2);
         flexTable_sides.getFlexCellFormatter().setColSpan(2, 0, 2);
         flexTable_sides.getCellFormatter().setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        button_pick.addClickHandler(new Button_pickClickHandler());
         button_pick.setEnabled(false);
 
         flexTable.setWidget(7, 0, button_pick);
@@ -205,6 +207,7 @@ public class VoteResultPanel extends DialogBox {
 
     public void center(final GatherState gatherState, final Long myId) {
         setAnimationEnabled(true);
+        this.myId = myId;
         ns2gService.getVoteResults(new MyAsyncCallback<List<VoteResultDTO>>() {
 
             @Override
@@ -232,7 +235,7 @@ public class VoteResultPanel extends DialogBox {
     }
 
     public void loadParticipants() {
-        ns2gService.getGatherPlayersList(new MyAsyncCallback<List<PlayerDTO>>() {
+        ns2gService.getGatherParticipantsList(new MyAsyncCallback<List<PlayerDTO>>() {
 
             @Override
             public void onSuccess(List<PlayerDTO> result) {
@@ -256,6 +259,9 @@ public class VoteResultPanel extends DialogBox {
                         break;
                     }
                 }
+                button_pick.setEnabled(dataProvider_aliens.getList().size() == dataProvider_marines.getList().size()
+                        && myId.equals(comms.get(1)) || dataProvider_aliens.getList().size() != dataProvider_marines.getList().size()
+                        && myId.equals(comms.get(0)));
             }
         });
     }
@@ -275,6 +281,19 @@ public class VoteResultPanel extends DialogBox {
         } else {
             label_commB.setText("Командир Marines");
             label_commA.setText("Командир Aliens");
+        }
+    }
+
+    private class Button_pickClickHandler implements ClickHandler {
+        public void onClick(ClickEvent event) {
+            PlayerDTO selected = trySelectionModelValue(selectionModel_nonDistributed, "Выберите участника.", PlayerDTO.class);
+            ns2gService.pickPlayer(selected.getId(), new MyAsyncCallback<Void>() {
+
+                @Override
+                public void onSuccess(Void result) {
+
+                }
+            });
         }
     }
 }

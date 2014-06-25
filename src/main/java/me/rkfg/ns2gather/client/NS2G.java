@@ -536,12 +536,8 @@ public class NS2G implements EntryPoint {
                     case RESET_HIGHLIGHT:
                         resetHighlight();
                         break;
-                    case SIDE_PICKED:
+                    case PICKED:
                         voteResultPanel.loadParticipants();
-                        break;
-                    case MARINE_PICKED:
-                        break;
-                    case ALIEN_PICKED:
                         break;
                     default:
                         break;

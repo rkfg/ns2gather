@@ -28,6 +28,10 @@ import ru.ppsrk.gwt.server.LogicExceptionFormatted;
 
 public class GatherPlayersManager {
 
+    public enum TeamStatType {
+        EQUALITY, NOFREE
+    }
+
     HashMap<Long, GatherPlayers> gatherToPlayers = new HashMap<>();
     HashMap<Long, PlayerDTO> steamIdPlayer = new HashMap<>();
 
@@ -39,6 +43,7 @@ public class GatherPlayersManager {
 
     public class GatherPlayers {
         HashMap<Long, PlayerDTO> gatherPlayers = new HashMap<>();
+        HashMap<Long, PlayerDTO> gatherParticipants = null;
         List<Long> comms = new ArrayList<Long>();
 
         public void putPlayer(Long id, PlayerDTO playerDTO) {
@@ -76,7 +81,7 @@ public class GatherPlayersManager {
             Side commSide = side;
             for (int i = 0; i < 2; i++) {
                 Long commId = getCommId(i);
-                PlayerDTO comm = getPlayer(commId);
+                PlayerDTO comm = getParticipant(commId);
                 if (comm == null) {
                     throw LogicExceptionFormatted.format("Не найден командир в списке участников: %d", commId);
                 }
@@ -84,6 +89,63 @@ public class GatherPlayersManager {
                 commSide = commSide == Side.MARINES ? Side.ALIENS : Side.MARINES;
             }
         }
+
+        public void pickPlayer(Long steamId, Long participantSteamId) throws LogicException {
+            boolean equalPlayersInTeams = getTeamsStat(TeamStatType.EQUALITY);
+            if (equalPlayersInTeams && !steamId.equals(comms.get(1)) || !equalPlayersInTeams && !steamId.equals(comms.get(0))) {
+                throw new LogicException("Вы не можете сейчас выбрать игрока.");
+            }
+            PlayerDTO comm = getParticipant(steamId);
+            if (comm == null) {
+                throw LogicExceptionFormatted.format("Командир %d не найден среди участников.", steamId);
+            }
+            Side side = comm.getSide();
+            PlayerDTO participant = getParticipant(participantSteamId);
+            if (participant == null) {
+                throw LogicExceptionFormatted.format("Игрок %d не найден среди участников.", participantSteamId);
+            }
+            participant.setSide(side);
+        }
+
+        public boolean getTeamsStat(TeamStatType type) {
+            int aliens = 0;
+            int marines = 0;
+            int free = 0;
+            for (PlayerDTO playerDTO : gatherParticipants.values()) {
+                switch (playerDTO.getSide()) {
+                case ALIENS:
+                    aliens++;
+                    break;
+                case MARINES:
+                    marines++;
+                    break;
+                case NONE:
+                    free++;
+                    break;
+                }
+            }
+            switch (type) {
+            case EQUALITY:
+                return aliens == marines;
+            case NOFREE:
+                return free == 0;
+            default:
+                return false;
+            }
+        }
+
+        public void fixPlayers() {
+            gatherParticipants = new HashMap<>(gatherPlayers);
+        }
+
+        public Collection<PlayerDTO> getParticipants() {
+            return gatherParticipants.values();
+        }
+
+        public PlayerDTO getParticipant(Long steamId) {
+            return gatherParticipants.get(steamId);
+        }
+
     }
 
     public GatherPlayersManager() {
