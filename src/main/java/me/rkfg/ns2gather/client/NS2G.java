@@ -384,7 +384,6 @@ public class NS2G implements EntryPoint {
                     @Override
                     public void onSuccess(Void result) {
                         runPing();
-                        runMessageListener();
                         loadInitState();
                         postRulesAnnounce();
                         runSizeSaver();
@@ -437,6 +436,7 @@ public class NS2G implements EntryPoint {
                 if (result.getVoteResults() != null) {
                     voteResultPanel.fillFields(result.getVoteResults());
                 }
+                runMessageListener();
             }
         });
     }
