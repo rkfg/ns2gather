@@ -63,7 +63,6 @@ import com.google.gwt.view.client.ListDataProvider;
  */
 public class NS2G implements EntryPoint {
 
-    private Long myId = null;
     private boolean ready = false;
     private SoundManager soundManager = new SoundManager();
     private CookieSettingsManager cookieSettingsManager = new CookieSettingsManager();
@@ -179,7 +178,7 @@ public class NS2G implements EntryPoint {
     private final Button button_enterNewGather = new Button("Зайти в новый сбор");
     private final Button button_logout = new Button("Выход");
     private Set<Long> votedPlayers = new HashSet<Long>();
-    private VoteResultPanel voteResultPanel = new VoteResultPanel();
+    private VoteResultPanel voteResultPanel;
     private String myNick;
     private final HorizontalPanel horizontalPanel_voteButton = new HorizontalPanel();
     private final Label label_version = new Label();
@@ -359,7 +358,14 @@ public class NS2G implements EntryPoint {
             @Override
             public void onSuccess(PlayerDTO result) {
                 label_nick.setHTML("<a href=\"" + result.getProfileUrl() + "\" target=\"_blank\">" + result.getName() + "</a>: ");
-                myId = result.getId();
+                voteResultPanel = new VoteResultPanel(result.getId());
+                voteResultPanel.getButton_mute().addClickHandler(new ClickHandler() {
+
+                    @Override
+                    public void onClick(ClickEvent event) {
+                        soundManager.stopSound(NS2Sound.VOTE_END);
+                    }
+                });
                 // send initial ping to show our presence
                 ns2gService.ping(new MyAsyncCallback<Void>() {
 
@@ -377,13 +383,6 @@ public class NS2G implements EntryPoint {
             @Override
             public void onFailure(Throwable caught) {
                 login();
-            }
-        });
-        voteResultPanel.getButton_mute().addClickHandler(new ClickHandler() {
-
-            @Override
-            public void onClick(ClickEvent event) {
-                soundManager.stopSound(NS2Sound.VOTE_END);
             }
         });
         soundManager.setLoop(NS2Sound.VOTE_END, true);
@@ -568,7 +567,7 @@ public class NS2G implements EntryPoint {
     }
 
     protected void loadVoteResult() {
-        voteResultPanel.center(gatherStatusLabel.getGatherState(), myId);
+        voteResultPanel.center(gatherStatusLabel.getGatherState());
     }
 
     protected void addChatMessage(String text, Long timestamp) {

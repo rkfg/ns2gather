@@ -70,8 +70,9 @@ public class VoteResultPanel extends DialogBox {
     private final Label label_5 = new Label("Участники");
     private Long myId = null;
 
-    public VoteResultPanel() {
+    public VoteResultPanel(Long myId) {
         setModal(false);
+        this.myId = myId;
         setText("Результаты голосования");
         flexTable.setCellPadding(5);
 
@@ -205,9 +206,8 @@ public class VoteResultPanel extends DialogBox {
         }
     }
 
-    public void center(final GatherState gatherState, final Long myId) {
+    public void center(final GatherState gatherState) {
         setAnimationEnabled(true);
-        this.myId = myId;
         ns2gService.getVoteResults(new MyAsyncCallback<List<VoteResultDTO>>() {
 
             @Override
