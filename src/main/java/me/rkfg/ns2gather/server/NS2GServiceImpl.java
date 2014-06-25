@@ -54,6 +54,8 @@ import org.openid4java.discovery.DiscoveryException;
 import org.openid4java.discovery.DiscoveryInformation;
 import org.openid4java.message.AuthRequest;
 import org.openid4java.message.MessageException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ru.ppsrk.gwt.client.ClientAuthException;
 import ru.ppsrk.gwt.client.ClientAuthenticationException;
@@ -78,6 +80,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private static final boolean forceDebug = false;
     private static final boolean forceRelease = false;
+    Logger logger = LoggerFactory.getLogger(getClass());
 
     static ConsumerManager manager = new ConsumerManager();
     GatherPlayersManager connectedPlayers = new GatherPlayersManager(new CleanupCallback() {
@@ -396,6 +399,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void updateGatherState(Gather gather, GatherState newState) throws LogicException, ClientAuthException {
+        logger.info("Changing gather {} state from {} to {}", gather.getId(), gather.getState(), newState);
         gather.setState(newState);
         messageManager.postMessage(MessageType.GATHER_STATUS, String.valueOf(newState.ordinal()), gather.getId());
         HibernateUtil.saveObject(gather);
