@@ -92,10 +92,7 @@ public class ServerManager {
                         try {
                             SourceServer sourceServer = new SourceServer(serverDTO.getIp());
                             getServerData(serverDTO.getId()).setPlayers(sourceServer.getPlayers());
-                        } catch (SteamCondenserException e) {
-                            e.printStackTrace();
-                        } catch (TimeoutException e) {
-                            e.printStackTrace();
+                        } catch (SteamCondenserException | TimeoutException e) {
                         }
                     }
                 } catch (LogicException | ClientAuthException e) {
