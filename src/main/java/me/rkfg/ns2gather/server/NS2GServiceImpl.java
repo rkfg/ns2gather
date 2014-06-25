@@ -588,7 +588,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             HttpUriRequest changeMapRequest = buildWebAdminGetRequest(server, "sv_changemap+" + map.getName());
             webClient.execute(changeMapRequest);
         } catch (IOException e) {
-            throw new LogicException("Не удалось сменить пароль на сервере " + server.getName());
+            throw new LogicException("Не удалось сменить карту на сервере " + server.getName());
         }
     }
 
