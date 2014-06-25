@@ -98,6 +98,7 @@ public class GatherPlayersManager {
             if (participant == null) {
                 throw LogicExceptionFormatted.format("Игрок %d не найден среди участников.", participantSteamId);
             }
+            participant.setLastPing(System.currentTimeMillis());
             participant.setSide(side);
         }
 

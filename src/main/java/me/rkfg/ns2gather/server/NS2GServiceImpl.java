@@ -500,7 +500,15 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public List<PlayerDTO> getGatherParticipantsList() throws LogicException, ClientAuthException {
-        return new ArrayList<>(connectedPlayers.getPlayersByGather(getCurrentGatherId()).getParticipants());
+        List<PlayerDTO> participantList = new ArrayList<>(connectedPlayers.getPlayersByGather(getCurrentGatherId()).getParticipants());
+        Collections.sort(participantList, new Comparator<PlayerDTO>() {
+
+            @Override
+            public int compare(PlayerDTO o1, PlayerDTO o2) {
+                return o1.getLastPing().compareTo(o2.getLastPing());
+            }
+        });
+        return participantList;
     }
 
     protected Gather getGatherById(Long gatherId) throws LogicException, ClientAuthException {
