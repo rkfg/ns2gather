@@ -409,7 +409,7 @@ public class NS2G implements EntryPoint {
             @Override
             public void onSuccess(InitStateDTO result) {
                 gatherStatusLabel.setGatherState(result.getGatherState());
-                if (result.getGatherState() == GatherState.COMPLETED) {
+                if (isGatherClosed(result.getGatherState())) {
                     button_vote.setEnabled(false);
                 }
                 updateEnterNewButtonVisibility();
@@ -741,4 +741,9 @@ public class NS2G implements EntryPoint {
             }
         }.scheduleRepeating(ClientSettings.SIZE_SAVE_INTERVAL);
     }
+
+    public static boolean isGatherClosed(GatherState gatherState) {
+        return Arrays.asList(GatherState.COMPLETED, GatherState.SIDEPICK, GatherState.PLAYERS).contains(gatherState);
+    }
+
 }
