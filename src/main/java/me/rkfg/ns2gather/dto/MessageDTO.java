@@ -10,6 +10,16 @@ public class MessageDTO implements IsSerializable {
     Long timestamp;
     Long gatherId;
 
+    public static MessageDTO privateMessage(Long toSteamId, MessageType type, String content, Long gatherId) {
+        MessageDTO result = new MessageDTO();
+        result.visibility = MessageVisibility.PERSONAL;
+        result.toSteamId = toSteamId;
+        result.type = type;
+        result.content = content;
+        result.gatherId = gatherId;
+        return result;
+    }
+
     public MessageDTO(MessageType type, String content, Long gatherId) {
         super();
         this.type = type;

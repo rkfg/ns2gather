@@ -92,7 +92,7 @@ public class VoteResult extends BasicDomain {
         CheckedDTO target = null;
         switch (type) {
         case COMM:
-            target = gatherPlayers.get(targetId);
+            target = gatherPlayers.getPlayer(targetId);
             if (target == null) {
                 throw LogicExceptionFormatted.format("Игрок %d не найден.", targetId);
             }

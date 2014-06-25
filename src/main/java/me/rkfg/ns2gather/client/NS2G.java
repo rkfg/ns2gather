@@ -63,6 +63,7 @@ import com.google.gwt.view.client.ListDataProvider;
  */
 public class NS2G implements EntryPoint {
 
+    private Long myId = null;
     private boolean ready = false;
     private SoundManager soundManager = new SoundManager();
     private CookieSettingsManager cookieSettingsManager = new CookieSettingsManager();
@@ -168,7 +169,8 @@ public class NS2G implements EntryPoint {
 
         @Override
         public void onClick(ClickEvent event) {
-            if (gatherStatusLabel.getGatherState() != GatherState.COMPLETED) {
+            if (!Arrays.asList(GatherState.COMPLETED, GatherState.SIDEPICK, GatherState.PLAYERS).contains(
+                    gatherStatusLabel.getGatherState())) {
                 return;
             }
             loadVoteResult();
@@ -357,6 +359,7 @@ public class NS2G implements EntryPoint {
             @Override
             public void onSuccess(PlayerDTO result) {
                 label_nick.setHTML("<a href=\"" + result.getProfileUrl() + "\" target=\"_blank\">" + result.getName() + "</a>: ");
+                myId = result.getId();
                 // send initial ping to show our presence
                 ns2gService.ping(new MyAsyncCallback<Void>() {
 
@@ -533,6 +536,9 @@ public class NS2G implements EntryPoint {
                     case RESET_HIGHLIGHT:
                         resetHighlight();
                         break;
+                    case PICKED:
+                        voteResultPanel.loadParticipants();
+                        break;
                     default:
                         break;
                     }
@@ -562,7 +568,7 @@ public class NS2G implements EntryPoint {
     }
 
     protected void loadVoteResult() {
-        voteResultPanel.center();
+        voteResultPanel.center(gatherStatusLabel.getGatherState(), myId);
     }
 
     protected void addChatMessage(String text, Long timestamp) {

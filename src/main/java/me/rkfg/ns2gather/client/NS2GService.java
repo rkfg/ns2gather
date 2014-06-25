@@ -9,6 +9,7 @@ import me.rkfg.ns2gather.dto.MapDTO;
 import me.rkfg.ns2gather.dto.MessageDTO;
 import me.rkfg.ns2gather.dto.PlayerDTO;
 import me.rkfg.ns2gather.dto.ServerDTO;
+import me.rkfg.ns2gather.dto.Side;
 import me.rkfg.ns2gather.dto.VoteResultDTO;
 import ru.ppsrk.gwt.client.ClientAuthException;
 import ru.ppsrk.gwt.client.LogicException;
@@ -60,5 +61,9 @@ public interface NS2GService extends RemoteService {
 
     void unvote() throws LogicException, ClientAuthException;
 
-    String getGatherPlayersList() throws LogicException, ClientAuthException;
+    List<PlayerDTO> getGatherParticipantsList() throws LogicException, ClientAuthException;
+
+    void pickSide(Side side) throws LogicException, ClientAuthException;
+
+    void pickPlayer(Long playerSteamId) throws LogicException, ClientAuthException;
 }
