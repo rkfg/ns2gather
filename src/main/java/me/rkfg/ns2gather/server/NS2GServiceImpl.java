@@ -347,9 +347,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     messageManager.postMessage(MessageType.MORE_PLAYERS, "", gatherId);
                 }
             } else {
-                if (gather.getState() == GatherState.ONTIMER) {
-                    stopGatherTimer(gather);
-                }
+                stopGatherTimer(gather);
             }
         }
     }
@@ -357,7 +355,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     private void stopGatherTimer(final Gather gather) throws LogicException, ClientAuthException {
         messageManager.postMessage(MessageType.STOP_TIMER, "", gather.getId());
         gatherCountdownManager.cancelGatherCountdownTasks(gather.getId());
-        updateGatherState(gather, GatherState.OPEN);
+        if (gather.getState() == GatherState.ONTIMER) {
+            updateGatherState(gather, GatherState.OPEN);
+        }
     }
 
     protected void resolveGather(final Gather gather) throws LogicException, ClientAuthException {
