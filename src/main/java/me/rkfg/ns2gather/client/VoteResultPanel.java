@@ -84,9 +84,8 @@ public class VoteResultPanel extends DialogBox {
     private final Label label_5 = new Label("Участники");
     private Long myId = null;
 
-    public VoteResultPanel(Long myId) {
+    public VoteResultPanel() {
         setModal(false);
-        this.myId = myId;
         setText("Результаты голосования");
         flexTable.setCellPadding(5);
 
@@ -188,6 +187,10 @@ public class VoteResultPanel extends DialogBox {
         flexTable.getFlexCellFormatter().setColSpan(7, 0, 2);
         flexTable.getCellFormatter().setHorizontalAlignment(7, 0, HasHorizontalAlignment.ALIGN_CENTER);
         flexTable.getFlexCellFormatter().setColSpan(6, 0, 2);
+    }
+
+    public void setId(Long id) {
+        myId = id;
     }
 
     public void fillFields(List<VoteResultDTO> result) {

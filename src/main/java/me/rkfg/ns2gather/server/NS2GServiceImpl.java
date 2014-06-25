@@ -42,6 +42,7 @@ import me.rkfg.ns2gather.dto.VoteType;
 import me.rkfg.ns2gather.server.GatherPlayersManager.CleanupCallback;
 import me.rkfg.ns2gather.server.GatherPlayersManager.GatherPlayers;
 import me.rkfg.ns2gather.server.GatherPlayersManager.TeamStatType;
+import me.rkfg.ns2gather.server.ServerManager.ServersChangeCallback;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -82,7 +83,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     private static final boolean forceRelease = false;
     Logger logger = LoggerFactory.getLogger(getClass());
 
-    static ConsumerManager manager = new ConsumerManager();
+    static ConsumerManager consumerManager = new ConsumerManager();
+    ServerManager serverManager;
     GatherPlayersManager connectedPlayers = new GatherPlayersManager(new CleanupCallback() {
 
         @Override
@@ -123,6 +125,17 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         } catch (LogicException | ClientAuthException e) {
             e.printStackTrace();
         }
+        serverManager = new ServerManager(new ServersChangeCallback() {
+
+            @Override
+            public void onChange() {
+                try {
+                    messageManager.postMessage(MessageType.SERVER_UPDATE, "", null);
+                } catch (LogicException | ClientAuthException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     protected void removeVotesForPlayer(final Long gatherId, final Long playerLeftId) throws LogicException, ClientAuthException {
@@ -183,18 +196,18 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     public String login() throws LogicException {
         try {
             // perform discovery on the user-supplied identifier
-            List<?> discoveries = manager.discover("http://steamcommunity.com/openid");
+            List<?> discoveries = consumerManager.discover("http://steamcommunity.com/openid");
 
             // attempt to associate with the OpenID provider
             // and retrieve one service endpoint for authentication
-            DiscoveryInformation discovered = manager.associate(discoveries);
+            DiscoveryInformation discovered = consumerManager.associate(discoveries);
 
             // store the discovery information in the user's session for later use
             // leave out for stateless operation / if there is no session
             getSession().setAttribute("discovered", discovered);
 
             // obtain a AuthRequest message to be sent to the OpenID provider
-            AuthRequest authReq = manager.authenticate(discovered, Settings.CALLBACK_URL);
+            AuthRequest authReq = consumerManager.authenticate(discovered, Settings.CALLBACK_URL);
             String result = authReq.getDestinationUrl(true);
             return result;
         } catch (MessageException | ConsumerException | DiscoveryException e) {
@@ -268,7 +281,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public List<ServerDTO> getServers() throws LogicException, ClientAuthException {
-        return HibernateUtil.queryList("from Server", new String[] {}, new Object[] {}, ServerDTO.class);
+        return serverManager.getServers();
     }
 
     @Override
