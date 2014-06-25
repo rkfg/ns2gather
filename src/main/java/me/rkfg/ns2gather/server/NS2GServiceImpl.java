@@ -91,8 +91,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     Long playerId = 1L;
     MessageManager messageManager = new MessageManager();
     GatherCountdownManager gatherCountdownManager = new GatherCountdownManager();
-    Object voteCountLock = new Object();
-    Object findGatherLock = new Object();
     private boolean debug = false;
 
     private class MessagePollingServer extends LongPollingServer<List<MessageDTO>> {
@@ -495,7 +493,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void countResults(final Long gatherId) throws LogicException, ClientAuthException {
-        synchronized (voteCountLock) {
+        synchronized (connectedPlayers) {
             final Gather gather = getGatherById(gatherId);
             stopGatherTimer(gather);
             try {
@@ -650,7 +648,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private Long findOpenGatherId() throws LogicException, ClientAuthException {
-        synchronized (findGatherLock) {
+        synchronized (connectedPlayers) {
             return HibernateUtil.exec(new HibernateCallback<Long>() {
 
                 @Override
