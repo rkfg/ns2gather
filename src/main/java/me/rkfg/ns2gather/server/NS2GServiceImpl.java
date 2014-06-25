@@ -330,10 +330,10 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             }
             if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN) {
                 // minimum players count reached
-                if (connectedPlayersCount % 2 == 0) {
-                    // even number, gather may be ready
-                    if (getVotedPlayersCount(gatherId) < connectedPlayersCount) {
-                        // not everyone voted yet, run the timer
+                if (getVotedPlayersCount(gatherId) < connectedPlayersCount) {
+                    // not everyone voted yet, check for evenness
+                    if (connectedPlayersCount % 2 == 0) {
+                        // even number, run the timer
                         gatherCountdownManager.scheduleGatherCountdownTask(gatherId, new TimerTask() {
 
                             @Override
@@ -349,13 +349,13 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                         updateGatherState(gather, GatherState.ONTIMER);
                         messageManager.postMessage(MessageType.RUN_TIMER, String.valueOf(Settings.GATHER_RESOLVE_DELAY / 1000), gatherId);
                     } else {
-                        // gather is fully ready, let's count votes
-                        countResults(gatherId);
+                        // odd number, stop the timer and wait
+                        stopGatherTimer(gather);
+                        messageManager.postMessage(MessageType.MORE_PLAYERS, "", gatherId);
                     }
                 } else {
-                    // odd number, stop the timer and wait
-                    stopGatherTimer(gather);
-                    messageManager.postMessage(MessageType.MORE_PLAYERS, "", gatherId);
+                    // gather is fully ready, let's count votes
+                    countResults(gatherId);
                 }
             } else {
                 stopGatherTimer(gather);
@@ -479,8 +479,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             sendReadiness(getPlayer().getId(), gatherId, true);
         }
         int connectedPlayersCount = connectedPlayers.getPlayersByGather(gatherId).playerCount();
-        if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN && getVotedPlayersCount(gatherId) == connectedPlayersCount
-                && connectedPlayersCount % 2 == 0) {
+        if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN && getVotedPlayersCount(gatherId) == connectedPlayersCount) {
             countResults(gatherId);
         }
     }
