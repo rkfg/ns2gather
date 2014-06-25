@@ -11,6 +11,8 @@ public class LoginBox extends DialogBox {
     private final SimplePanel simplePanel = new SimplePanel();
     private final FlexTable flexTable = new FlexTable();
     private final HTML html_loginButton = new HTML("", false);
+    private final HTML htmlNewHtml = new HTML(
+            "Пожалуйста, ознакомьтесь с <a href=\"rules.html\" target=\"_blank\">правилами</a>, прежде чем войти.", true);
 
     public LoginBox(String url) {
         setText("Пожалуйста, войдите");
@@ -26,5 +28,7 @@ public class LoginBox extends DialogBox {
                 + "\"><img src=\"http://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_large_border.png\"/></a>");
         flexTable.getCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
         flexTable.getCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_MIDDLE);
+
+        flexTable.setWidget(1, 0, htmlNewHtml);
     }
 }
