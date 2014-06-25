@@ -555,7 +555,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                         }
                         GatherPlayers players = connectedPlayers.getPlayersByGather(gatherId);
                         players.setComms(commsId);
-                        players.fixPlayers();
+                        players.playersToParticipants();
                         setupServer(gatherId, session);
                         return null;
                     }

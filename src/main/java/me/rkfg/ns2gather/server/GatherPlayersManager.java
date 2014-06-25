@@ -134,8 +134,12 @@ public class GatherPlayersManager {
             }
         }
 
-        public void fixPlayers() {
-            gatherParticipants = new HashMap<>(gatherPlayers);
+        // clone players to fix them for the current gather
+        public void playersToParticipants() {
+            gatherParticipants = new HashMap<>();
+            for (PlayerDTO playerDTO : getPlayers()) {
+                gatherParticipants.put(playerDTO.getId(), playerDTO.clone());
+            }
         }
 
         public Collection<PlayerDTO> getParticipants() {

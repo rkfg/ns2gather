@@ -47,4 +47,9 @@ public class PlayerDTO extends CheckedDTO {
     public String toString() {
         return name;
     }
+
+    public PlayerDTO clone() {
+        PlayerDTO result = new PlayerDTO(id, name, profileUrl, lastPing);
+        return result;
+    }
 }
