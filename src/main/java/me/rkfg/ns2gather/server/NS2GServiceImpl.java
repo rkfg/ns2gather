@@ -841,6 +841,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         result.setVoteStat(getVoteStat());
         result.setVersion(getVersion());
         result.setPasswords(getPasswordsForStreamer());
+        if (isGatherClosed(getCurrentGather())) {
+            result.setVoteResults(getVoteResults());
+        }
         return result;
     }
 
