@@ -16,8 +16,10 @@ import ru.ppsrk.gwt.client.AlertRuntimeException;
 import ru.ppsrk.gwt.client.ClientUtils.MyAsyncCallback;
 import ru.ppsrk.gwt.client.ResultPopupPanel.ResultPopupPanelCallback;
 
+import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -33,6 +35,18 @@ import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SingleSelectionModel;
 
 public class VoteResultPanel extends DialogBox {
+
+    private class ParticipantCell extends AbstractCell<PlayerDTO> {
+        @Override
+        public void render(Context context, PlayerDTO value, SafeHtmlBuilder sb) {
+            if (comms.contains(value.getId())) {
+                sb.appendHtmlConstant("<b>").appendEscaped(value.getName()).appendHtmlConstant("</b>");
+            } else {
+                sb.appendEscaped(value.getName());
+            }
+        }
+    };
+
     private SidePick sidePickPanel = new SidePick();
     private final SimplePanel rootPanel = new SimplePanel();
     private final FlexTable flexTable = new FlexTable();
@@ -53,12 +67,12 @@ public class VoteResultPanel extends DialogBox {
     private final Label label_4 = new Label("Список участников:");
     private NS2GServiceAsync ns2gService = NS2GServiceAsync.Util.getInstance();
     private final ListDataProvider<PlayerDTO> dataProvider_marines = new ListDataProvider<PlayerDTO>();
-    private final CellList<PlayerDTO> cellList_marines = new CellList<PlayerDTO>(PlayerDTO.getCell());
+    private final CellList<PlayerDTO> cellList_marines = new CellList<PlayerDTO>(new ParticipantCell());
     private final ListDataProvider<PlayerDTO> dataProvider_aliens = new ListDataProvider<PlayerDTO>();
-    private final CellList<PlayerDTO> cellList_aliens = new CellList<PlayerDTO>(PlayerDTO.getCell());
+    private final CellList<PlayerDTO> cellList_aliens = new CellList<PlayerDTO>(new ParticipantCell());
     private final ListDataProvider<PlayerDTO> dataProvider_nonDistributed = new ListDataProvider<PlayerDTO>();
     private final SingleSelectionModel<PlayerDTO> selectionModel_nonDistributed = new SingleSelectionModel<PlayerDTO>();
-    private final CellList<PlayerDTO> cellList_nonDistributed = new CellList<PlayerDTO>(PlayerDTO.getCell());
+    private final CellList<PlayerDTO> cellList_nonDistributed = new CellList<PlayerDTO>(new ParticipantCell());
     private final Button button_pick = new Button("Забрать");
     private List<Long> comms = new ArrayList<Long>();
     private final FlexTable flexTable_sides = new FlexTable();

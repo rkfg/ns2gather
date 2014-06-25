@@ -47,13 +47,4 @@ public class PlayerDTO extends CheckedDTO {
     public String toString() {
         return name;
     }
-
-    public static AbstractCell<PlayerDTO> getCell() {
-        return new AbstractCell<PlayerDTO>() {
-            @Override
-            public void render(Context context, PlayerDTO value, SafeHtmlBuilder sb) {
-                sb.appendEscaped(value.getName());
-            }
-        };
-    }
 }
