@@ -87,14 +87,16 @@ public class VoteResult extends BasicDomain {
         return new VoteResultDTO(getTargetId(), getVoteCount(), getType(), target);
     }
 
-    public static CheckedDTO getTarget(Session session, GatherPlayers gatherPlayers, VoteType type, Long targetId)
-            throws LogicException {
+    public static CheckedDTO getTarget(Session session, GatherPlayers gatherPlayers, VoteType type, Long targetId) throws LogicException {
         CheckedDTO target = null;
         switch (type) {
         case COMM:
-            target = gatherPlayers.getPlayer(targetId);
+            target = gatherPlayers.getParticipant(targetId);
             if (target == null) {
-                throw LogicExceptionFormatted.format("Игрок %d не найден.", targetId);
+                target = gatherPlayers.getPlayer(targetId);
+                if (target == null) {
+                    throw LogicExceptionFormatted.format("Игрок %d не найден.", targetId);
+                }
             }
             break;
         case MAP:

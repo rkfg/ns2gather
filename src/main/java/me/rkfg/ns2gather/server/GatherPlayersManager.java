@@ -43,7 +43,7 @@ public class GatherPlayersManager {
 
     public class GatherPlayers {
         HashMap<Long, PlayerDTO> gatherPlayers = new HashMap<>();
-        HashMap<Long, PlayerDTO> gatherParticipants = null;
+        HashMap<Long, PlayerDTO> gatherParticipants = new HashMap<>();
         List<Long> comms = new ArrayList<Long>();
 
         public void putPlayer(Long id, PlayerDTO playerDTO) {
