@@ -1,8 +1,5 @@
 package me.rkfg.ns2gather.dto;
 
-import com.google.gwt.cell.client.AbstractCell;
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
-
 public class PlayerDTO extends CheckedDTO {
     Long lastPing;
     String profileUrl;
