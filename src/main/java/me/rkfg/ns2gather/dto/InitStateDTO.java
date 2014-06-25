@@ -10,7 +10,7 @@ public class InitStateDTO implements IsSerializable {
     List<ServerDTO> servers;
     List<PlayerDTO> players;
     String voteStat;
-    Set<String> votedNames;
+    Set<Long> votedIds;
     GatherState gatherState;
     String version;
     String passwords;
@@ -47,12 +47,12 @@ public class InitStateDTO implements IsSerializable {
         this.voteStat = voteStat;
     }
 
-    public Set<String> getVotedNames() {
-        return votedNames;
+    public Set<Long> getVotedIds() {
+        return votedIds;
     }
 
-    public void setVotedNames(Set<String> votedNames) {
-        this.votedNames = votedNames;
+    public void setVotedIds(Set<Long> votedIds) {
+        this.votedIds = votedIds;
     }
 
     public GatherState getGatherState() {

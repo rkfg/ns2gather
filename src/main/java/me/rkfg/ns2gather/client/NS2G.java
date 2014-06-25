@@ -178,7 +178,7 @@ public class NS2G implements EntryPoint {
     });
     private final Button button_enterNewGather = new Button("Зайти в новый сбор");
     private final Button button_logout = new Button("Выход");
-    private Set<String> votedPlayers = new HashSet<String>();
+    private Set<Long> votedPlayers = new HashSet<Long>();
     private VoteResultPanel voteResultPanel = new VoteResultPanel();
     private String myNick;
     private final HorizontalPanel horizontalPanel_voteButton = new HorizontalPanel();
@@ -333,7 +333,7 @@ public class NS2G implements EntryPoint {
             @Override
             public String getStyleNames(PlayerDTO row, int rowIndex) {
                 String result = "big-datagrid";
-                if (votedPlayers.contains(row.getName())) {
+                if (votedPlayers.contains(row.getId())) {
                     result += " voted";
                 }
                 return result;
@@ -354,7 +354,7 @@ public class NS2G implements EntryPoint {
             }
         });
 
-        ns2gService.getUserName(new AsyncCallback<PlayerDTO>() {
+        ns2gService.getPlayer(new AsyncCallback<PlayerDTO>() {
 
             @Override
             public void onSuccess(PlayerDTO result) {
@@ -414,7 +414,7 @@ public class NS2G implements EntryPoint {
                     button_vote.setEnabled(false);
                 }
                 updateEnterNewButtonVisibility();
-                votedPlayers = result.getVotedNames();
+                votedPlayers = result.getVotedIds();
                 dataProvider_players.setList(result.getPlayers());
                 dataProvider_maps.setList(result.getMaps());
                 dataProvider_servers.setList(result.getServers());
@@ -481,7 +481,7 @@ public class NS2G implements EntryPoint {
                         loadPlayers = true;
                         break;
                     case USER_READY:
-                        votedPlayers.add(message.getContent());
+                        votedPlayers.add(Long.valueOf(message.getContent()));
                         dataGrid_players.redraw();
                         addChatMessage(message.getContent() + " готов начать игру!", message.getTimestamp());
                         break;
@@ -563,7 +563,7 @@ public class NS2G implements EntryPoint {
     }
 
     protected void resetHighlight() {
-        votedPlayers = new HashSet<String>();
+        votedPlayers = new HashSet<Long>();
         dataGrid_players.redraw();
     }
 

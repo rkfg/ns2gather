@@ -27,7 +27,7 @@ public interface NS2GService extends RemoteService {
 
     Long getSteamId() throws ClientAuthException, LogicException;
 
-    PlayerDTO getUserName() throws LogicException, ClientAuthException;
+    PlayerDTO getPlayer() throws LogicException, ClientAuthException;
 
     List<ServerDTO> getServers() throws LogicException, ClientAuthException;
 
@@ -53,7 +53,7 @@ public interface NS2GService extends RemoteService {
 
     String getVoteStat() throws LogicException, ClientAuthException;
 
-    Set<String> getVotedPlayerNames() throws LogicException, ClientAuthException;
+    Set<Long> getVotedPlayerIds() throws LogicException, ClientAuthException;
 
     GatherState getGatherState() throws LogicException, ClientAuthException;
 

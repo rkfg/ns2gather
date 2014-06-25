@@ -247,11 +247,11 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     @Override
-    public PlayerDTO getUserName() throws LogicException, ClientAuthException {
-        return getUserName(getSteamId());
+    public PlayerDTO getPlayer() throws LogicException, ClientAuthException {
+        return getPlayer(getSteamId());
     }
 
-    public PlayerDTO getUserName(Long steamId) throws LogicException, ClientAuthException {
+    public PlayerDTO getPlayer(Long steamId) throws LogicException, ClientAuthException {
         PlayerDTO player = connectedPlayers.getPlayerBySteamId(steamId);
         if (player != null) {
             return player;
@@ -394,7 +394,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private void unvote(Long gatherId, Long steamId) throws LogicException, ClientAuthException {
         removeVotes(steamId);
-        sendReadiness(getUserName(steamId).getName(), gatherId, false);
+        sendReadiness(getPlayer(steamId).getId(), gatherId, false);
     }
 
     private void updateGatherState(Gather gather, GatherState newState) throws LogicException, ClientAuthException {
@@ -420,7 +420,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         if (text.length() > ClientSettings.CHAT_MAX_LENGTH) {
             text = text.substring(0, ClientSettings.CHAT_MAX_LENGTH);
         }
-        messageManager.postMessage(MessageType.CHAT_MESSAGE, getUserName().getName() + ": " + text, getCurrentGatherId());
+        messageManager.postMessage(MessageType.CHAT_MESSAGE, getPlayer().getName() + ": " + text, getCurrentGatherId());
     }
 
     @Override
@@ -465,7 +465,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             }
         });
         if (showVote) {
-            sendReadiness(getUserName().getName(), gatherId, true);
+            sendReadiness(getPlayer().getId(), gatherId, true);
         }
         int connectedPlayersCount = connectedPlayers.getPlayersByGather(gatherId).playerCount();
         if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN && getVotedPlayersCount(gatherId) == connectedPlayersCount
@@ -717,15 +717,15 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             });
         } catch (LogicException e) {
             if (removeVotes(getSteamId())) {
-                sendReadiness(getUserName().getName(), getCurrentGatherId(), false);
+                sendReadiness(getPlayer().getId(), getCurrentGatherId(), false);
             }
             throw e;
         }
     }
 
-    private void sendReadiness(String username, Long gatherId, boolean ready) throws LogicException, ClientAuthException {
+    private void sendReadiness(Long steamId, Long gatherId, boolean ready) throws LogicException, ClientAuthException {
         postVoteChangeMessage(gatherId);
-        messageManager.postMessage(ready ? MessageType.USER_READY : MessageType.USER_UNREADY, username, gatherId);
+        messageManager.postMessage(ready ? MessageType.USER_READY : MessageType.USER_UNREADY, steamId.toString(), gatherId);
     }
 
     private Boolean removeVotes(final Long steamId) throws LogicException, ClientAuthException {
@@ -796,12 +796,12 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     @Override
-    public Set<String> getVotedPlayerNames() throws LogicException, ClientAuthException {
-        return HibernateUtil.exec(new HibernateCallback<Set<String>>() {
+    public Set<Long> getVotedPlayerIds() throws LogicException, ClientAuthException {
+        return HibernateUtil.exec(new HibernateCallback<Set<Long>>() {
 
             @Override
-            public Set<String> run(Session session) throws LogicException, ClientAuthException {
-                Set<String> result = new HashSet<>();
+            public Set<Long> run(Session session) throws LogicException, ClientAuthException {
+                Set<Long> result = new HashSet<>();
                 Long gatherId = getCurrentGatherId();
                 session.enableFilter("gatherId").setParameter("gid", gatherId);
                 @SuppressWarnings("unchecked")
@@ -811,7 +811,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 for (Long voteSteamId : votedSteamIds) {
                     PlayerDTO playerDTO = gatherPlayers.getPlayer(voteSteamId);
                     if (playerDTO != null) {
-                        result.add(playerDTO.getName());
+                        result.add(playerDTO.getId());
                     }
                 }
                 return result;
@@ -831,7 +831,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         result.setMaps(getMaps());
         result.setPlayers(getConnectedPlayers());
         result.setServers(getServers());
-        result.setVotedNames(getVotedPlayerNames());
+        result.setVotedIds(getVotedPlayerIds());
         result.setVoteStat(getVoteStat());
         result.setVersion(getVersion());
         result.setPasswords(getPasswordsForStreamer());
@@ -881,7 +881,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     private void removePlayer(Long gatherId, Long steamId, boolean isKicked) throws LogicException, ClientAuthException {
         removeVotes(steamId);
         removeVotesForPlayer(gatherId, steamId);
-        messageManager.postMessage(MessageType.USER_LEAVES, getUserName(steamId).getName(), gatherId);
+        messageManager.postMessage(MessageType.USER_LEAVES, getPlayer(steamId).getName(), gatherId);
         if (isKicked) {
             MessageDTO messageDTO = new MessageDTO(MessageType.USER_KICKED, "Вы были кикнуты из Gather по неактивности.", gatherId);
             messageDTO.setVisibility(MessageVisibility.PERSONAL);
