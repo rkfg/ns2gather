@@ -57,13 +57,13 @@ import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.view.client.ListDataProvider;
+import com.google.gwt.cell.client.ButtonCell;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class NS2G implements EntryPoint {
 
-    private Long myId = null;
     private boolean ready = false;
     private SoundManager soundManager = new SoundManager();
     private CookieSettingsManager cookieSettingsManager = new CookieSettingsManager();
@@ -117,7 +117,7 @@ public class NS2G implements EntryPoint {
     private final TextColumn<ServerDTO> textColumn_serverName = new TextColumn<ServerDTO>() {
         @Override
         public String getValue(ServerDTO object) {
-            return object.getName();
+            return object.getName() + " [" + object.getPlayers().size() + "]";
         }
     };
     private final Column<ServerDTO, Boolean> column_voteServer = new Column<ServerDTO, Boolean>(new CheckboxCell(true, false)) {
@@ -180,11 +180,18 @@ public class NS2G implements EntryPoint {
     private final Button button_logout = new Button("Выход");
     private Set<Long> votedPlayers = new HashSet<Long>();
     private VoteResultPanel voteResultPanel = new VoteResultPanel();
+    private ServerPlayersPanel serverPlayersPanel = new ServerPlayersPanel();
     private String myNick;
     private final HorizontalPanel horizontalPanel_voteButton = new HorizontalPanel();
     private final Label label_version = new Label();
     private final Button button_rules = new Button("Правила");
     private final FlexTable flexTable_cornerControls = new FlexTable();
+    private final Column<ServerDTO, String> column_playersList = new Column<ServerDTO, String>(new ButtonCell()) {
+        @Override
+        public String getValue(ServerDTO object) {
+            return "?";
+        }
+    };
 
     /**
      * This is the entry point method.
@@ -294,6 +301,8 @@ public class NS2G implements EntryPoint {
         dataProvider_players.addDataDisplay(dataGrid_players);
         dataProvider_maps.addDataDisplay(dataGrid_maps);
         dataProvider_servers.addDataDisplay(dataGrid_servers);
+
+        dataGrid_servers.addColumn(column_playersList);
         init();
         ready = true;
     }
@@ -328,6 +337,15 @@ public class NS2G implements EntryPoint {
             }
         });
 
+        column_playersList.setFieldUpdater(new FieldUpdater<ServerDTO, String>() {
+
+            @Override
+            public void update(int index, ServerDTO object, String value) {
+                serverPlayersPanel.init(object);
+                serverPlayersPanel.center();
+            }
+        });
+
         dataGrid_players.setRowStyles(new RowStyles<PlayerDTO>() {
 
             @Override
@@ -359,7 +377,7 @@ public class NS2G implements EntryPoint {
             @Override
             public void onSuccess(PlayerDTO result) {
                 label_nick.setHTML("<a href=\"" + result.getProfileUrl() + "\" target=\"_blank\">" + result.getName() + "</a>: ");
-                myId = result.getId();
+                voteResultPanel.setId(result.getId());
                 // send initial ping to show our presence
                 ns2gService.ping(new MyAsyncCallback<Void>() {
 
@@ -410,7 +428,7 @@ public class NS2G implements EntryPoint {
             @Override
             public void onSuccess(InitStateDTO result) {
                 gatherStatusLabel.setGatherState(result.getGatherState());
-                if (result.getGatherState() == GatherState.COMPLETED) {
+                if (isGatherClosed(result.getGatherState())) {
                     button_vote.setEnabled(false);
                 }
                 updateEnterNewButtonVisibility();
@@ -422,6 +440,9 @@ public class NS2G implements EntryPoint {
                 label_version.setText(result.getVersion());
                 if (result.getPasswords() != null) {
                     addChatMessage(result.getPasswords(), System.currentTimeMillis(), ChatMessageType.SYSTEM, false);
+                }
+                if (result.getVoteResults() != null) {
+                    voteResultPanel.fillFields(result.getVoteResults());
                 }
             }
         });
@@ -539,6 +560,9 @@ public class NS2G implements EntryPoint {
                     case PICKED:
                         voteResultPanel.loadParticipants();
                         break;
+                    case SERVER_UPDATE:
+                        loadServers();
+                        break;
                     default:
                         break;
                     }
@@ -562,13 +586,26 @@ public class NS2G implements EntryPoint {
         client.start();
     }
 
+    protected void loadServers() {
+        ns2gService.getServers(new MyAsyncCallback<List<ServerDTO>>() {
+
+            @Override
+            public void onSuccess(List<ServerDTO> result) {
+                MementoCheckedDTO<ServerDTO> serverMemento = new MementoCheckedDTO<ServerDTO>();
+                serverMemento.storeChecks(dataProvider_servers.getList());
+                dataProvider_servers.setList(result);
+                serverMemento.restoreChecks(dataProvider_servers.getList());
+            }
+        });
+    }
+
     protected void resetHighlight() {
         votedPlayers = new HashSet<Long>();
         dataGrid_players.redraw();
     }
 
     protected void loadVoteResult() {
-        voteResultPanel.center(gatherStatusLabel.getGatherState(), myId);
+        voteResultPanel.center(gatherStatusLabel.getGatherState());
     }
 
     protected void addChatMessage(String text, Long timestamp) {
@@ -742,4 +779,9 @@ public class NS2G implements EntryPoint {
             }
         }.scheduleRepeating(ClientSettings.SIZE_SAVE_INTERVAL);
     }
+
+    public static boolean isGatherClosed(GatherState gatherState) {
+        return Arrays.asList(GatherState.COMPLETED, GatherState.SIDEPICK, GatherState.PLAYERS).contains(gatherState);
+    }
+
 }

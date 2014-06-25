@@ -23,7 +23,8 @@ public class MessageManager {
         List<MessageDTO> result = new LinkedList<>();
         for (MessageDTO messageDTO : messages) {
             if (messageDTO.getTimestamp() > since) {
-                if (messageDTO.getVisibility() == MessageVisibility.BROADCAST && messageDTO.getGatherId() == gatherId
+                if (messageDTO.getVisibility() == MessageVisibility.BROADCAST
+                        && (messageDTO.getGatherId() == gatherId || messageDTO.getGatherId() == null)
                         || messageDTO.getVisibility() == MessageVisibility.PERSONAL && messageDTO.getToSteamId().equals(steamId)) {
                     result.add(messageDTO);
                 }

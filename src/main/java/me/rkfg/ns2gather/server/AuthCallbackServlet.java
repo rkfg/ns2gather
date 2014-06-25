@@ -50,7 +50,7 @@ public class AuthCallbackServlet extends HttpServlet {
                 receivingURL.append("?").append(req.getQueryString());
 
             // verify the response
-            VerificationResult verification = NS2GServiceImpl.manager.verify(receivingURL.toString(), openidResp, discovered);
+            VerificationResult verification = NS2GServiceImpl.consumerManager.verify(receivingURL.toString(), openidResp, discovered);
 
             // examine the verification result and extract the verified identifier
             Identifier verified = verification.getVerifiedId();

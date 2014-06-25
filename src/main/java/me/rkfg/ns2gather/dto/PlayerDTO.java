@@ -48,12 +48,8 @@ public class PlayerDTO extends CheckedDTO {
         return name;
     }
 
-    public static AbstractCell<PlayerDTO> getCell() {
-        return new AbstractCell<PlayerDTO>() {
-            @Override
-            public void render(Context context, PlayerDTO value, SafeHtmlBuilder sb) {
-                sb.appendEscaped(value.getName());
-            }
-        };
+    public PlayerDTO clone() {
+        PlayerDTO result = new PlayerDTO(id, name, profileUrl, lastPing);
+        return result;
     }
 }

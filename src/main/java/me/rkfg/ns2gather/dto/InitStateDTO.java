@@ -9,6 +9,7 @@ public class InitStateDTO implements IsSerializable {
     List<MapDTO> maps;
     List<ServerDTO> servers;
     List<PlayerDTO> players;
+    List<VoteResultDTO> voteResults;
     String voteStat;
     Set<Long> votedIds;
     GatherState gatherState;
@@ -37,6 +38,14 @@ public class InitStateDTO implements IsSerializable {
 
     public void setPlayers(List<PlayerDTO> players) {
         this.players = players;
+    }
+
+    public List<VoteResultDTO> getVoteResults() {
+        return voteResults;
+    }
+
+    public void setVoteResults(List<VoteResultDTO> voteResults) {
+        this.voteResults = voteResults;
     }
 
     public String getVoteStat() {

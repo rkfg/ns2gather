@@ -42,6 +42,7 @@ import me.rkfg.ns2gather.dto.VoteType;
 import me.rkfg.ns2gather.server.GatherPlayersManager.CleanupCallback;
 import me.rkfg.ns2gather.server.GatherPlayersManager.GatherPlayers;
 import me.rkfg.ns2gather.server.GatherPlayersManager.TeamStatType;
+import me.rkfg.ns2gather.server.ServerManager.ServersChangeCallback;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -54,6 +55,8 @@ import org.openid4java.discovery.DiscoveryException;
 import org.openid4java.discovery.DiscoveryInformation;
 import org.openid4java.message.AuthRequest;
 import org.openid4java.message.MessageException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ru.ppsrk.gwt.client.ClientAuthException;
 import ru.ppsrk.gwt.client.ClientAuthenticationException;
@@ -78,8 +81,10 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private static final boolean forceDebug = false;
     private static final boolean forceRelease = false;
+    Logger logger = LoggerFactory.getLogger(getClass());
 
     static ConsumerManager consumerManager = new ConsumerManager();
+    ServerManager serverManager;
     GatherPlayersManager connectedPlayers = new GatherPlayersManager(new CleanupCallback() {
 
         @Override
@@ -91,8 +96,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     Long playerId = 1L;
     MessageManager messageManager = new MessageManager();
     GatherCountdownManager gatherCountdownManager = new GatherCountdownManager();
-    Object voteCountLock = new Object();
-    Object findGatherLock = new Object();
     private boolean debug = false;
 
     private class MessagePollingServer extends LongPollingServer<List<MessageDTO>> {
@@ -122,6 +125,17 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         } catch (LogicException | ClientAuthException e) {
             e.printStackTrace();
         }
+        serverManager = new ServerManager(new ServersChangeCallback() {
+
+            @Override
+            public void onChange() {
+                try {
+                    messageManager.postMessage(MessageType.SERVER_UPDATE, "", null);
+                } catch (LogicException | ClientAuthException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     protected void removeVotesForPlayer(final Long gatherId, final Long playerLeftId) throws LogicException, ClientAuthException {
@@ -182,18 +196,18 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     public String login() throws LogicException {
         try {
             // perform discovery on the user-supplied identifier
-            List<?> discoveries = manager.discover("http://steamcommunity.com/openid");
+            List<?> discoveries = consumerManager.discover("http://steamcommunity.com/openid");
 
             // attempt to associate with the OpenID provider
             // and retrieve one service endpoint for authentication
-            DiscoveryInformation discovered = manager.associate(discoveries);
+            DiscoveryInformation discovered = consumerManager.associate(discoveries);
 
             // store the discovery information in the user's session for later use
             // leave out for stateless operation / if there is no session
             getSession().setAttribute("discovered", discovered);
 
             // obtain a AuthRequest message to be sent to the OpenID provider
-            AuthRequest authReq = manager.authenticate(discovered, Settings.CALLBACK_URL);
+            AuthRequest authReq = consumerManager.authenticate(discovered, Settings.CALLBACK_URL);
             String result = authReq.getDestinationUrl(true);
             return result;
         } catch (MessageException | ConsumerException | DiscoveryException e) {
@@ -258,7 +272,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         }
         if (debug) {
             player = new PlayerDTO(steamId, "fake" + steamId.toString(), "http://steamcommunity.com", System.currentTimeMillis());
-            connectedPlayers.addPlayerBySteamId(steamId, player);
+            connectedPlayers.addPlayerBySteamId(player);
         } else {
             player = connectedPlayers.lookupPlayerBySteamId(steamId);
         }
@@ -267,7 +281,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public List<ServerDTO> getServers() throws LogicException, ClientAuthException {
-        return HibernateUtil.queryList("from Server", new String[] {}, new Object[] {}, ServerDTO.class);
+        return serverManager.getServers();
     }
 
     @Override
@@ -299,7 +313,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private void updateGatherStateByPlayerNumber(final Gather gather) throws LogicException, ClientAuthException {
         synchronized (gatherCountdownManager) {
-            if (Arrays.asList(GatherState.COMPLETED, GatherState.SIDEPICK, GatherState.PLAYERS).contains(gather.getState())) {
+            if (isGatherClosed(gather)) {
                 // nothing to do here
                 return;
             }
@@ -346,9 +360,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     messageManager.postMessage(MessageType.MORE_PLAYERS, "", gatherId);
                 }
             } else {
-                if (gather.getState() == GatherState.ONTIMER) {
-                    stopGatherTimer(gather);
-                }
+                stopGatherTimer(gather);
             }
         }
     }
@@ -356,7 +368,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     private void stopGatherTimer(final Gather gather) throws LogicException, ClientAuthException {
         messageManager.postMessage(MessageType.STOP_TIMER, "", gather.getId());
         gatherCountdownManager.cancelGatherCountdownTasks(gather.getId());
-        updateGatherState(gather, GatherState.OPEN);
+        if (gather.getState() == GatherState.ONTIMER) {
+            updateGatherState(gather, GatherState.OPEN);
+        }
     }
 
     protected void resolveGather(final Gather gather) throws LogicException, ClientAuthException {
@@ -371,12 +385,14 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     Set<Long> votedSteamIds = new HashSet<>(session.createQuery(
                             "select distinct(v.player.steamId) from Vote v left join v.gather").list());
                     GatherPlayers gatherPlayers = connectedPlayers.getPlayersByGather(gatherId);
-                    Iterator<Entry<Long, PlayerDTO>> iter = gatherPlayers.playersEntrySet().iterator();
-                    while (iter.hasNext()) {
-                        Entry<Long, PlayerDTO> player = iter.next();
-                        if (!votedSteamIds.contains(player.getKey())) {
-                            iter.remove();
-                            removePlayer(gatherId, player.getKey(), true);
+                    synchronized (gatherPlayers) {
+                        Iterator<Entry<Long, PlayerDTO>> iter = gatherPlayers.playersEntrySet().iterator();
+                        while (iter.hasNext()) {
+                            Entry<Long, PlayerDTO> player = iter.next();
+                            if (!votedSteamIds.contains(player.getKey())) {
+                                iter.remove();
+                                removePlayer(gatherId, player.getKey(), true);
+                            }
                         }
                     }
                     return null;
@@ -398,6 +414,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void updateGatherState(Gather gather, GatherState newState) throws LogicException, ClientAuthException {
+        logger.info("Changing gather {} state from {} to {}", gather.getId(), gather.getState(), newState);
         gather.setState(newState);
         messageManager.postMessage(MessageType.GATHER_STATUS, String.valueOf(newState.ordinal()), gather.getId());
         HibernateUtil.saveObject(gather);
@@ -475,9 +492,13 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void requiresOngoingGather() throws LogicException, ClientAuthException {
-        if (getCurrentGather().getState() == GatherState.COMPLETED) {
+        if (isGatherClosed(getCurrentGather())) {
             throw new LogicException("Голосование уже завершено.");
         }
+    }
+
+    private boolean isGatherClosed(Gather gather) {
+        return Arrays.asList(GatherState.COMPLETED, GatherState.SIDEPICK, GatherState.PLAYERS).contains(gather.getState());
     }
 
     protected Gather getCurrentGather() throws LogicException, ClientAuthException {
@@ -495,7 +516,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void countResults(final Long gatherId) throws LogicException, ClientAuthException {
-        synchronized (voteCountLock) {
+        synchronized (connectedPlayers) {
             final Gather gather = getGatherById(gatherId);
             stopGatherTimer(gather);
             try {
@@ -547,7 +568,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                         }
                         GatherPlayers players = connectedPlayers.getPlayersByGather(gatherId);
                         players.setComms(commsId);
-                        players.fixPlayers();
+                        players.playersToParticipants();
                         setupServer(gatherId, session);
                         return null;
                     }
@@ -650,7 +671,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private Long findOpenGatherId() throws LogicException, ClientAuthException {
-        synchronized (findGatherLock) {
+        synchronized (connectedPlayers) {
             return HibernateUtil.exec(new HibernateCallback<Long>() {
 
                 @Override
@@ -835,6 +856,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         result.setVoteStat(getVoteStat());
         result.setVersion(getVersion());
         result.setPasswords(getPasswordsForStreamer());
+        if (isGatherClosed(getCurrentGather())) {
+            result.setVoteResults(getVoteResults());
+        }
         return result;
     }
 

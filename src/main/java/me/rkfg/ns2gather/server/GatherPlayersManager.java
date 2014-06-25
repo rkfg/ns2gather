@@ -43,11 +43,11 @@ public class GatherPlayersManager {
 
     public class GatherPlayers {
         HashMap<Long, PlayerDTO> gatherPlayers = new HashMap<>();
-        HashMap<Long, PlayerDTO> gatherParticipants = null;
+        HashMap<Long, PlayerDTO> gatherParticipants = new HashMap<>();
         List<Long> comms = new ArrayList<Long>();
 
-        public void putPlayer(Long id, PlayerDTO playerDTO) {
-            gatherPlayers.put(id, playerDTO);
+        public void putPlayer(PlayerDTO playerDTO) {
+            gatherPlayers.put(playerDTO.getId(), playerDTO);
         }
 
         public PlayerDTO getPlayer(Long steamId) {
@@ -134,8 +134,12 @@ public class GatherPlayersManager {
             }
         }
 
-        public void fixPlayers() {
-            gatherParticipants = new HashMap<>(gatherPlayers);
+        // clone players to fix them for the current gather
+        public void playersToParticipants() {
+            gatherParticipants = new HashMap<>();
+            for (PlayerDTO playerDTO : getPlayers()) {
+                gatherParticipants.put(playerDTO.getId(), playerDTO.clone());
+            }
         }
 
         public Collection<PlayerDTO> getParticipants() {
@@ -159,8 +163,8 @@ public class GatherPlayersManager {
 
     public void addPlayer(Long gatherId, PlayerDTO playerDTO) {
         GatherPlayers gatherPlayers = getPlayersByGather(gatherId);
-        gatherPlayers.putPlayer(playerDTO.getId(), playerDTO);
-        addPlayerBySteamId(playerDTO.getId(), playerDTO);
+        gatherPlayers.putPlayer(playerDTO);
+        addPlayerBySteamId(playerDTO);
     }
 
     public PlayerDTO getPlayerByGatherSteamId(Long gatherId, Long steamId) {
@@ -180,8 +184,8 @@ public class GatherPlayersManager {
         return steamIdPlayer.get(steamId);
     }
 
-    public void addPlayerBySteamId(Long steamId, PlayerDTO player) {
-        steamIdPlayer.put(steamId, player);
+    public void addPlayerBySteamId(PlayerDTO player) {
+        steamIdPlayer.put(player.getId(), player);
     }
 
     public Set<Long> getGathers() {
@@ -217,7 +221,7 @@ public class GatherPlayersManager {
                 throw new LogicException("no profile url");
             }
             PlayerDTO player = new PlayerDTO(steamId, name, profileUrl, System.currentTimeMillis());
-            addPlayerBySteamId(steamId, player);
+            addPlayerBySteamId(player);
             return player;
         } catch (IOException | IllegalStateException e) {
             throw new LogicException("can't get player data");
@@ -231,9 +235,10 @@ public class GatherPlayersManager {
 
             @Override
             public void run() {
-                synchronized (this) {
-                    for (Long gatherId : getGathers()) {
-                        Iterator<Entry<Long, PlayerDTO>> iterator = getPlayersByGather(gatherId).playersEntrySet().iterator();
+                for (Long gatherId : getGathers()) {
+                    GatherPlayers players = getPlayersByGather(gatherId);
+                    synchronized (players) {
+                        Iterator<Entry<Long, PlayerDTO>> iterator = players.playersEntrySet().iterator();
                         while (iterator.hasNext()) {
                             Entry<Long, PlayerDTO> entry = iterator.next();
                             if (System.currentTimeMillis() - entry.getValue().getLastPing() > Settings.PLAYER_PING_TIMEOUT) {
