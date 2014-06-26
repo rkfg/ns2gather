@@ -181,7 +181,7 @@ public class NS2G implements EntryPoint {
     private VoteResultPanel voteResultPanel = new VoteResultPanel();
     private ServerPlayersPanel serverPlayersPanel = new ServerPlayersPanel();
     private final HorizontalPanel horizontalPanel_voteButton = new HorizontalPanel();
-    private final Label label_version = new Label();
+    private final HTML html_version = new HTML();
     private final Button button_rules = new Button("Правила");
     private final FlexTable flexTable_cornerControls = new FlexTable();
     private final Column<ServerDTO, String> column_playersList = new Column<ServerDTO, String>(new ButtonCell()) {
@@ -202,7 +202,7 @@ public class NS2G implements EntryPoint {
         rootLayoutPanel.add(splitLayoutPanel_main);
         horizontalPanel_1.setSpacing(5);
 
-        splitLayoutPanel_main.addNorth(horizontalPanel_1, 65.0);
+        splitLayoutPanel_main.addNorth(horizontalPanel_1, 70.0);
         horizontalPanel_1.setSize("100%", "100%");
 
         horizontalPanel_1.add(gatherStatusLabel);
@@ -222,11 +222,11 @@ public class NS2G implements EntryPoint {
         horizontalPanel_1.setCellWidth(button_logout, "1px");
         horizontalPanel_1.setCellHorizontalAlignment(button_logout, HasHorizontalAlignment.ALIGN_RIGHT);
         flexTable_cornerControls.getCellFormatter().setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_RIGHT);
-        label_version.setText("Версия");
-        flexTable_cornerControls.setWidget(1, 0, label_version);
-        label_version.setWordWrap(false);
+        html_version.setText("Версия");
+        flexTable_cornerControls.setWidget(1, 0, html_version);
+        html_version.setWordWrap(false);
 
-        label_version.addStyleName("version");
+        html_version.addStyleName("version");
         flexTable_cornerControls.getFlexCellFormatter().setColSpan(1, 0, 2);
         flexTable_cornerControls.getCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
         flexTable_cornerControls.getCellFormatter().setHorizontalAlignment(0, 1, HasHorizontalAlignment.ALIGN_RIGHT);
@@ -417,7 +417,8 @@ public class NS2G implements EntryPoint {
                 dataProvider_maps.setList(result.getMaps());
                 dataProvider_servers.setList(result.getServers());
                 label_voted.setText(result.getVoteStat());
-                label_version.setText(result.getVersion());
+                html_version.setHTML("<a href=\"https://github.com/rkfg/ns2gather/issues\" title=\"Сообщить об ошибке\" target=\"_blank\">"
+                        + result.getVersion() + "</a>");
                 if (result.getPasswords() != null) {
                     addChatMessage(result.getPasswords(), System.currentTimeMillis(), ChatMessageType.SYSTEM, false);
                 }
