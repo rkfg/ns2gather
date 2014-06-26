@@ -385,6 +385,13 @@ public class NS2G implements EntryPoint {
                 login();
             }
         });
+        voteResultPanel.getButton_mute().addClickHandler(new ClickHandler() {
+
+            @Override
+            public void onClick(ClickEvent event) {
+                soundManager.stopSound(NS2Sound.VOTE_END);
+            }
+        });
         soundManager.setLoop(NS2Sound.VOTE_END, true);
         restorePanelsSize();
     }
