@@ -37,13 +37,32 @@ import com.google.gwt.view.client.SingleSelectionModel;
 public class VoteResultPanel extends DialogBox {
 
     private class ParticipantCell extends AbstractCell<PlayerDTO> {
+
+        String baseClass = "";
+
+        public ParticipantCell(Side side) {
+            switch (side) {
+            case NONE:
+                baseClass = "regular";
+                break;
+            case ALIENS:
+                baseClass = "aliens";
+                break;
+            case MARINES:
+                baseClass = "marines";
+                break;
+            }
+        }
+
         @Override
         public void render(Context context, PlayerDTO value, SafeHtmlBuilder sb) {
+            String playerClass = "";
             if (comms.contains(value.getId())) {
-                sb.appendHtmlConstant("<b>").appendEscaped(value.getName()).appendHtmlConstant("</b>");
+                playerClass = "participant captain";
             } else {
-                sb.appendEscaped(value.getName());
+                playerClass = "participant " + baseClass;
             }
+            sb.appendHtmlConstant("<span class=\"" + playerClass + "\">").appendEscaped(value.getName()).appendHtmlConstant("</span>");
         }
     };
 
@@ -67,12 +86,12 @@ public class VoteResultPanel extends DialogBox {
     private final Label label_4 = new Label("Список участников:");
     private NS2GServiceAsync ns2gService = NS2GServiceAsync.Util.getInstance();
     private final ListDataProvider<PlayerDTO> dataProvider_marines = new ListDataProvider<PlayerDTO>();
-    private final CellList<PlayerDTO> cellList_marines = new CellList<PlayerDTO>(new ParticipantCell());
+    private final CellList<PlayerDTO> cellList_marines = new CellList<PlayerDTO>(new ParticipantCell(Side.MARINES));
     private final ListDataProvider<PlayerDTO> dataProvider_aliens = new ListDataProvider<PlayerDTO>();
-    private final CellList<PlayerDTO> cellList_aliens = new CellList<PlayerDTO>(new ParticipantCell());
+    private final CellList<PlayerDTO> cellList_aliens = new CellList<PlayerDTO>(new ParticipantCell(Side.ALIENS));
     private final ListDataProvider<PlayerDTO> dataProvider_nonDistributed = new ListDataProvider<PlayerDTO>();
     private final SingleSelectionModel<PlayerDTO> selectionModel_nonDistributed = new SingleSelectionModel<PlayerDTO>();
-    private final CellList<PlayerDTO> cellList_nonDistributed = new CellList<PlayerDTO>(new ParticipantCell());
+    private final CellList<PlayerDTO> cellList_nonDistributed = new CellList<PlayerDTO>(new ParticipantCell(Side.NONE));
     private final Button button_pick = new Button("Забрать");
     private List<Long> comms = new ArrayList<Long>();
     private final FlexTable flexTable_sides = new FlexTable();
