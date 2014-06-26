@@ -137,26 +137,28 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     protected void removeVotesForPlayer(final Long gatherId, final Long playerLeftId) throws LogicException, ClientAuthException {
-        List<Long> votes = HibernateUtil.exec(new HibernateCallback<List<Long>>() {
+        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
+            List<Long> votes = HibernateUtil.exec(new HibernateCallback<List<Long>>() {
 
-            @SuppressWarnings("unchecked")
-            @Override
-            public List<Long> run(Session session) throws LogicException, ClientAuthException {
-                session.enableFilter("gatherId").setParameter("gid", gatherId);
-                return session
-                        .createQuery(
-                                "select pv.steamId from PlayerVote pv, Vote v, Gather g2 where v in elements (pv.votes) and v.gather = g2 and v.type = :comm and v.targetId = :tid")
-                        .setParameter("comm", VoteType.COMM).setLong("tid", playerLeftId).list();
+                @SuppressWarnings("unchecked")
+                @Override
+                public List<Long> run(Session session) throws LogicException, ClientAuthException {
+                    session.enableFilter("gatherId").setParameter("gid", gatherId);
+                    return session
+                            .createQuery(
+                                    "select pv.steamId from PlayerVote pv, Vote v, Gather g2 where v in elements (pv.votes) and v.gather = g2 and v.type = :comm and v.targetId = :tid")
+                            .setParameter("comm", VoteType.COMM).setLong("tid", playerLeftId).list();
+                }
+            });
+            for (Long steamId : votes) {
+                removeVotes(steamId);
+                MessageDTO messageDTO = new MessageDTO(MessageType.VOTE_ENDED,
+                        "Игрок, за которого вы голосовали, ушёл. Пожалуйста, переголосуйте.", gatherId);
+                messageDTO.setVisibility(MessageVisibility.PERSONAL);
+                messageDTO.setToSteamId(steamId);
+                messageManager.postMessage(messageDTO);
+                unvote(gatherId, steamId);
             }
-        });
-        for (Long steamId : votes) {
-            removeVotes(steamId);
-            MessageDTO messageDTO = new MessageDTO(MessageType.VOTE_ENDED,
-                    "Игрок, за которого вы голосовали, ушёл. Пожалуйста, переголосуйте.", gatherId);
-            messageDTO.setVisibility(MessageVisibility.PERSONAL);
-            messageDTO.setToSteamId(steamId);
-            messageManager.postMessage(messageDTO);
-            unvote(gatherId, steamId);
         }
     }
 
@@ -289,9 +291,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public void ping() throws ClientAuthException, LogicException {
-        synchronized (connectedPlayers) {
-            Long steamId = getSteamId();
-            Long gatherId = getCurrentGatherId();
+        Long steamId = getSteamId();
+        Long gatherId = getCurrentGatherId();
+        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
             PlayerDTO existing = connectedPlayers.getPlayerByGatherSteamId(gatherId, steamId);
             if (existing == null) {
                 existing = connectedPlayers.getPlayerBySteamId(steamId);
@@ -302,30 +304,30 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 connectedPlayers.addPlayer(gatherId, existing);
                 messageManager.postMessage(MessageType.USER_ENTERS, existing.getName(), gatherId);
                 postVoteChangeMessage(gatherId);
-                updateGatherStateByPlayerNumber(getCurrentGather());
+                updateGatherStateByPlayerNumber(gatherId);
             } else {
                 existing.setLastPing(System.currentTimeMillis());
             }
         }
     }
 
-    private void updateGatherStateByPlayerNumber(final Gather gather) throws LogicException, ClientAuthException {
-        synchronized (gatherCountdownManager) {
-            if (isGatherClosed(gather)) {
+    private void updateGatherStateByPlayerNumber(final Long gatherId) throws LogicException, ClientAuthException {
+        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
+            Gather gather = getGatherById(gatherId);
+            if (isGatherClosed(gatherId)) {
                 // nothing to do here
                 return;
             }
-            final Long gatherId = gather.getId();
             int connectedPlayersCount = connectedPlayers.getPlayersByGather(gatherId).playerCount();
             if (connectedPlayersCount == Settings.GATHER_PLAYER_MAX) {
                 if (gather.getState() == GatherState.OPEN) {
                     // close gather if player limit reached
-                    updateGatherState(gather, GatherState.CLOSED);
+                    updateGatherState(gatherId, GatherState.CLOSED);
                 }
             } else {
                 if (gather.getState() == GatherState.CLOSED) {
                     // reopen gather if players have left
-                    updateGatherState(gather, GatherState.OPEN);
+                    updateGatherState(gatherId, GatherState.OPEN);
                 }
             }
             if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN) {
@@ -339,18 +341,18 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                             @Override
                             public void run() {
                                 try {
-                                    resolveGather(gather);
+                                    resolveGather(gatherId);
                                 } catch (LogicException | ClientAuthException e) {
                                     // TODO Auto-generated catch block
                                     e.printStackTrace();
                                 }
                             }
                         }, Settings.GATHER_RESOLVE_DELAY);
-                        updateGatherState(gather, GatherState.ONTIMER);
+                        updateGatherState(gatherId, GatherState.ONTIMER);
                         messageManager.postMessage(MessageType.RUN_TIMER, String.valueOf(Settings.GATHER_RESOLVE_DELAY / 1000), gatherId);
                     } else {
                         // odd number, stop the timer and wait
-                        stopGatherTimer(gather);
+                        stopGatherTimer(gatherId);
                         messageManager.postMessage(MessageType.MORE_PLAYERS, "", gatherId);
                     }
                 } else {
@@ -358,26 +360,27 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     countResults(gatherId);
                 }
             } else {
-                stopGatherTimer(gather);
+                stopGatherTimer(gatherId);
             }
         }
     }
 
-    private void stopGatherTimer(final Gather gather) throws LogicException, ClientAuthException {
-        messageManager.postMessage(MessageType.STOP_TIMER, "", gather.getId());
-        gatherCountdownManager.cancelGatherCountdownTasks(gather.getId());
-        if (gather.getState() == GatherState.ONTIMER) {
-            updateGatherState(gather, GatherState.OPEN);
+    private void stopGatherTimer(final Long gatherId) throws LogicException, ClientAuthException {
+        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
+            messageManager.postMessage(MessageType.STOP_TIMER, "", gatherId);
+            gatherCountdownManager.cancelGatherCountdownTasks(gatherId);
+            if (getGatherById(gatherId).getState() == GatherState.ONTIMER) {
+                updateGatherState(gatherId, GatherState.OPEN);
+            }
         }
     }
 
-    protected void resolveGather(final Gather gather) throws LogicException, ClientAuthException {
-        synchronized (gatherCountdownManager) {
+    protected void resolveGather(final Long gatherId) throws LogicException, ClientAuthException {
+        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
             HibernateUtil.exec(new HibernateCallback<Void>() {
 
                 @Override
                 public Void run(Session session) throws LogicException, ClientAuthException {
-                    Long gatherId = gather.getId();
                     session.enableFilter("gatherId").setParameter("gid", gatherId);
                     @SuppressWarnings("unchecked")
                     Set<Long> votedSteamIds = new HashSet<>(session.createQuery(
@@ -392,7 +395,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     return null;
                 }
             });
-            updateGatherStateByPlayerNumber(gather);
+            updateGatherStateByPlayerNumber(gatherId);
         }
     }
 
@@ -403,15 +406,19 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void unvote(Long gatherId, Long steamId) throws LogicException, ClientAuthException {
-        removeVotes(steamId);
-        sendReadiness(getPlayer(steamId).getId(), gatherId, false);
+        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
+            removeVotes(steamId);
+            sendReadiness(getPlayer(steamId).getId(), gatherId, false);
+        }
     }
 
-    private void updateGatherState(Gather gather, GatherState newState) throws LogicException, ClientAuthException {
-        logger.info("Changing gather {} state from {} to {}", gather.getId(), gather.getState(), newState);
-        gather.setState(newState);
-        messageManager.postMessage(MessageType.GATHER_STATUS, String.valueOf(newState.ordinal()), gather.getId());
-        HibernateUtil.saveObject(gather);
+    private void updateGatherState(Long gatherId, GatherState newState) throws LogicException, ClientAuthException {
+        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
+            Gather gather = getGatherById(gatherId);
+            gather.setState(newState);
+            messageManager.postMessage(MessageType.GATHER_STATUS, String.valueOf(newState.ordinal()), gather.getId());
+            HibernateUtil.saveObject(gather);
+        }
     }
 
     @Override
@@ -450,48 +457,50 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public void vote(final Long[][] votes) throws LogicException, ClientAuthException {
-        requiresOngoingGather();
-        if (votes.length != 3) {
-            throw LogicExceptionFormatted.format("invalid vote size, expected %d, got %d", 3, votes.length);
-        }
-        validateVoteNumbers(votes);
         Long gatherId = getCurrentGatherId();
-        boolean showVote = HibernateUtil.exec(new HibernateCallback<Boolean>() {
-
-            @Override
-            public Boolean run(Session session) throws LogicException, ClientAuthException {
-                Long steamId = getSteamId();
-                // delete all previous votes
-                boolean showVote = !removeVotes(steamId);
-                PlayerVote playerVote = new PlayerVote(steamId);
-                for (int i = 0; i < 3; i++) {
-                    Long[] votesCat = votes[i];
-                    for (Long targetId : votesCat) {
-                        Vote vote = new Vote(playerVote, targetId, VoteType.values()[i], getCurrentGather());
-                        playerVote.getVotes().add(vote);
-                    }
-                }
-                session.merge(playerVote);
-                return showVote;
+        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
+            requiresOngoingGather();
+            if (votes.length != 3) {
+                throw LogicExceptionFormatted.format("invalid vote size, expected %d, got %d", 3, votes.length);
             }
-        });
-        if (showVote) {
-            sendReadiness(getPlayer().getId(), gatherId, true);
-        }
-        int connectedPlayersCount = connectedPlayers.getPlayersByGather(gatherId).playerCount();
-        if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN && getVotedPlayersCount(gatherId) == connectedPlayersCount) {
-            countResults(gatherId);
+            validateVoteNumbers(votes);
+            boolean showVote = HibernateUtil.exec(new HibernateCallback<Boolean>() {
+
+                @Override
+                public Boolean run(Session session) throws LogicException, ClientAuthException {
+                    Long steamId = getSteamId();
+                    // delete all previous votes
+                    boolean showVote = !removeVotes(steamId);
+                    PlayerVote playerVote = new PlayerVote(steamId);
+                    for (int i = 0; i < 3; i++) {
+                        Long[] votesCat = votes[i];
+                        for (Long targetId : votesCat) {
+                            Vote vote = new Vote(playerVote, targetId, VoteType.values()[i], getCurrentGather());
+                            playerVote.getVotes().add(vote);
+                        }
+                    }
+                    session.merge(playerVote);
+                    return showVote;
+                }
+            });
+            if (showVote) {
+                sendReadiness(getPlayer().getId(), gatherId, true);
+            }
+            int connectedPlayersCount = connectedPlayers.getPlayersByGather(gatherId).playerCount();
+            if (connectedPlayersCount >= Settings.GATHER_PLAYER_MIN && getVotedPlayersCount(gatherId) == connectedPlayersCount) {
+                countResults(gatherId);
+            }
         }
     }
 
     private void requiresOngoingGather() throws LogicException, ClientAuthException {
-        if (isGatherClosed(getCurrentGather())) {
+        if (isGatherClosed(getCurrentGatherId())) {
             throw new LogicException("Голосование уже завершено.");
         }
     }
 
-    private boolean isGatherClosed(Gather gather) {
-        return Arrays.asList(GatherState.COMPLETED, GatherState.SIDEPICK, GatherState.PLAYERS).contains(gather.getState());
+    private boolean isGatherClosed(Long gatherId) throws LogicException, ClientAuthException {
+        return Arrays.asList(GatherState.COMPLETED, GatherState.SIDEPICK, GatherState.PLAYERS).contains(getGatherById(gatherId).getState());
     }
 
     protected Gather getCurrentGather() throws LogicException, ClientAuthException {
@@ -517,9 +526,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void countResults(final Long gatherId) throws LogicException, ClientAuthException {
-        synchronized (connectedPlayers) {
-            final Gather gather = getGatherById(gatherId);
-            stopGatherTimer(gather);
+        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
+            stopGatherTimer(gatherId);
             try {
                 HibernateUtil.exec(new HibernateCallback<Void>() {
 
@@ -527,6 +535,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     public Void run(Session session) throws LogicException, ClientAuthException {
                         session.enableFilter("gatherId").setParameter("gid", gatherId);
                         resetVotes(gatherId, ResetType.RESULTS);
+                        Gather gather = getGatherById(gatherId);
                         for (VoteType voteType : VoteType.values()) {
                             @SuppressWarnings("unchecked")
                             List<Vote> votesForType = session
@@ -562,7 +571,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                                 session.delete(voteResult);
                             }
                         }
-                        session.merge(gather);
                         List<Long> commsId = new ArrayList<Long>();
                         for (VoteResult voteResult : getVoteResultsByType(gatherId, session, VoteType.COMM)) {
                             commsId.add(voteResult.getTargetId());
@@ -578,12 +586,12 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 resetVotes(gatherId, ResetType.ALL);
                 messageManager.postMessage(MessageType.VOTE_ENDED, e.getMessage(), gatherId);
                 postVoteChangeMessage(gatherId);
-                updateGatherStateByPlayerNumber(gather);
+                updateGatherStateByPlayerNumber(gatherId);
                 return;
             }
             resetVotes(gatherId, ResetType.VOTES);
             messageManager.postMessage(MessageType.VOTE_ENDED, "ok", gatherId);
-            updateGatherState(gather, GatherState.SIDEPICK);
+            updateGatherState(gatherId, GatherState.SIDEPICK);
         }
     }
 
@@ -704,16 +712,18 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private Long getVotedPlayersCount(final Long gatherId) throws LogicException, ClientAuthException {
-        return HibernateUtil.exec(new HibernateCallback<Long>() {
+        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
+            return HibernateUtil.exec(new HibernateCallback<Long>() {
 
-            @Override
-            public Long run(Session session) throws LogicException, ClientAuthException {
-                return (Long) session
-                        .createQuery(
-                                "select count(*) from PlayerVote pv where pv in (select v.player from Vote v where v.gather.id = :gid)")
-                        .setLong("gid", gatherId).uniqueResult();
-            }
-        });
+                @Override
+                public Long run(Session session) throws LogicException, ClientAuthException {
+                    return (Long) session
+                            .createQuery(
+                                    "select count(*) from PlayerVote pv where pv in (select v.player from Vote v where v.gather.id = :gid)")
+                            .setLong("gid", gatherId).uniqueResult();
+                }
+            });
+        }
     }
 
     private void validateVoteNumbers(final Long[][] votes) throws LogicException, ClientAuthException {
@@ -751,34 +761,38 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private Boolean removeVotes(final Long steamId) throws LogicException, ClientAuthException {
-        return HibernateUtil.exec(new HibernateCallback<Boolean>() {
+        synchronized (connectedPlayers) {
+            return HibernateUtil.exec(new HibernateCallback<Boolean>() {
 
-            @Override
-            public Boolean run(Session session) throws LogicException, ClientAuthException {
-                @SuppressWarnings("unchecked")
-                List<PlayerVote> playerVotes = session.createQuery("from PlayerVote pv where pv.steamId = :sid").setLong("sid", steamId)
-                        .list();
-                for (PlayerVote playerVote : playerVotes) {
-                    session.delete(playerVote);
+                @Override
+                public Boolean run(Session session) throws LogicException, ClientAuthException {
+                    @SuppressWarnings("unchecked")
+                    List<PlayerVote> playerVotes = session.createQuery("from PlayerVote pv where pv.steamId = :sid")
+                            .setLong("sid", steamId).list();
+                    for (PlayerVote playerVote : playerVotes) {
+                        session.delete(playerVote);
+                    }
+                    return playerVotes.size() > 0;
                 }
-                return playerVotes.size() > 0;
-            }
-        });
+            });
+        }
     }
 
     private List<VoteResult> getVoteResultsByType(final Long gatherId, Session session, VoteType voteType) throws LogicException,
             ClientAuthException {
-        int idx = voteType.ordinal();
-        session.enableFilter("gatherId").setParameter("gid", gatherId);
-        @SuppressWarnings("unchecked")
-        List<VoteResult> voteResults = session
-                .createQuery(
-                        "select vr from VoteResult vr left join vr.gather g, Gather g2 where vr.type = :vt and g = g2 order by vr.voteCount desc, vr.place, rand()")
-                .setParameter("vt", voteType).setMaxResults(ClientSettings.voteRules[idx].getWinnerCount()).list();
-        if (voteResults.size() < ClientSettings.voteRules[idx].getWinnerCount()) {
-            throw LogicExceptionFormatted.format("Невозможно определить %s, переголосовка.", ClientSettings.voteRules[idx].getName());
+        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
+            int idx = voteType.ordinal();
+            session.enableFilter("gatherId").setParameter("gid", gatherId);
+            @SuppressWarnings("unchecked")
+            List<VoteResult> voteResults = session
+                    .createQuery(
+                            "select vr from VoteResult vr left join vr.gather g, Gather g2 where vr.type = :vt and g = g2 order by vr.voteCount desc, vr.place, rand()")
+                    .setParameter("vt", voteType).setMaxResults(ClientSettings.voteRules[idx].getWinnerCount()).list();
+            if (voteResults.size() < ClientSettings.voteRules[idx].getWinnerCount()) {
+                throw LogicExceptionFormatted.format("Невозможно определить %s, переголосовка.", ClientSettings.voteRules[idx].getName());
+            }
+            return voteResults;
         }
-        return voteResults;
     }
 
     @Override
@@ -857,7 +871,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         result.setVoteStat(getVoteStat());
         result.setVersion(getVersion());
         result.setPasswords(getPasswordsForStreamer());
-        if (isGatherClosed(getCurrentGather())) {
+        if (isGatherClosed(getCurrentGatherId())) {
             result.setVoteResults(getVoteResults());
         }
         return result;
@@ -904,45 +918,45 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     private void removePlayer(Long gatherId, Long steamId, boolean isKicked) throws LogicException, ClientAuthException {
-        removeVotes(steamId);
-        removeVotesForPlayer(gatherId, steamId);
-        messageManager.postMessage(MessageType.USER_LEAVES, getPlayer(steamId).getName(), gatherId);
-        if (isKicked) {
-            MessageDTO messageDTO = new MessageDTO(MessageType.USER_KICKED, "Вы были кикнуты из Gather по неактивности.", gatherId);
-            messageDTO.setVisibility(MessageVisibility.PERSONAL);
-            messageDTO.setToSteamId(steamId);
-            messageManager.postMessage(messageDTO);
+        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
+            removeVotes(steamId);
+            removeVotesForPlayer(gatherId, steamId);
+            messageManager.postMessage(MessageType.USER_LEAVES, getPlayer(steamId).getName(), gatherId);
+            if (isKicked) {
+                MessageDTO messageDTO = new MessageDTO(MessageType.USER_KICKED, "Вы были кикнуты из Gather по неактивности.", gatherId);
+                messageDTO.setVisibility(MessageVisibility.PERSONAL);
+                messageDTO.setToSteamId(steamId);
+                messageManager.postMessage(messageDTO);
+            }
+            postVoteChangeMessage(gatherId);
+            updateGatherStateByPlayerNumber(gatherId);
         }
-        postVoteChangeMessage(gatherId);
-        updateGatherStateByPlayerNumber(getGatherById(gatherId));
     }
 
     @Override
     public void pickSide(final Side side) throws LogicException, ClientAuthException {
-        Gather gather = getCurrentGather();
-        requiresGatherState(gather, GatherState.SIDEPICK, "Сейчас нельзя выбирать строну.");
-        Long gatherId = gather.getId();
+        Long gatherId = getCurrentGatherId();
+        requiresGatherState(gatherId, GatherState.SIDEPICK, "Сейчас нельзя выбирать строну.");
         connectedPlayers.getPlayersByGather(gatherId).pickSide(getSteamId(), side);
         messageManager.postMessage(MessageType.PICKED, "", gatherId);
-        updateGatherState(gather, GatherState.PLAYERS);
+        updateGatherState(gatherId, GatherState.PLAYERS);
     }
 
-    private void requiresGatherState(Gather gather, GatherState state, String errorMessage) throws LogicException {
-        if (gather.getState() != state) {
+    private void requiresGatherState(Long gatherId, GatherState state, String errorMessage) throws LogicException, ClientAuthException {
+        if (getGatherById(gatherId).getState() != state) {
             throw new LogicException(errorMessage);
         }
     }
 
     @Override
     public void pickPlayer(Long playerSteamId) throws LogicException, ClientAuthException {
-        Gather gather = getCurrentGather();
-        requiresGatherState(gather, GatherState.PLAYERS, "Сейчас нельзя выбирать игроков.");
-        Long gatherId = gather.getId();
+        Long gatherId = getCurrentGatherId();
+        requiresGatherState(gatherId, GatherState.PLAYERS, "Сейчас нельзя выбирать игроков.");
         GatherPlayers gatherPlayers = connectedPlayers.getPlayersByGather(gatherId);
         gatherPlayers.pickPlayer(getSteamId(), playerSteamId);
         messageManager.postMessage(MessageType.PICKED, "", gatherId);
         if (gatherPlayers.getTeamsStat(TeamStatType.NOFREE)) {
-            updateGatherState(gather, GatherState.COMPLETED);
+            updateGatherState(gatherId, GatherState.COMPLETED);
         }
     }
 }
