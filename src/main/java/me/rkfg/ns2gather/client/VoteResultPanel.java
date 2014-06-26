@@ -102,6 +102,7 @@ public class VoteResultPanel extends DialogBox {
     private final ScrollPanel scrollPanel_nonDistributed = new ScrollPanel();
     private final Label label_5 = new Label("Участники");
     private Long myId = null;
+    private final Label label_password = new Label("Пароль");
 
     public VoteResultPanel() {
         setModal(false);
@@ -132,12 +133,13 @@ public class VoteResultPanel extends DialogBox {
         flexTable.setWidget(3, 1, label_server);
 
         flexTable.setWidget(4, 0, html_connect);
-        flexTable.getFlexCellFormatter().setColSpan(4, 0, 2);
         flexTable.getCellFormatter().setHorizontalAlignment(4, 0, HasHorizontalAlignment.ALIGN_CENTER);
 
-        flexTable.setWidget(5, 0, label_4);
+        flexTable.setWidget(5, 0, label_password);
 
-        flexTable.setWidget(6, 0, flexTable_sides);
+        flexTable.setWidget(6, 0, label_4);
+
+        flexTable.setWidget(7, 0, flexTable_sides);
         flexTable_sides.setSize("100%", "100%");
 
         flexTable_sides.setWidget(0, 0, lblMarines);
@@ -179,16 +181,16 @@ public class VoteResultPanel extends DialogBox {
         button_pick.addClickHandler(new Button_pickClickHandler());
         button_pick.setEnabled(false);
 
-        flexTable.setWidget(7, 0, button_pick);
+        flexTable.setWidget(8, 0, button_pick);
 
-        flexTable.setWidget(8, 0, horizontalPanel);
+        flexTable.setWidget(9, 0, horizontalPanel);
         horizontalPanel.setSize("100%", "50px");
 
         horizontalPanel.add(label_2);
         horizontalPanel.setCellVerticalAlignment(label_2, HasVerticalAlignment.ALIGN_MIDDLE);
-        flexTable.getCellFormatter().setWidth(8, 0, "");
+        flexTable.getCellFormatter().setWidth(9, 0, "");
 
-        flexTable.setWidget(9, 0, horizontalPanel_buttons);
+        flexTable.setWidget(10, 0, horizontalPanel_buttons);
         horizontalPanel_buttons.setWidth("100%");
         horizontalPanel_buttons.add(button_close);
         horizontalPanel_buttons.setCellVerticalAlignment(button_close, HasVerticalAlignment.ALIGN_MIDDLE);
@@ -198,14 +200,17 @@ public class VoteResultPanel extends DialogBox {
         horizontalPanel_buttons.setCellWidth(button_mute, "48px");
         horizontalPanel_buttons.setCellHorizontalAlignment(button_mute, HasHorizontalAlignment.ALIGN_RIGHT);
         button_close.addClickHandler(new Button_closeClickHandler());
-        flexTable.getFlexCellFormatter().setColSpan(8, 0, 2);
-        html_connect.setStyleName("gwt-Label");
         flexTable.getFlexCellFormatter().setColSpan(9, 0, 2);
+        html_connect.setStyleName("gwt-Label");
+        flexTable.getFlexCellFormatter().setColSpan(10, 0, 2);
+        flexTable.getFlexCellFormatter().setColSpan(6, 0, 2);
+        flexTable.getCellFormatter().setHorizontalAlignment(6, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        flexTable.getFlexCellFormatter().setColSpan(8, 0, 2);
+        flexTable.getCellFormatter().setHorizontalAlignment(8, 0, HasHorizontalAlignment.ALIGN_CENTER);
+        flexTable.getFlexCellFormatter().setColSpan(7, 0, 2);
+        flexTable.getFlexCellFormatter().setColSpan(4, 0, 2);
         flexTable.getFlexCellFormatter().setColSpan(5, 0, 2);
         flexTable.getCellFormatter().setHorizontalAlignment(5, 0, HasHorizontalAlignment.ALIGN_CENTER);
-        flexTable.getFlexCellFormatter().setColSpan(7, 0, 2);
-        flexTable.getCellFormatter().setHorizontalAlignment(7, 0, HasHorizontalAlignment.ALIGN_CENTER);
-        flexTable.getFlexCellFormatter().setColSpan(6, 0, 2);
     }
 
     public void setId(Long id) {
@@ -220,9 +225,20 @@ public class VoteResultPanel extends DialogBox {
             label.setText(voteResultDTO.getTarget().getName() + " [" + voteResultDTO.getVoteCount() + "]");
         }
         setSteamConnectUrl(result.get(i - 1));
+        setPassword(result.get(i - 1));
         comms.clear();
         comms.add(result.get(0).getTarget().getId());
         comms.add(result.get(1).getTarget().getId());
+    }
+
+    private void setPassword(VoteResultDTO voteResultDTO) {
+        ServerDTO serverDTO = (ServerDTO) voteResultDTO.getTarget();
+        String password = serverDTO.getPassword();
+        if (password != null && !password.isEmpty()) {
+            label_password.setText("Пароль: " + password);
+        } else {
+            label_password.setText("Пароля нет");
+        }
     }
 
     private void setSteamConnectUrl(VoteResultDTO voteResultDTO) {
