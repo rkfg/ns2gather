@@ -163,7 +163,7 @@ public class NS2G implements EntryPoint {
             }
         }
     };
-    private final HorizontalPanel horizontalPanel_1 = new HorizontalPanel();
+    private final HorizontalPanel horizontalPanel_header = new HorizontalPanel();
     private final GatherStatusLabel gatherStatusLabel = new GatherStatusLabel(new ClickHandler() {
 
         @Override
@@ -200,27 +200,27 @@ public class NS2G implements EntryPoint {
         RootLayoutPanel rootLayoutPanel = RootLayoutPanel.get();
 
         rootLayoutPanel.add(splitLayoutPanel_main);
-        horizontalPanel_1.setSpacing(5);
+        horizontalPanel_header.setSpacing(5);
 
-        splitLayoutPanel_main.addNorth(horizontalPanel_1, 70.0);
-        horizontalPanel_1.setSize("100%", "100%");
+        splitLayoutPanel_main.addNorth(horizontalPanel_header, 70.0);
+        horizontalPanel_header.setSize("100%", "100%");
 
-        horizontalPanel_1.add(gatherStatusLabel);
-        horizontalPanel_1.setCellVerticalAlignment(gatherStatusLabel, HasVerticalAlignment.ALIGN_MIDDLE);
-        horizontalPanel_1.setCellHorizontalAlignment(gatherStatusLabel, HasHorizontalAlignment.ALIGN_CENTER);
+        horizontalPanel_header.add(gatherStatusLabel);
+        horizontalPanel_header.setCellVerticalAlignment(gatherStatusLabel, HasVerticalAlignment.ALIGN_MIDDLE);
+        horizontalPanel_header.setCellHorizontalAlignment(gatherStatusLabel, HasHorizontalAlignment.ALIGN_CENTER);
         flexTable_cornerControls.setCellPadding(3);
 
-        horizontalPanel_1.add(flexTable_cornerControls);
-        horizontalPanel_1.setCellWidth(flexTable_cornerControls, "1px");
-        horizontalPanel_1.setCellHorizontalAlignment(flexTable_cornerControls, HasHorizontalAlignment.ALIGN_RIGHT);
+        horizontalPanel_header.add(flexTable_cornerControls);
+        horizontalPanel_header.setCellWidth(flexTable_cornerControls, "1px");
+        horizontalPanel_header.setCellHorizontalAlignment(flexTable_cornerControls, HasHorizontalAlignment.ALIGN_RIGHT);
         flexTable_cornerControls.setWidget(0, 0, button_rules);
         button_rules.addClickHandler(new Button_rulesClickHandler());
-        horizontalPanel_1.setCellWidth(button_rules, "1px");
-        horizontalPanel_1.setCellHorizontalAlignment(button_rules, HasHorizontalAlignment.ALIGN_RIGHT);
+        horizontalPanel_header.setCellWidth(button_rules, "1px");
+        horizontalPanel_header.setCellHorizontalAlignment(button_rules, HasHorizontalAlignment.ALIGN_RIGHT);
         flexTable_cornerControls.setWidget(0, 1, button_logout);
         button_logout.addClickHandler(new Button_logoutClickHandler());
-        horizontalPanel_1.setCellWidth(button_logout, "1px");
-        horizontalPanel_1.setCellHorizontalAlignment(button_logout, HasHorizontalAlignment.ALIGN_RIGHT);
+        horizontalPanel_header.setCellWidth(button_logout, "1px");
+        horizontalPanel_header.setCellHorizontalAlignment(button_logout, HasHorizontalAlignment.ALIGN_RIGHT);
         flexTable_cornerControls.getCellFormatter().setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_RIGHT);
         html_version.setText("Версия");
         flexTable_cornerControls.setWidget(1, 0, html_version);
@@ -396,6 +396,8 @@ public class NS2G implements EntryPoint {
                 cookieSettingsManager.getDoubleCookie(CookieSettingsManager.SERVER_PANEL_COOKIE, 300.0));
         splitLayoutPanel_main.setWidgetSize(dockLayoutPanel_chat,
                 cookieSettingsManager.getDoubleCookie(CookieSettingsManager.CHAT_PANEL_COOKIE, 300.0));
+        splitLayoutPanel_main.setWidgetSize(horizontalPanel_header,
+                cookieSettingsManager.getDoubleCookie(CookieSettingsManager.HEADER_PANEL_COOKIE, 70.0));
     }
 
     protected void postRulesAnnounce() {
@@ -783,6 +785,8 @@ public class NS2G implements EntryPoint {
                         splitLayoutPanel_data.getWidgetSize(dataGrid_servers));
                 cookieSettingsManager.setDoubleCookie(CookieSettingsManager.CHAT_PANEL_COOKIE,
                         splitLayoutPanel_main.getWidgetSize(dockLayoutPanel_chat));
+                cookieSettingsManager.setDoubleCookie(CookieSettingsManager.HEADER_PANEL_COOKIE,
+                        splitLayoutPanel_main.getWidgetSize(horizontalPanel_header));
             }
         }.scheduleRepeating(ClientSettings.SIZE_SAVE_INTERVAL);
     }
