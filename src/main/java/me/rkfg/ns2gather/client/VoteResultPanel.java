@@ -135,6 +135,7 @@ public class VoteResultPanel extends DialogBox {
         flexTable.setWidget(4, 0, html_connect);
         flexTable.getCellFormatter().setHorizontalAlignment(4, 0, HasHorizontalAlignment.ALIGN_CENTER);
 
+        label_password.addStyleName("password");
         flexTable.setWidget(5, 0, label_password);
 
         flexTable.setWidget(6, 0, label_4);

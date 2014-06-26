@@ -91,3 +91,8 @@ h1 {
 .aliens {
     color: #bb6622;
 }
+
+.password {
+    color: #ff3333;
+    font-weight: bold;
+}
