@@ -500,7 +500,7 @@ public class NS2G implements EntryPoint {
                         if (id.equals(myPlayer.getId())) {
                             break;
                         }
-                        addChatMessage(getNameById(dataProvider_players.getList(), id) + " покидает нас.", message.getTimestamp());
+                        addPlayerMessage(message, " покидает нас.");
                         votedPlayers.remove(id);
                         dataGrid_players.redraw();
                         soundManager.queue(NS2Sound.USER_LEAVES);
@@ -510,14 +510,13 @@ public class NS2G implements EntryPoint {
                         id = Long.valueOf(message.getContent());
                         votedPlayers.add(id);
                         dataGrid_players.redraw();
-                        addChatMessage(getNameById(dataProvider_players.getList(), id) + " готов начать игру!", message.getTimestamp());
+                        addPlayerMessage(message, " готов начать игру!");
                         break;
                     case USER_UNREADY:
                         id = Long.valueOf(message.getContent());
                         votedPlayers.remove(id);
                         dataGrid_players.redraw();
-                        addChatMessage(getNameById(dataProvider_players.getList(), id) + " отменил готовность начать игру.",
-                                message.getTimestamp());
+                        addPlayerMessage(message, " отменил готовность начать игру.");
                         break;
                     case GAME_START:
                         addChatMessage("Игра начинается!", message.getTimestamp());
@@ -591,6 +590,13 @@ public class NS2G implements EntryPoint {
             }
         };
         client.start();
+    }
+
+    private void addPlayerMessage(MessageDTO message, String messageText) {
+        String name = getNameById(dataProvider_players.getList(), Long.valueOf(message.getContent()));
+        if (name != null) {
+            addChatMessage(name + messageText, message.getTimestamp());
+        }
     }
 
     protected String getNameById(List<? extends CheckedDTO> list, Long id) {
