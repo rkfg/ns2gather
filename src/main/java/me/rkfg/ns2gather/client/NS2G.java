@@ -518,9 +518,6 @@ public class NS2G implements EntryPoint {
                         dataGrid_players.redraw();
                         addPlayerMessage(message, " отменил готовность начать игру.");
                         break;
-                    case GAME_START:
-                        addChatMessage("Игра начинается!", message.getTimestamp());
-                        break;
                     case CHAT_MESSAGE:
                         addChatMessage(message.getContent(), message.getTimestamp(), ChatMessageType.CHAT);
                         soundManager.queue(NS2Sound.CHAT);
