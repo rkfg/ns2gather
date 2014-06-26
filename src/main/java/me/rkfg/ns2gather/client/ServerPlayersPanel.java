@@ -51,6 +51,7 @@ public class ServerPlayersPanel extends DialogBox {
     };
 
     public ServerPlayersPanel() {
+        setText("Данные о сервере");
         flexTable.setCellPadding(5);
 
         setWidget(simplePanel);
