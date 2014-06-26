@@ -408,10 +408,7 @@ public class NS2G implements EntryPoint {
     }
 
     protected void postRulesAnnounce() {
-        addChatMessage(
-                "Вы заявили свою готовность играть Gather. Ознакомтесь с <a href=\"rules.html\" target=\"_blank\">Правилами</a><br/>"
-                        + "Регулировка громкости звуков чата не влияет на громкость звуков оповещения о сборе. "
-                        + "Вы будете оповещены при ЛЮБОЙ громкости чата, даже если звук отключен совсем.",
+        addChatMessage("Вы заявили свою готовность играть Gather. Ознакомтесь с <a href=\"rules.html\" target=\"_blank\">Правилами</a>",
                 System.currentTimeMillis(), ChatMessageType.SYSTEM, false);
     }
 
