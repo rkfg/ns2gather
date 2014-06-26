@@ -302,6 +302,7 @@ public class NS2G implements EntryPoint {
         dataProvider_servers.addDataDisplay(dataGrid_servers);
 
         dataGrid_servers.addColumn(column_playersList);
+        dataGrid_servers.setColumnWidth(column_playersList, "70px");
         init();
         ready = true;
     }
