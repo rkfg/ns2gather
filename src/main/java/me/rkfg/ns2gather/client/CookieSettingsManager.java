@@ -9,7 +9,6 @@ public class CookieSettingsManager {
     public static final String CHAT_VOLUME_COOKIE = "chat_volume";
     public static final String CHAT_MUTE_COOKIE = "chat_mute";
     public static final String REMEMBER_STEAM_ID = "rememberSteamId";
-    public static final String KICKED = "kicked";
     public static final long COOKIE_AGE = 3650 * 24 * 3600;
     public static final String PLAYER_PANEL_COOKIE = "playerpanel_size";
     public static final String SERVER_PANEL_COOKIE = "serverpanel_size";

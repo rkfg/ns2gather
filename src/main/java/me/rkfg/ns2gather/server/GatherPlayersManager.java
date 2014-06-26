@@ -32,6 +32,19 @@ public class GatherPlayersManager {
 
     ConcurrentHashMap<Long, GatherPlayers> gatherToPlayers = new ConcurrentHashMap<>();
     ConcurrentHashMap<Long, PlayerDTO> steamIdPlayer = new ConcurrentHashMap<>();
+    ConcurrentHashMap<Long, String> kicked = new ConcurrentHashMap<>();
+
+    public void addKicked(Long steamId, String reason) {
+        kicked.put(steamId, reason);
+    }
+
+    public String getKickedReason(Long steamId) {
+        return kicked.get(steamId);
+    }
+
+    public void removeKickedId(Long steamId) {
+        kicked.remove(steamId);
+    }
 
     private CleanupCallback cleanupCallback;
 

@@ -107,7 +107,12 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
         @Override
         public List<MessageDTO> exec() throws LogicException, ClientAuthException, ClientAuthException {
-            List<MessageDTO> result = messageManager.getNewMessages(getCurrentGatherId(), getSteamId(), since);
+            List<MessageDTO> result = new LinkedList<>();
+            try {
+                result = messageManager.getNewMessages(getCurrentGatherId(), getSteamId(), since);
+            } catch (ClientAuthException e) {
+                result = messageManager.getNewMessages(null, getSteamId(), since);
+            }
             if (result.isEmpty()) {
                 return null;
             }
@@ -291,9 +296,10 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public void ping() throws ClientAuthException, LogicException {
-        Long steamId = getSteamId();
-        Long gatherId = getCurrentGatherId();
-        synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
+        synchronized (connectedPlayers.getPlayersByGather(getCurrentGatherId())) {
+            Long steamId = getSteamId();
+            // this should be inside synchronized block to prevent racing with kick
+            Long gatherId = getCurrentGatherId();
             PlayerDTO existing = connectedPlayers.getPlayerByGatherSteamId(gatherId, steamId);
             if (existing == null) {
                 existing = connectedPlayers.getPlayerBySteamId(steamId);
@@ -663,7 +669,10 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     protected Long getCurrentGatherId() throws LogicException, ClientAuthException {
-        getSteamId();
+        String kickReason = connectedPlayers.getKickedReason(getSteamId());
+        if (kickReason != null) {
+            throw new ClientAuthenticationException(kickReason);
+        }
         Long gatherId = (Long) getSession().getAttribute(Settings.GATHER_ID);
         if (gatherId == null) {
             gatherId = findOpenGatherId();
@@ -827,7 +836,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     @Override
-    public void resetGatherPresence() throws LogicException {
+    public void resetGatherPresence() throws LogicException, ClientAuthException {
+        connectedPlayers.removeKickedId(getSteamId());
         getSession().removeAttribute(Settings.GATHER_ID);
     }
 
@@ -862,6 +872,11 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public InitStateDTO getInitState() throws LogicException, ClientAuthException {
+        try {
+            getCurrentGatherId();
+        } catch (ClientAuthException e) {
+            throw new LogicException(e.getMessage());
+        }
         InitStateDTO result = new InitStateDTO();
         result.setGatherState(getGatherState());
         result.setMaps(getMaps());
@@ -921,12 +936,11 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
             removeVotes(steamId);
             removeVotesForPlayer(gatherId, steamId);
-            messageManager.postMessage(MessageType.USER_LEAVES, getPlayer(steamId).getName(), gatherId);
+            messageManager.postMessage(MessageType.USER_LEAVES, steamId.toString(), gatherId);
             if (isKicked) {
-                MessageDTO messageDTO = new MessageDTO(MessageType.USER_KICKED, "Вы были кикнуты из Gather по неактивности.", gatherId);
-                messageDTO.setVisibility(MessageVisibility.PERSONAL);
-                messageDTO.setToSteamId(steamId);
-                messageManager.postMessage(messageDTO);
+                connectedPlayers.addKicked(steamId,
+                        "Вы были кикнуты из Gather по неактивности. Нажмите «Зайти в новый сбор», чтобы продолжить участие.");
+                messageManager.postMessage(MessageDTO.privateMessage(steamId, MessageType.USER_KICKED, "", null));
             }
             postVoteChangeMessage(gatherId);
             updateGatherStateByPlayerNumber(gatherId);

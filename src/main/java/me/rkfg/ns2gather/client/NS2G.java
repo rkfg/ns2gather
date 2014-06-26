@@ -23,6 +23,7 @@ import ru.ppsrk.gwt.client.ClientUtils.MyAsyncCallback;
 import ru.ppsrk.gwt.client.LongPollingClient;
 
 import com.google.gwt.cell.client.AbstractCell;
+import com.google.gwt.cell.client.ButtonCell;
 import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.EntryPoint;
@@ -41,7 +42,6 @@ import com.google.gwt.user.cellview.client.RowStyles;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.Window.Location;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
@@ -57,7 +57,6 @@ import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.cell.client.ButtonCell;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -181,7 +180,6 @@ public class NS2G implements EntryPoint {
     private Set<Long> votedPlayers = new HashSet<Long>();
     private VoteResultPanel voteResultPanel = new VoteResultPanel();
     private ServerPlayersPanel serverPlayersPanel = new ServerPlayersPanel();
-    private String myNick;
     private final HorizontalPanel horizontalPanel_voteButton = new HorizontalPanel();
     private final Label label_version = new Label();
     private final Button button_rules = new Button("Правила");
@@ -192,6 +190,7 @@ public class NS2G implements EntryPoint {
             return "?";
         }
     };
+    private PlayerDTO myPlayer;
 
     /**
      * This is the entry point method.
@@ -308,11 +307,6 @@ public class NS2G implements EntryPoint {
     }
 
     private void init() {
-        String kickedMessage = cookieSettingsManager.getStringCookie(CookieSettingsManager.KICKED, "");
-        if (!kickedMessage.isEmpty()) {
-            Window.alert(kickedMessage);
-            cookieSettingsManager.removeCookie(CookieSettingsManager.KICKED);
-        }
         column_voteComm.setFieldUpdater(new FieldUpdater<PlayerDTO, Boolean>() {
 
             @Override
@@ -377,18 +371,12 @@ public class NS2G implements EntryPoint {
             @Override
             public void onSuccess(PlayerDTO result) {
                 label_nick.setHTML("<a href=\"" + result.getProfileUrl() + "\" target=\"_blank\">" + result.getName() + "</a>: ");
-                voteResultPanel.setId(result.getId());
+                myPlayer = result;
+                voteResultPanel.setId(myPlayer.getId());
                 // send initial ping to show our presence
-                ns2gService.ping(new MyAsyncCallback<Void>() {
-
-                    @Override
-                    public void onSuccess(Void result) {
-                        runPing();
-                        loadInitState();
-                        postRulesAnnounce();
-                        runSizeSaver();
-                    }
-                });
+                loadInitState();
+                postRulesAnnounce();
+                runSizeSaver();
             }
 
             @Override
@@ -436,8 +424,22 @@ public class NS2G implements EntryPoint {
                 if (result.getVoteResults() != null) {
                     voteResultPanel.fillFields(result.getVoteResults());
                 }
+                ns2gService.ping(new MyAsyncCallback<Void>() {
+
+                    @Override
+                    public void onSuccess(Void result) {
+                        runPing();
+                    }
+                });
                 runMessageListener();
             }
+
+            @Override
+            public void onFailure(Throwable caught) {
+                super.onFailure(caught);
+                button_enterNewGather.setVisible(true);
+            }
+
         });
     }
 
@@ -470,6 +472,7 @@ public class NS2G implements EntryPoint {
                 boolean loadPlayers = false;
                 boolean voteEnded = false;
                 boolean badVote = false;
+                Long id;
                 soundManager.clearQueue();
                 for (MessageDTO message : result) {
                     if (message.getTimestamp() > lastMessageUpdate) {
@@ -477,32 +480,33 @@ public class NS2G implements EntryPoint {
                     }
                     switch (message.getType()) {
                     case USER_ENTERS:
-                        if (message.getContent().equals(myNick)) {
-                            break;
-                        }
                         addChatMessage(message.getContent() + " входит.", message.getTimestamp());
                         loadPlayers = true;
                         soundManager.queue(NS2Sound.USER_ENTERS);
                         break;
                     case USER_LEAVES:
-                        if (message.getContent().equals(myNick)) {
+                        id = Long.valueOf(message.getContent());
+                        if (id.equals(myPlayer.getId())) {
                             break;
                         }
-                        addChatMessage(message.getContent() + " покидает нас.", message.getTimestamp());
-                        votedPlayers.remove(getIdByName(dataProvider_players.getList(), message.getContent()));
+                        addChatMessage(getNameById(dataProvider_players.getList(), id) + " покидает нас.", message.getTimestamp());
+                        votedPlayers.remove(id);
                         dataGrid_players.redraw();
                         soundManager.queue(NS2Sound.USER_LEAVES);
                         loadPlayers = true;
                         break;
                     case USER_READY:
-                        votedPlayers.add(Long.valueOf(message.getContent()));
+                        id = Long.valueOf(message.getContent());
+                        votedPlayers.add(id);
                         dataGrid_players.redraw();
-                        addChatMessage(message.getContent() + " готов начать игру!", message.getTimestamp());
+                        addChatMessage(getNameById(dataProvider_players.getList(), id) + " готов начать игру!", message.getTimestamp());
                         break;
                     case USER_UNREADY:
-                        votedPlayers.remove(Long.valueOf(message.getContent()));
+                        id = Long.valueOf(message.getContent());
+                        votedPlayers.remove(id);
                         dataGrid_players.redraw();
-                        addChatMessage(message.getContent() + " отменил готовность начать игру.", message.getTimestamp());
+                        addChatMessage(getNameById(dataProvider_players.getList(), id) + " отменил готовность начать игру.",
+                                message.getTimestamp());
                         break;
                     case GAME_START:
                         addChatMessage("Игра начинается!", message.getTimestamp());
@@ -533,7 +537,6 @@ public class NS2G implements EntryPoint {
                         updateEnterNewButtonVisibility();
                         break;
                     case USER_KICKED:
-                        cookieSettingsManager.setStringCookie(CookieSettingsManager.KICKED, message.getContent());
                         Location.reload();
                         break;
                     case RUN_TIMER:
@@ -579,10 +582,10 @@ public class NS2G implements EntryPoint {
         client.start();
     }
 
-    protected Long getIdByName(List<? extends CheckedDTO> list, String content) {
+    protected String getNameById(List<? extends CheckedDTO> list, Long id) {
         for (CheckedDTO checkedDTO : list) {
-            if (checkedDTO.getName().equals(content)) {
-                return checkedDTO.getId();
+            if (checkedDTO.getId().equals(id)) {
+                return checkedDTO.getName();
             }
         }
         return null;
