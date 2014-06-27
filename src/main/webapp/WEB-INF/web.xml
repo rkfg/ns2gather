@@ -32,5 +32,7 @@
   <welcome-file-list>
     <welcome-file>ns2g.html</welcome-file>
   </welcome-file-list>
+  
+  <display-name>NS2 Gather Service</display-name>
 
 </web-app>
