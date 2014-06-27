@@ -66,6 +66,7 @@ import ru.ppsrk.gwt.server.LongPollingServer;
 import ru.ppsrk.gwt.server.ServerUtils;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import com.mysql.jdbc.AbandonedConnectionCleanupThread;
 
 /**
  * The server side implementation of the RPC service.
@@ -972,5 +973,14 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         if (gatherPlayers.getTeamsStat(TeamStatType.NOFREE)) {
             updateGatherState(gatherId, GatherState.COMPLETED);
         }
+    }
+
+    @Override
+    public void destroy() {
+        messageManager.stopMessageCleanup();
+        serverManager.stopServersInfoRefresher();
+        connectedPlayers.stopPlayersCleanup();
+        HibernateUtil.cleanup();
+        HibernateUtil.mysqlCleanup();
     }
 }

@@ -30,6 +30,7 @@ public class GatherPlayersManager {
         EQUALITY, NOFREE
     }
 
+    Timer playersCleanupTimer = new Timer("Players cleanup", true);
     ConcurrentHashMap<Long, GatherPlayers> gatherToPlayers = new ConcurrentHashMap<>();
     ConcurrentHashMap<Long, PlayerDTO> steamIdPlayer = new ConcurrentHashMap<>();
     ConcurrentHashMap<Long, String> kicked = new ConcurrentHashMap<>();
@@ -243,7 +244,7 @@ public class GatherPlayersManager {
     }
 
     private void runPlayersCleanup() {
-        new Timer().schedule(new TimerTask() {
+        playersCleanupTimer.schedule(new TimerTask() {
 
             @Override
             public void run() {
@@ -264,5 +265,9 @@ public class GatherPlayersManager {
                 }
             }
         }, 5000, 5000);
+    }
+
+    public void stopPlayersCleanup() {
+        playersCleanupTimer.cancel();
     }
 }

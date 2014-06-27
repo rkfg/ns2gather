@@ -48,6 +48,7 @@ public class ServerManager {
     private ServersChangeCallback serversChangeCallback;
 
     HashMap<Long, ServerData> serversData = new HashMap<>();
+    Timer serverRefresher = new Timer("Server refresher", true);
 
     public ServerManager(ServersChangeCallback callback) {
         serversChangeCallback = callback;
@@ -83,7 +84,7 @@ public class ServerManager {
     }
 
     private void runServersInfoRefresher() {
-        new Timer(true).schedule(new TimerTask() {
+        serverRefresher.schedule(new TimerTask() {
 
             @Override
             public void run() {
@@ -101,5 +102,9 @@ public class ServerManager {
                 serversChangeCallback.onChange();
             }
         }, 1000, Settings.SERVER_INFO_REFRESH_PERIOD);
+    }
+
+    public void stopServersInfoRefresher() {
+        serverRefresher.cancel();
     }
 }

@@ -14,6 +14,7 @@ import me.rkfg.ns2gather.dto.MessageVisibility;
 
 public class MessageManager {
     ConcurrentLinkedQueue<MessageDTO> messages = new ConcurrentLinkedQueue<>();
+    Timer messageCleanupTimer = new Timer("Message cleanup", true);
 
     public MessageManager() {
         runMessageCleanup();
@@ -34,7 +35,7 @@ public class MessageManager {
     }
 
     private void runMessageCleanup() {
-        new Timer().schedule(new TimerTask() {
+        messageCleanupTimer.schedule(new TimerTask() {
 
             @Override
             public void run() {
@@ -45,6 +46,10 @@ public class MessageManager {
                 }
             }
         }, 10000, 10000);
+    }
+
+    public void stopMessageCleanup() {
+        messageCleanupTimer.cancel();
     }
 
     public void postMessage(MessageDTO messageDTO) {

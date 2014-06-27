@@ -6,7 +6,7 @@ import java.util.TimerTask;
 
 public class GatherCountdownManager {
     public class GatherCountdown {
-        private Timer timer = new Timer(true);
+        private Timer timer = new Timer("Countdown", true);
 
         public void schedule(final TimerTask task, long delay, final Long gatherId) {
             timer.schedule(new TimerTask() {
