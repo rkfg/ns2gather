@@ -408,7 +408,7 @@ public class NS2G implements EntryPoint {
     }
 
     protected void postRulesAnnounce() {
-        addChatMessage("Вы заявили свою готовность играть Gather. Ознакомтесь с <a href=\"rules.html\" target=\"_blank\">Правилами</a>",
+        addChatMessage("Вы заявили свою готовность играть Gather. Ознакомьтесь с <a href=\"rules.html\" target=\"_blank\">Правилами</a>",
                 System.currentTimeMillis(), ChatMessageType.SYSTEM, false);
     }
 
