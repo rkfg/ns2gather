@@ -45,6 +45,7 @@ import me.rkfg.ns2gather.server.ServerManager.ServersChangeCallback;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.utils.DateUtils;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.openid4java.consumer.ConsumerException;
@@ -66,7 +67,6 @@ import ru.ppsrk.gwt.server.LongPollingServer;
 import ru.ppsrk.gwt.server.ServerUtils;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-import com.mysql.jdbc.AbandonedConnectionCleanupThread;
 
 /**
  * The server side implementation of the RPC service.
@@ -982,5 +982,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         connectedPlayers.stopPlayersCleanup();
         HibernateUtil.cleanup();
         HibernateUtil.mysqlCleanup();
+        DateUtils.clearThreadLocal();
     }
 }
