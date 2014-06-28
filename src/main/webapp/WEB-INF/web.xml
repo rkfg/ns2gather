@@ -5,6 +5,8 @@
 
 <web-app>
 
+  <display-name>NS2 Gather Service</display-name>
+
   <!-- Servlets -->
   <servlet>
     <servlet-name>NS2Servlet</servlet-name>
@@ -33,6 +35,4 @@
     <welcome-file>ns2g.html</welcome-file>
   </welcome-file-list>
   
-  <display-name>NS2 Gather Service</display-name>
-
 </web-app>
