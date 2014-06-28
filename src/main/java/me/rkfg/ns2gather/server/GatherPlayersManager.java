@@ -24,7 +24,7 @@ import ru.ppsrk.gwt.client.ClientAuthException;
 import ru.ppsrk.gwt.client.LogicException;
 import ru.ppsrk.gwt.server.LogicExceptionFormatted;
 
-public class GatherPlayersManager {
+public class GatherPlayersManager extends Cleanupable {
 
     public enum TeamStatType {
         EQUALITY, NOFREE
@@ -267,7 +267,8 @@ public class GatherPlayersManager {
         }, 5000, 5000);
     }
 
-    public void stopPlayersCleanup() {
+    @Override
+    public void cleanup() {
         playersCleanupTimer.cancel();
     }
 }

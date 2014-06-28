@@ -19,7 +19,7 @@ import com.github.koraktor.steamcondenser.exceptions.SteamCondenserException;
 import com.github.koraktor.steamcondenser.steam.SteamPlayer;
 import com.github.koraktor.steamcondenser.steam.servers.SourceServer;
 
-public class ServerManager {
+public class ServerManager extends Cleanupable {
 
     public class ServerData {
         HashMap<String, SteamPlayer> players = new HashMap<>();
@@ -104,7 +104,8 @@ public class ServerManager {
         }, 1000, Settings.SERVER_INFO_REFRESH_PERIOD);
     }
 
-    public void stopServersInfoRefresher() {
+    @Override
+    public void cleanup() {
         serverRefresher.cancel();
     }
 }

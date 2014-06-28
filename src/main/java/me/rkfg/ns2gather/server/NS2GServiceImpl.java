@@ -977,9 +977,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public void destroy() {
-        messageManager.stopMessageCleanup();
-        serverManager.stopServersInfoRefresher();
-        connectedPlayers.stopPlayersCleanup();
+        CleanupManager.getInstance().doCleanup();
         HibernateUtil.cleanup();
         HibernateUtil.mysqlCleanup();
         DateUtils.clearThreadLocal();
