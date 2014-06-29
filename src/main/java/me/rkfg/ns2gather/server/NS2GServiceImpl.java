@@ -16,6 +16,7 @@ import java.util.TimerTask;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 
+import me.rkfg.ns2gather.client.AnonymousAuthException;
 import me.rkfg.ns2gather.client.ClientSettings;
 import me.rkfg.ns2gather.client.NS2GService;
 import me.rkfg.ns2gather.domain.Gather;
@@ -109,11 +110,14 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         @Override
         public List<MessageDTO> exec() throws LogicException, ClientAuthException, ClientAuthException {
             List<MessageDTO> result = new LinkedList<>();
+            Long gatherId = null;
+            Long steamId = null;
             try {
-                result = messageManager.getNewMessages(getCurrentGatherId(), getSteamId(), since);
+                gatherId = getCurrentGatherId();
+                steamId = getSteamId();
             } catch (ClientAuthException e) {
-                result = messageManager.getNewMessages(null, getSteamId(), since);
             }
+            result = messageManager.getNewMessages(gatherId, steamId, since);
             if (result.isEmpty()) {
                 return null;
             }
@@ -224,6 +228,10 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public Long getSteamId() throws ClientAuthException, LogicException {
+        Boolean isAnonymous = (Boolean) getSession().getAttribute(Settings.ANONYMOUS_SESSION);
+        if (isAnonymous != null) {
+            throw new AnonymousAuthException("anonymous");
+        }
         Long result = (Long) getSession().getAttribute(Settings.STEAMID_SESSION);
         if (result == null) {
             result = rememberMe();
@@ -670,9 +678,13 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     }
 
     protected Long getCurrentGatherId() throws LogicException, ClientAuthException {
-        String kickReason = connectedPlayers.getKickedReason(getSteamId());
-        if (kickReason != null) {
-            throw new ClientAuthenticationException(kickReason);
+        try {
+            String kickReason = connectedPlayers.getKickedReason(getSteamId());
+            if (kickReason != null) {
+                throw new ClientAuthenticationException(kickReason);
+            }
+        } catch (AnonymousAuthException e) {
+            // ok, let the anon pass in
         }
         Long gatherId = (Long) getSession().getAttribute(Settings.GATHER_ID);
         if (gatherId == null) {
@@ -824,11 +836,15 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
             @Override
             public Void run(Session session) throws LogicException, ClientAuthException {
-                @SuppressWarnings("unchecked")
-                List<Remembered> remembereds = session.createQuery("from Remembered r where r.steamId = :sid").setLong("sid", getSteamId())
-                        .list();
-                for (Remembered remembered : remembereds) {
-                    session.delete(remembered);
+                try {
+                    @SuppressWarnings("unchecked")
+                    List<Remembered> remembereds = session.createQuery("from Remembered r where r.steamId = :sid")
+                            .setLong("sid", getSteamId()).list();
+                    for (Remembered remembered : remembereds) {
+                        session.delete(remembered);
+                    }
+                } catch (AnonymousAuthException e) {
+
                 }
                 getSession().invalidate();
                 return null;
@@ -886,7 +902,11 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         result.setVotedIds(getVotedPlayerIds());
         result.setVoteStat(getVoteStat());
         result.setVersion(getVersion());
-        result.setPasswords(getPasswordsForStreamer());
+        try {
+            result.setPasswords(getPasswordsForStreamer());
+        } catch (AnonymousAuthException e) {
+
+        }
         if (isGatherClosed(getCurrentGatherId())) {
             result.setVoteResults(getVoteResults());
         }
@@ -981,5 +1001,11 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         HibernateUtil.cleanup();
         HibernateUtil.mysqlCleanup();
         DateUtils.clearThreadLocal();
+    }
+
+    @Override
+    public void loginAnonymously() throws LogicException, ClientAuthException {
+        getSession().setAttribute(Settings.ANONYMOUS_SESSION, true);
+        getCurrentGatherId();
     }
 }

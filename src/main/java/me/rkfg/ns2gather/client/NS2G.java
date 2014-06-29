@@ -371,18 +371,16 @@ public class NS2G implements EntryPoint {
 
             @Override
             public void onSuccess(PlayerDTO result) {
-                label_nick.setHTML("<a href=\"" + result.getProfileUrl() + "\" target=\"_blank\">" + result.getName() + "</a>: ");
-                myPlayer = result;
-                voteResultPanel.setId(myPlayer.getId());
-                // send initial ping to show our presence
-                loadInitState();
-                postRulesAnnounce();
-                runSizeSaver();
+                initPlayer(result);
             }
 
             @Override
             public void onFailure(Throwable caught) {
-                login();
+                if (caught instanceof AnonymousAuthException) {
+                    initPlayer(new PlayerDTO(0L, "Anonymous", "", System.currentTimeMillis()));
+                } else {
+                    login();
+                }
             }
         });
         voteResultPanel.getButton_mute().addClickHandler(new ClickHandler() {
@@ -408,8 +406,16 @@ public class NS2G implements EntryPoint {
     }
 
     protected void postRulesAnnounce() {
-        addChatMessage("Вы заявили свою готовность играть Gather. Ознакомьтесь с <a href=\"rules.html\" target=\"_blank\">Правилами</a>",
-                System.currentTimeMillis(), ChatMessageType.SYSTEM, false);
+        if (myPlayer.getId().equals(0L)) {
+            addChatMessage(
+                    "Вы вошли в Gather анонимно. Вы не можете голосовать и писать в чат, но можете следить за ходом голосования и набором команд. "
+                            + "Ознакомьтесь с <a href=\"rules.html\" target=\"_blank\">Правилами</a>", System.currentTimeMillis(),
+                    ChatMessageType.SYSTEM, false);
+        } else {
+            addChatMessage(
+                    "Вы заявили свою готовность играть Gather. Ознакомьтесь с <a href=\"rules.html\" target=\"_blank\">Правилами</a>",
+                    System.currentTimeMillis(), ChatMessageType.SYSTEM, false);
+        }
     }
 
     protected void loadInitState() {
@@ -435,13 +441,15 @@ public class NS2G implements EntryPoint {
                 if (result.getVoteResults() != null) {
                     voteResultPanel.fillFields(result.getVoteResults());
                 }
-                ns2gService.ping(new MyAsyncCallback<Void>() {
+                if (!myPlayer.getId().equals(0L)) {
+                    ns2gService.ping(new MyAsyncCallback<Void>() {
 
-                    @Override
-                    public void onSuccess(Void result) {
-                        runPing();
-                    }
-                });
+                        @Override
+                        public void onSuccess(Void result) {
+                            runPing();
+                        }
+                    });
+                }
                 runMessageListener();
             }
 
@@ -799,6 +807,16 @@ public class NS2G implements EntryPoint {
                         splitLayoutPanel_main.getWidgetSize(horizontalPanel_header));
             }
         }.scheduleRepeating(ClientSettings.SIZE_SAVE_INTERVAL);
+    }
+
+    private void initPlayer(PlayerDTO result) {
+        label_nick.setHTML("<a href=\"" + result.getProfileUrl() + "\" target=\"_blank\">" + result.getName() + "</a>: ");
+        myPlayer = result;
+        voteResultPanel.setId(myPlayer.getId());
+        // send initial ping to show our presence
+        loadInitState();
+        postRulesAnnounce();
+        runSizeSaver();
     }
 
     public static boolean isGatherClosed(GatherState gatherState) {
