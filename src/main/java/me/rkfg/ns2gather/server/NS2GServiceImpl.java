@@ -422,8 +422,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private void unvote(Long gatherId, Long steamId) throws LogicException, ClientAuthException {
         synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
-            removeVotes(steamId);
-            sendReadiness(getPlayer(steamId).getId(), gatherId, false);
+            if (removeVotes(steamId)) {
+                sendReadiness(getPlayer(steamId).getId(), gatherId, false);
+            }
         }
     }
 
