@@ -63,7 +63,7 @@ public class VoteResultPanel extends DialogBox {
                 playerClass = "participant " + baseClass;
             }
             sb.appendHtmlConstant("<span class=\"" + playerClass + "\" title=\"" + value.getName() + "\">")
-                    .appendEscaped(value.getEffectiveName()).appendHtmlConstant("</span>");
+                    .appendEscaped(value.buildInfo()).appendHtmlConstant("</span>");
         }
     };
 

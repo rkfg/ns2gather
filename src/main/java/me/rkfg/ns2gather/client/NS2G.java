@@ -84,7 +84,7 @@ public class NS2G implements EntryPoint {
 
         @Override
         public void render(Context context, PlayerDTO value, SafeHtmlBuilder sb) {
-            value.buildLink(sb);
+            value.buildLink(sb, true);
         }
     }) {
         @Override
@@ -869,7 +869,7 @@ public class NS2G implements EntryPoint {
 
     private void updateNickURL() {
         SafeHtmlBuilder sb = new SafeHtmlBuilder();
-        myPlayer.buildLink(sb);
+        myPlayer.buildLink(sb, false);
         label_nick.setHTML(sb.toSafeHtml().asString());
     }
 

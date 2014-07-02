@@ -10,6 +10,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 import me.rkfg.ns2gather.domain.Player;
+import me.rkfg.ns2gather.dto.HiveStatsDTO;
 import me.rkfg.ns2gather.dto.PlayerDTO;
 import me.rkfg.ns2gather.dto.Side;
 
@@ -28,6 +29,8 @@ import ru.ppsrk.gwt.client.LogicException;
 import ru.ppsrk.gwt.server.HibernateCallback;
 import ru.ppsrk.gwt.server.HibernateUtil;
 import ru.ppsrk.gwt.server.LogicExceptionFormatted;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class GatherPlayersManager implements AutoCloseable {
 
@@ -166,6 +169,35 @@ public class GatherPlayersManager implements AutoCloseable {
 
         public void remove(PlayerDTO player) {
             gatherPlayers.remove(player.getId());
+        }
+
+        public synchronized void getHiveStats(final Long steamId, final AsyncCallback<HiveStatsDTO> callback) {
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    PlayerDTO playerDTO = getPlayer(steamId);
+                    Long realSteamId = steamId & 0xFFFFFFFFL;
+                    HttpClient client = NetworkUtils.getHTTPClient();
+                    HttpGet request = new HttpGet("http://hive.naturalselection2.com/api/get/playerData/" + realSteamId);
+                    try {
+                        String resultJSON = NetworkUtils.readStream(client.execute(request).getEntity().getContent());
+                        JSONObject rootObject = new JSONObject(resultJSON);
+                        HiveStatsDTO hiveStatsDTO = playerDTO.getHiveStats();
+                        if (hiveStatsDTO == null) {
+                            hiveStatsDTO = new HiveStatsDTO();
+                        }
+                        hiveStatsDTO.setHoursPlayed(rootObject.getLong("playTime") / 3600);
+                        hiveStatsDTO.setSkill(rootObject.getDouble("skill"));
+                        playerDTO.setHiveStats(hiveStatsDTO);
+                        callback.onSuccess(hiveStatsDTO);
+                    } catch (IOException e) {
+                        callback.onFailure(e);
+                    } catch (JSONException e) {
+                        callback.onFailure(e);
+                    }
+                }
+            }, "Hive request for " + steamId).start();
         }
 
     }

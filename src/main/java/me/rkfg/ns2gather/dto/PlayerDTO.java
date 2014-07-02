@@ -6,6 +6,8 @@ public class PlayerDTO extends CheckedDTO {
     Long lastPing;
     String profileUrl;
     String nick;
+    Long lastHiveUpdate = 0L;
+    HiveStatsDTO hiveStats;
     Side side = Side.NONE;
 
     public PlayerDTO(Long id, String name, String profileUrl, Long lastPing) {
@@ -43,6 +45,22 @@ public class PlayerDTO extends CheckedDTO {
         this.nick = nick;
     }
 
+    public Long getLastHiveUpdate() {
+        return lastHiveUpdate;
+    }
+
+    public void setLastHiveUpdate(Long lastHiveUpdate) {
+        this.lastHiveUpdate = lastHiveUpdate;
+    }
+
+    public HiveStatsDTO getHiveStats() {
+        return hiveStats;
+    }
+
+    public void setHiveStats(HiveStatsDTO hiveStats) {
+        this.hiveStats = hiveStats;
+    }
+
     public Side getSide() {
         return side;
     }
@@ -69,9 +87,20 @@ public class PlayerDTO extends CheckedDTO {
         return name;
     }
 
-    public void buildLink(SafeHtmlBuilder sb) {
+    public void buildLink(SafeHtmlBuilder sb, boolean skills) {
         sb.appendHtmlConstant("<a href=\"" + getProfileUrl() + "\" target=\"_blank\" title=\"" + getName() + "\">")
                 .appendEscaped(getEffectiveName()).appendHtmlConstant("</a>");
+        if (skills && hiveStats != null && hiveStats.getHoursPlayed() != null && hiveStats.getSkill() != null) {
+            sb.appendEscaped(" [H:" + hiveStats.getHoursPlayed() + "] [S:" + hiveStats.getSkill() + "]");
+        }
     }
 
+    public String buildInfo() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getEffectiveName());
+        if (hiveStats != null && hiveStats.getHoursPlayed() != null && hiveStats.getSkill() != null) {
+            sb.append(" [H:" + hiveStats.getHoursPlayed() + "] [S:" + hiveStats.getSkill() + "]");
+        }
+        return sb.toString();
+    }
 }
