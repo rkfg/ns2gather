@@ -13,4 +13,8 @@ public class Settings {
     static final long GATHER_RESOLVE_DELAY = 60000;
     static final int SERVER_PASSWORD_LENGTH = 6;
     static final long SERVER_INFO_REFRESH_PERIOD = 60000;
+    static final String KICKED = "kicked";
+    public static final String ANONYMOUS_SESSION = "anonymous";
+    static final long HIVE_UPDATE_INTERVAL = TimeUnit.HOURS.toMillis(1);
+    static final long HIVE_UPDATE_FAILURE_WAIT = TimeUnit.MINUTES.toMillis(5);
 }
