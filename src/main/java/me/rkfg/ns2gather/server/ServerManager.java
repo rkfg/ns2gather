@@ -19,7 +19,7 @@ import com.github.koraktor.steamcondenser.exceptions.SteamCondenserException;
 import com.github.koraktor.steamcondenser.steam.SteamPlayer;
 import com.github.koraktor.steamcondenser.steam.servers.SourceServer;
 
-public class ServerManager extends Cleanupable {
+public class ServerManager implements AutoCloseable {
 
     public class ServerData {
         HashMap<String, SteamPlayer> players = new HashMap<>();
@@ -105,7 +105,7 @@ public class ServerManager extends Cleanupable {
     }
 
     @Override
-    public void cleanup() {
+    public void close() throws Exception {
         serverRefresher.cancel();
     }
 }

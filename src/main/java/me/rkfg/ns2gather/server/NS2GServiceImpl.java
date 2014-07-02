@@ -21,6 +21,7 @@ import me.rkfg.ns2gather.client.ClientSettings;
 import me.rkfg.ns2gather.client.NS2GService;
 import me.rkfg.ns2gather.domain.Gather;
 import me.rkfg.ns2gather.domain.Map;
+import me.rkfg.ns2gather.domain.Player;
 import me.rkfg.ns2gather.domain.PlayerVote;
 import me.rkfg.ns2gather.domain.Remembered;
 import me.rkfg.ns2gather.domain.Server;
@@ -28,6 +29,7 @@ import me.rkfg.ns2gather.domain.Streamer;
 import me.rkfg.ns2gather.domain.Vote;
 import me.rkfg.ns2gather.domain.VoteResult;
 import me.rkfg.ns2gather.dto.GatherState;
+import me.rkfg.ns2gather.dto.HiveStatsDTO;
 import me.rkfg.ns2gather.dto.InitStateDTO;
 import me.rkfg.ns2gather.dto.MapDTO;
 import me.rkfg.ns2gather.dto.MessageDTO;
@@ -67,6 +69,7 @@ import ru.ppsrk.gwt.server.LogicExceptionFormatted;
 import ru.ppsrk.gwt.server.LongPollingServer;
 import ru.ppsrk.gwt.server.ServerUtils;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 /**
@@ -83,6 +86,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     private static final boolean forceRelease = false;
     Logger logger = LoggerFactory.getLogger(getClass());
 
+    CleanupManager cleanupManager = new CleanupManager();
     static ConsumerManager consumerManager = new ConsumerManager();
     ServerManager serverManager;
     GatherPlayersManager connectedPlayers = new GatherPlayersManager(new CleanupCallback() {
@@ -144,6 +148,9 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 }
             }
         });
+        cleanupManager.add(connectedPlayers);
+        cleanupManager.add(messageManager);
+        cleanupManager.add(serverManager);
     }
 
     protected void removeVotesForPlayer(final Long gatherId, final Long playerLeftId) throws LogicException, ClientAuthException {
@@ -308,7 +315,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         synchronized (connectedPlayers.getPlayersByGather(getCurrentGatherId())) {
             Long steamId = getSteamId();
             // this should be inside synchronized block to prevent racing with kick
-            Long gatherId = getCurrentGatherId();
+            final Long gatherId = getCurrentGatherId();
             PlayerDTO existing = connectedPlayers.getPlayerByGatherSteamId(gatherId, steamId);
             if (existing == null) {
                 existing = connectedPlayers.getPlayerBySteamId(steamId);
@@ -317,7 +324,53 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 }
                 existing.setLastPing(System.currentTimeMillis());
                 connectedPlayers.addPlayer(gatherId, existing);
-                messageManager.postMessage(MessageType.USER_ENTERS, existing.getName(), gatherId);
+                if (System.currentTimeMillis() - existing.getLastHiveUpdate() > Settings.HIVE_UPDATE_INTERVAL) {
+                    final PlayerDTO hivePlayer = existing;
+                    connectedPlayers.getPlayersByGather(gatherId).getHiveStats(steamId, new AsyncCallback<HiveStatsDTO>() {
+
+                        @Override
+                        public void onSuccess(HiveStatsDTO result) {
+                            try {
+                                logger.info("Got hive info for {}", hivePlayer.getId());
+                                hivePlayer.setLastHiveUpdate(System.currentTimeMillis());
+                                messageManager.postMessage(MessageType.PLAYERS_UPDATE, "", gatherId);
+                            } catch (LogicException | ClientAuthException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Throwable caught) {
+                            logger.warn("Can't get hive info for {}", hivePlayer.getId());
+                            hivePlayer.setLastHiveUpdate(System.currentTimeMillis() + Settings.HIVE_UPDATE_FAILURE_WAIT
+                                    - Settings.HIVE_UPDATE_INTERVAL);
+                        }
+                    });
+                }
+                if (System.currentTimeMillis() - existing.getLastHiveUpdate() > Settings.HIVE_UPDATE_INTERVAL) {
+                    final PlayerDTO hivePlayer = existing;
+                    connectedPlayers.getPlayersByGather(gatherId).getHiveStats(steamId, new AsyncCallback<HiveStatsDTO>() {
+
+                        @Override
+                        public void onSuccess(HiveStatsDTO result) {
+                            try {
+                                logger.info("Got hive info for {}", hivePlayer.getId());
+                                hivePlayer.setLastHiveUpdate(System.currentTimeMillis());
+                                messageManager.postMessage(MessageType.PLAYERS_UPDATE, "", gatherId);
+                            } catch (LogicException | ClientAuthException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Throwable caught) {
+                            logger.warn("Can't get hive info for {}", hivePlayer.getId());
+                            hivePlayer.setLastHiveUpdate(System.currentTimeMillis() + Settings.HIVE_UPDATE_FAILURE_WAIT
+                                    - Settings.HIVE_UPDATE_INTERVAL);
+                        }
+                    });
+                }
+                messageManager.postMessage(MessageType.USER_ENTERS, existing.getEffectiveName(), gatherId);
                 postVoteChangeMessage(gatherId);
                 updateGatherStateByPlayerNumber(gatherId);
             } else {
@@ -465,7 +518,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
             @Override
             public int compare(PlayerDTO o1, PlayerDTO o2) {
-                return o1.getName().compareTo(o2.getName());
+                return o1.getEffectiveName().compareTo(o2.getEffectiveName());
             }
         });
         return result;
@@ -998,7 +1051,11 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public void destroy() {
-        CleanupManager.getInstance().doCleanup();
+        try {
+            cleanupManager.doCleanup();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         HibernateUtil.cleanup();
         HibernateUtil.mysqlCleanup();
         DateUtils.clearThreadLocal();
@@ -1008,5 +1065,30 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     public void loginAnonymously() throws LogicException, ClientAuthException {
         getSession().setAttribute(Settings.ANONYMOUS_SESSION, true);
         getCurrentGatherId();
+    }
+
+    @Override
+    public void changeNick(String newNick) throws LogicException, ClientAuthException {
+        Long gatherId = getCurrentGatherId();
+        changeNick(connectedPlayers.getPlayerByGatherSteamId(gatherId, getSteamId()), newNick);
+        messageManager.postMessage(MessageType.PLAYERS_UPDATE, "", gatherId);
+    }
+
+    private void changeNick(final PlayerDTO playerDTO, final String newNick) throws LogicException, ClientAuthException {
+        HibernateUtil.exec(new HibernateCallback<Void>() {
+
+            @Override
+            public Void run(Session session) throws LogicException, ClientAuthException {
+                Player playerEnt = (Player) session.createQuery("from Player p where p.steamId = :sid").setLong("sid", playerDTO.getId())
+                        .uniqueResult();
+                if (playerEnt == null) {
+                    session.merge(new Player(newNick, playerDTO.getId()));
+                } else {
+                    playerEnt.setNick(newNick);
+                }
+                playerDTO.setNick(newNick);
+                return null;
+            }
+        });
     }
 }

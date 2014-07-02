@@ -1,8 +1,11 @@
 package me.rkfg.ns2gather.dto;
 
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+
 public class PlayerDTO extends CheckedDTO {
     Long lastPing;
     String profileUrl;
+    String nick;
     Side side = Side.NONE;
 
     public PlayerDTO(Long id, String name, String profileUrl, Long lastPing) {
@@ -32,6 +35,14 @@ public class PlayerDTO extends CheckedDTO {
         this.profileUrl = profileUrl;
     }
 
+    public String getNick() {
+        return nick;
+    }
+
+    public void setNick(String nick) {
+        this.nick = nick;
+    }
+
     public Side getSide() {
         return side;
     }
@@ -47,6 +58,20 @@ public class PlayerDTO extends CheckedDTO {
 
     public PlayerDTO clone() {
         PlayerDTO result = new PlayerDTO(id, name, profileUrl, lastPing);
+        result.setNick(getNick());
         return result;
     }
+
+    public String getEffectiveName() {
+        if (nick != null && !nick.isEmpty()) {
+            return nick;
+        }
+        return name;
+    }
+
+    public void buildLink(SafeHtmlBuilder sb) {
+        sb.appendHtmlConstant("<a href=\"" + getProfileUrl() + "\" target=\"_blank\" title=\"" + getName() + "\">")
+                .appendEscaped(getEffectiveName()).appendHtmlConstant("</a>");
+    }
+
 }

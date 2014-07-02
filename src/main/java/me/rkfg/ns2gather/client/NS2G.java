@@ -42,6 +42,7 @@ import com.google.gwt.user.cellview.client.RowStyles;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.Window.Location;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
@@ -83,8 +84,7 @@ public class NS2G implements EntryPoint {
 
         @Override
         public void render(Context context, PlayerDTO value, SafeHtmlBuilder sb) {
-            sb.appendHtmlConstant("<a href=\"" + value.getProfileUrl() + "\" target=\"_blank\">").appendEscaped(value.getName())
-                    .appendHtmlConstant("</a>");
+            value.buildLink(sb);
         }
     }) {
         @Override
@@ -195,6 +195,7 @@ public class NS2G implements EntryPoint {
     private final SplitLayoutPanel splitLayoutPanel_chat = new SplitLayoutPanel();
     private final ScrollPanel scrollPanel_systemChat = new ScrollPanel();
     private final FlowPanel system_chat = new FlowPanel();
+    private final Button button_setNick = new Button("Задать ник");
 
     /**
      * This is the entry point method.
@@ -221,7 +222,11 @@ public class NS2G implements EntryPoint {
         button_rules.addClickHandler(new Button_rulesClickHandler());
         horizontalPanel_header.setCellWidth(button_rules, "1px");
         horizontalPanel_header.setCellHorizontalAlignment(button_rules, HasHorizontalAlignment.ALIGN_RIGHT);
-        flexTable_cornerControls.setWidget(0, 1, button_logout);
+        button_setNick.addClickHandler(new Button_setNickClickHandler());
+
+        flexTable_cornerControls.setWidget(0, 1, button_setNick);
+        button_setNick.setWidth("150px");
+        flexTable_cornerControls.setWidget(0, 2, button_logout);
         button_logout.addClickHandler(new Button_logoutClickHandler());
         horizontalPanel_header.setCellWidth(button_logout, "1px");
         horizontalPanel_header.setCellHorizontalAlignment(button_logout, HasHorizontalAlignment.ALIGN_RIGHT);
@@ -231,9 +236,9 @@ public class NS2G implements EntryPoint {
         html_version.setWordWrap(false);
 
         html_version.addStyleName("version");
-        flexTable_cornerControls.getFlexCellFormatter().setColSpan(1, 0, 2);
+        flexTable_cornerControls.getFlexCellFormatter().setColSpan(1, 0, 3);
         flexTable_cornerControls.getCellFormatter().setHorizontalAlignment(0, 0, HasHorizontalAlignment.ALIGN_CENTER);
-        flexTable_cornerControls.getCellFormatter().setHorizontalAlignment(0, 1, HasHorizontalAlignment.ALIGN_RIGHT);
+        flexTable_cornerControls.getCellFormatter().setHorizontalAlignment(0, 2, HasHorizontalAlignment.ALIGN_RIGHT);
 
         splitLayoutPanel_main.addSouth(dockLayoutPanel_chat, 300.0);
         horizontalPanel.setSpacing(5);
@@ -587,6 +592,9 @@ public class NS2G implements EntryPoint {
                     case SERVER_UPDATE:
                         loadServers();
                         break;
+                    case PLAYERS_UPDATE:
+                        loadPlayers();
+                        break;
                     default:
                         break;
                     }
@@ -617,10 +625,10 @@ public class NS2G implements EntryPoint {
         }
     }
 
-    protected String getNameById(List<? extends CheckedDTO> list, Long id) {
-        for (CheckedDTO checkedDTO : list) {
-            if (checkedDTO.getId().equals(id)) {
-                return checkedDTO.getName();
+    protected String getNameById(List<PlayerDTO> list, Long id) {
+        for (PlayerDTO playerDTO : list) {
+            if (playerDTO.getId().equals(id)) {
+                return playerDTO.getEffectiveName();
             }
         }
         return null;
@@ -850,8 +858,8 @@ public class NS2G implements EntryPoint {
     }
 
     private void initPlayer(PlayerDTO result) {
-        label_nick.setHTML("<a href=\"" + result.getProfileUrl() + "\" target=\"_blank\">" + result.getName() + "</a>: ");
         myPlayer = result;
+        updateNickURL();
         voteResultPanel.setId(myPlayer.getId());
         // send initial ping to show our presence
         loadInitState();
@@ -859,8 +867,29 @@ public class NS2G implements EntryPoint {
         runSizeSaver();
     }
 
+    private void updateNickURL() {
+        SafeHtmlBuilder sb = new SafeHtmlBuilder();
+        myPlayer.buildLink(sb);
+        label_nick.setHTML(sb.toSafeHtml().asString());
+    }
+
     public static boolean isGatherClosed(GatherState gatherState) {
         return Arrays.asList(GatherState.COMPLETED, GatherState.SIDEPICK, GatherState.PLAYERS).contains(gatherState);
     }
 
+    private class Button_setNickClickHandler implements ClickHandler {
+        public void onClick(ClickEvent event) {
+            final String newNick = Window.prompt("Укажите ник.", myPlayer.getNick() != null ? myPlayer.getNick() : myPlayer.getName());
+            if (newNick != null) {
+                ns2gService.changeNick(newNick, new MyAsyncCallback<Void>() {
+
+                    @Override
+                    public void onSuccess(Void result) {
+                        myPlayer.setNick(newNick);
+                        updateNickURL();
+                    }
+                });
+            }
+        }
+    }
 }

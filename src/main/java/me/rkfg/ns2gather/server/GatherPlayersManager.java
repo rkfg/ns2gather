@@ -9,6 +9,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
+import me.rkfg.ns2gather.domain.Player;
 import me.rkfg.ns2gather.dto.PlayerDTO;
 import me.rkfg.ns2gather.dto.Side;
 
@@ -16,15 +17,19 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.hibernate.NonUniqueResultException;
+import org.hibernate.Session;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import ru.ppsrk.gwt.client.ClientAuthException;
 import ru.ppsrk.gwt.client.LogicException;
+import ru.ppsrk.gwt.server.HibernateCallback;
+import ru.ppsrk.gwt.server.HibernateUtil;
 import ru.ppsrk.gwt.server.LogicExceptionFormatted;
 
-public class GatherPlayersManager extends Cleanupable {
+public class GatherPlayersManager implements AutoCloseable {
 
     public enum TeamStatType {
         EQUALITY, NOFREE
@@ -205,7 +210,7 @@ public class GatherPlayersManager extends Cleanupable {
         return gatherToPlayers.keySet();
     }
 
-    public PlayerDTO lookupPlayerBySteamId(Long steamId) throws LogicException {
+    public PlayerDTO lookupPlayerBySteamId(Long steamId) throws LogicException, ClientAuthException {
         String name;
         HttpClient client = NetworkUtils.getHTTPClient();
         HttpUriRequest request = new HttpGet(String.format(
@@ -234,6 +239,7 @@ public class GatherPlayersManager extends Cleanupable {
                 throw new LogicException("no profile url");
             }
             PlayerDTO player = new PlayerDTO(steamId, name, profileUrl, System.currentTimeMillis());
+            completeInfo(player);
             addPlayerBySteamId(player);
             return player;
         } catch (IOException | IllegalStateException e) {
@@ -241,6 +247,26 @@ public class GatherPlayersManager extends Cleanupable {
         } catch (JSONException e) {
             throw new LogicException("invalid player data");
         }
+    }
+
+    private void completeInfo(final PlayerDTO playerDTO) throws LogicException, ClientAuthException {
+        HibernateUtil.exec(new HibernateCallback<Void>() {
+
+            @Override
+            public Void run(Session session) throws LogicException, ClientAuthException {
+                try {
+                    Player playerEnt = (Player) session.createQuery("from Player p where p.steamId = :sid")
+                            .setLong("sid", playerDTO.getId()).uniqueResult();
+                    if (playerEnt != null) {
+                        playerDTO.setNick(playerEnt.getNick());
+                    }
+                } catch (NonUniqueResultException e) {
+                    throw LogicExceptionFormatted.format("Дубликация информации об игроке %d", playerDTO.getId());
+                }
+                return null;
+            }
+        });
+
     }
 
     private void runPlayersCleanup() {
@@ -268,7 +294,7 @@ public class GatherPlayersManager extends Cleanupable {
     }
 
     @Override
-    public void cleanup() {
+    public void close() throws Exception {
         playersCleanupTimer.cancel();
     }
 }

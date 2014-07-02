@@ -18,6 +18,7 @@
   <property name="connection.provider_class">org.hibernate.connection.C3P0ConnectionProvider</property>
   <mapping class="me.rkfg.ns2gather.domain.Gather" />
   <mapping class="me.rkfg.ns2gather.domain.Map"/>
+  <mapping class="me.rkfg.ns2gather.domain.Player" />
   <mapping class="me.rkfg.ns2gather.domain.PlayerVote"/>
   <mapping class="me.rkfg.ns2gather.domain.Remembered"/>
   <mapping class="me.rkfg.ns2gather.domain.Server"/>

@@ -68,4 +68,6 @@ public interface NS2GService extends RemoteService {
     void pickPlayer(Long playerSteamId) throws LogicException, ClientAuthException;
 
     void loginAnonymously() throws LogicException, ClientAuthException;
+
+    void changeNick(String newNick) throws LogicException, ClientAuthException;
 }

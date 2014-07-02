@@ -62,7 +62,8 @@ public class VoteResultPanel extends DialogBox {
             } else {
                 playerClass = "participant " + baseClass;
             }
-            sb.appendHtmlConstant("<span class=\"" + playerClass + "\">").appendEscaped(value.getName()).appendHtmlConstant("</span>");
+            sb.appendHtmlConstant("<span class=\"" + playerClass + "\" title=\"" + value.getName() + "\">")
+                    .appendEscaped(value.getEffectiveName()).appendHtmlConstant("</span>");
         }
     };
 
@@ -223,7 +224,13 @@ public class VoteResultPanel extends DialogBox {
         int i = 0;
         for (Label label : labels) {
             VoteResultDTO voteResultDTO = result.get(i++);
-            label.setText(voteResultDTO.getTarget().getName() + " [" + voteResultDTO.getVoteCount() + "]");
+            String name;
+            if (voteResultDTO.getTarget() instanceof PlayerDTO) {
+                name = ((PlayerDTO) voteResultDTO.getTarget()).getEffectiveName();
+            } else {
+                name = voteResultDTO.getTarget().getName();
+            }
+            label.setText(name + " [" + voteResultDTO.getVoteCount() + "]");
         }
         setSteamConnectUrl(result.get(i - 1));
         setPassword(result.get(i - 1));

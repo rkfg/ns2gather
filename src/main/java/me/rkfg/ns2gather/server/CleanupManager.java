@@ -2,27 +2,21 @@ package me.rkfg.ns2gather.server;
 
 import java.util.LinkedList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public final class CleanupManager {
-    private static CleanupManager instance;
-    LinkedList<Cleanupable> cleanuppables = new LinkedList<>();
+    LinkedList<AutoCloseable> closeables = new LinkedList<>();
+    Logger logger = LoggerFactory.getLogger(getClass());
 
-    private CleanupManager() {
+    public void add(AutoCloseable cleanuppable) {
+        closeables.add(cleanuppable);
     }
 
-    public static CleanupManager getInstance() {
-        if (instance == null) {
-            instance = new CleanupManager();
-        }
-        return instance;
-    }
-
-    public void add(Cleanupable cleanuppable) {
-        cleanuppables.add(cleanuppable);
-    }
-
-    public void doCleanup() {
-        for (Cleanupable cleanuppable : cleanuppables) {
-            cleanuppable.cleanup();
+    public void doCleanup() throws Exception {
+        for (AutoCloseable closeable : closeables) {
+            logger.info("Cleaning up " + closeable.toString());
+            closeable.close();
         }
     }
 
