@@ -14,6 +14,7 @@ public class CookieSettingsManager {
     public static final String SERVER_PANEL_COOKIE = "serverpanel_size";
     public static final String CHAT_PANEL_COOKIE = "chatpanel_size";
     public static final String HEADER_PANEL_COOKIE = "headerpanel_size";
+    public static final String CHAT_SYSTEM_PANEL_COOKIE = "chatsystempanel_size";
 
     public String getStringCookie(String name, String defaultValue) {
         String result = Cookies.getCookie(name);

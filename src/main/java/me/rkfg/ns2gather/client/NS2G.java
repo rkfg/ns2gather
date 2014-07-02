@@ -47,6 +47,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
@@ -71,8 +72,8 @@ public class NS2G implements EntryPoint {
     private final HTML label_nick = new HTML("Ник");
     private final SplitLayoutPanel splitLayoutPanel_main = new SplitLayoutPanel();
     private final DockLayoutPanel dockLayoutPanel_chat = new DockLayoutPanel(Unit.EM);
-    private final ScrollPanel scrollPanel = new ScrollPanel();
-    private final HTML html_chat = new HTML("Чат<p/>", true);
+    private final ScrollPanel scrollPanel_userChat = new ScrollPanel();
+    private final FlowPanel user_chat = new FlowPanel();
     private final TextBox textBox_chatText = new TextBox();
     private final Button button_sendChat = new Button("Отправить");
     private final SplitLayoutPanel splitLayoutPanel_data = new SplitLayoutPanel();
@@ -191,6 +192,9 @@ public class NS2G implements EntryPoint {
         }
     };
     private PlayerDTO myPlayer;
+    private final SplitLayoutPanel splitLayoutPanel_chat = new SplitLayoutPanel();
+    private final ScrollPanel scrollPanel_systemChat = new ScrollPanel();
+    private final FlowPanel system_chat = new FlowPanel();
 
     /**
      * This is the entry point method.
@@ -271,12 +275,19 @@ public class NS2G implements EntryPoint {
         textBox_chatText.setWidth("100%");
         flexTable.setWidget(0, 2, button_sendChat);
         button_sendChat.addClickHandler(new Button_sendChatClickHandler());
-        scrollPanel.setStyleName("border-bs");
 
-        dockLayoutPanel_chat.add(scrollPanel);
+        dockLayoutPanel_chat.add(splitLayoutPanel_chat);
+        scrollPanel_systemChat.setStyleName("border-bs");
 
-        scrollPanel.setWidget(html_chat);
-        html_chat.setSize("100%", "100%");
+        splitLayoutPanel_chat.addEast(scrollPanel_systemChat, 400.0);
+
+        scrollPanel_systemChat.setWidget(system_chat);
+        system_chat.setSize("100%", "100%");
+        splitLayoutPanel_chat.add(scrollPanel_userChat);
+        scrollPanel_userChat.setStyleName("border-bs");
+
+        scrollPanel_userChat.setWidget(user_chat);
+        user_chat.setSize("100%", "100%");
 
         splitLayoutPanel_main.add(splitLayoutPanel_data);
 
@@ -403,6 +414,8 @@ public class NS2G implements EntryPoint {
                 cookieSettingsManager.getDoubleCookie(CookieSettingsManager.CHAT_PANEL_COOKIE, 300.0));
         splitLayoutPanel_main.setWidgetSize(horizontalPanel_header,
                 cookieSettingsManager.getDoubleCookie(CookieSettingsManager.HEADER_PANEL_COOKIE, 70.0));
+        splitLayoutPanel_chat.setWidgetSize(scrollPanel_systemChat,
+                cookieSettingsManager.getDoubleCookie(CookieSettingsManager.CHAT_SYSTEM_PANEL_COOKIE, 400.0));
     }
 
     protected void postRulesAnnounce() {
@@ -657,13 +670,38 @@ public class NS2G implements EntryPoint {
     }
 
     protected void addChatMessage(String text, long timestamp, ChatMessageType messageType, boolean escape) {
-        boolean shouldScroll = scrollPanel.getVerticalScrollPosition() == scrollPanel.getMaximumVerticalScrollPosition();
-        html_chat.setHTML(html_chat.getHTML() + "<br/>" + format.format(new Date(timestamp)) + " <span class=\""
-                + getCSSClassByMessageType(messageType) + "\">"
-                + (escape ? formatText(new SafeHtmlBuilder().appendEscaped(text).toSafeHtml().asString()) : text) + "</span>");
-        if (shouldScroll) {
-            scrollPanel.scrollToBottom();
+        boolean shouldScroll_user = scrollPanel_userChat.getVerticalScrollPosition() == scrollPanel_userChat
+                .getMaximumVerticalScrollPosition();
+        boolean shouldScroll_system = scrollPanel_systemChat.getVerticalScrollPosition() == scrollPanel_systemChat
+                .getMaximumVerticalScrollPosition();
+        HTML msg = buildChatMessage(text, timestamp, messageType, escape);
+        switch (messageType) {
+        case CHAT:
+            user_chat.add(msg);
+            trimChat(user_chat);
+            break;
+        case SYSTEM:
+            system_chat.add(msg);
+            trimChat(system_chat);
+            break;
         }
+        if (shouldScroll_user) {
+            scrollPanel_userChat.scrollToBottom();
+        }
+        if (shouldScroll_system) {
+            scrollPanel_systemChat.scrollToBottom();
+        }
+    }
+
+    private void trimChat(FlowPanel chat) {
+        if (chat.getWidgetCount() > ClientSettings.CHAT_MAX_MESSAGES) {
+            chat.remove(0);
+        }
+    }
+
+    private HTML buildChatMessage(String text, long timestamp, ChatMessageType messageType, boolean escape) {
+        return new HTML(format.format(new Date(timestamp)) + " <span class=\"" + getCSSClassByMessageType(messageType) + "\">"
+                + (escape ? formatText(new SafeHtmlBuilder().appendEscaped(text).toSafeHtml().asString()) : text) + "</span>");
     }
 
     private String formatText(String asString) {
@@ -805,6 +843,8 @@ public class NS2G implements EntryPoint {
                         splitLayoutPanel_main.getWidgetSize(dockLayoutPanel_chat));
                 cookieSettingsManager.setDoubleCookie(CookieSettingsManager.HEADER_PANEL_COOKIE,
                         splitLayoutPanel_main.getWidgetSize(horizontalPanel_header));
+                cookieSettingsManager.setDoubleCookie(CookieSettingsManager.CHAT_SYSTEM_PANEL_COOKIE,
+                        splitLayoutPanel_chat.getWidgetSize(scrollPanel_systemChat));
             }
         }.scheduleRepeating(ClientSettings.SIZE_SAVE_INTERVAL);
     }

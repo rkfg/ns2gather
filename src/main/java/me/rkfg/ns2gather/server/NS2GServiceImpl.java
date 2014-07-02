@@ -454,7 +454,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         if (text.length() > ClientSettings.CHAT_MAX_LENGTH) {
             text = text.substring(0, ClientSettings.CHAT_MAX_LENGTH);
         }
-        messageManager.postMessage(MessageType.CHAT_MESSAGE, getPlayer().getName() + ": " + text, getCurrentGatherId());
+        messageManager.postMessage(MessageType.CHAT_MESSAGE, getPlayer().getEffectiveName() + ": " + text, getCurrentGatherId());
     }
 
     @Override
