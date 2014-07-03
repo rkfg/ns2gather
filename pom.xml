@@ -194,8 +194,13 @@
 		</resources>
 	</build>
 
+    <repositories>
+        <repository>
+            <id>rkfg.me</id>
+            <url>http://rkfg.me/maven/</url>
+        </repository>
+    </repositories>
 	<scm>
 		<connection>scm:git:git://github.com/rkfg/ns2gather.git</connection>
-		<!-- <connection>lol</connection> -->
 	</scm>
 </project>
