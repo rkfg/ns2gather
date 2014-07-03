@@ -168,7 +168,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                 }
             });
             for (Long steamId : votes) {
-                removeVotes(steamId);
                 MessageDTO messageDTO = new MessageDTO(MessageType.VOTE_ENDED,
                         "Игрок, за которого вы голосовали, ушёл. Пожалуйста, переголосуйте.", gatherId);
                 messageDTO.setVisibility(MessageVisibility.PERSONAL);
