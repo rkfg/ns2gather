@@ -1,5 +1,7 @@
 package me.rkfg.ns2gather.server;
 
+import java.util.concurrent.TimeUnit;
+
 public class Settings {
     static final String STEAM_API_KEY = "INSERT_STEAM_API_KEY_HERE";
     static final String CALLBACK_URL = "INSERT_FULL_CALLBACK_URL_HERE";
