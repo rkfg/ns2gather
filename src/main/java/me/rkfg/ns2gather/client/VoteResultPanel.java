@@ -20,6 +20,7 @@ import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -62,8 +63,10 @@ public class VoteResultPanel extends DialogBox {
             } else {
                 playerClass = "participant " + baseClass;
             }
-            sb.appendHtmlConstant("<span class=\"" + playerClass + "\" title=\"" + value.getName() + "\">")
-                    .appendEscaped(value.buildInfo()).appendHtmlConstant("</span>");
+            sb.appendHtmlConstant("<span class=\"" + playerClass + "\" title=\"" + SafeHtmlUtils.fromString(value.getName()).asString()
+                    + "\">");
+            value.buildInfo(sb);
+            sb.appendHtmlConstant("</span>");
         }
     };
 

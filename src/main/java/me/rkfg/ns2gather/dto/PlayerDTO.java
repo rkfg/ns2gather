@@ -1,6 +1,7 @@
 package me.rkfg.ns2gather.dto;
 
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 
 public class PlayerDTO extends CheckedDTO {
     Long lastPing;
@@ -89,22 +90,25 @@ public class PlayerDTO extends CheckedDTO {
 
     public void buildLink(SafeHtmlBuilder sb, boolean skills) {
         if (getProfileUrl() != null && !getProfileUrl().isEmpty()) {
-            sb.appendHtmlConstant("<a href=\"" + getProfileUrl() + "\" target=\"_blank\" title=\"" + getName() + "\">")
-                    .appendEscaped(getEffectiveName()).appendHtmlConstant("</a>");
+            sb.appendHtmlConstant(
+                    "<a href=\"" + getProfileUrl() + "\" target=\"_blank\" title=\"" + SafeHtmlUtils.fromString(getName()).asString()
+                            + "\">").appendEscaped(getEffectiveName()).appendHtmlConstant("</a>");
         } else {
             sb.appendEscaped(getEffectiveName());
         }
-        if (skills && hiveStats != null && hiveStats.getHoursPlayed() != null && hiveStats.getSkill() != null) {
-            sb.appendEscaped(" [H:" + hiveStats.getHoursPlayed() + "] [S:" + hiveStats.getSkill() + "]");
+        if (skills) {
+            addHiveStat(sb);
         }
     }
 
-    public String buildInfo() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getEffectiveName());
+    private void addHiveStat(SafeHtmlBuilder sb) {
         if (hiveStats != null && hiveStats.getHoursPlayed() != null && hiveStats.getSkill() != null) {
-            sb.append(" [H:" + hiveStats.getHoursPlayed() + "] [S:" + hiveStats.getSkill() + "]");
+            sb.appendEscaped(" [Часов:" + hiveStats.getHoursPlayed() + "] [Скилл:" + hiveStats.getSkill() + "]");
         }
-        return sb.toString();
+    }
+
+    public void buildInfo(SafeHtmlBuilder sb) {
+        sb.appendEscaped(getEffectiveName());
+        addHiveStat(sb);
     }
 }
