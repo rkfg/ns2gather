@@ -346,29 +346,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                         }
                     });
                 }
-                if (System.currentTimeMillis() - existing.getLastHiveUpdate() > Settings.HIVE_UPDATE_INTERVAL) {
-                    final PlayerDTO hivePlayer = existing;
-                    connectedPlayers.getPlayersByGather(gatherId).getHiveStats(steamId, new AsyncCallback<HiveStatsDTO>() {
-
-                        @Override
-                        public void onSuccess(HiveStatsDTO result) {
-                            try {
-                                logger.info("Got hive info for {}", hivePlayer.getId());
-                                hivePlayer.setLastHiveUpdate(System.currentTimeMillis());
-                                messageManager.postMessage(MessageType.PLAYERS_UPDATE, "", gatherId);
-                            } catch (LogicException | ClientAuthException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Throwable caught) {
-                            logger.warn("Can't get hive info for {}", hivePlayer.getId());
-                            hivePlayer.setLastHiveUpdate(System.currentTimeMillis() + Settings.HIVE_UPDATE_FAILURE_WAIT
-                                    - Settings.HIVE_UPDATE_INTERVAL);
-                        }
-                    });
-                }
                 messageManager.postMessage(MessageType.USER_ENTERS, existing.getEffectiveName(), gatherId);
                 postVoteChangeMessage(gatherId);
                 updateGatherStateByPlayerNumber(gatherId);
