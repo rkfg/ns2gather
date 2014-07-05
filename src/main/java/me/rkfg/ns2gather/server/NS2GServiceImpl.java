@@ -127,6 +127,12 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             }
             return result;
         }
+
+        @Override
+        public void close() throws Exception {
+            logger.info("Stopping the long polling " + Thread.currentThread());
+            super.close();
+        }
     }
 
     public NS2GServiceImpl() {
@@ -468,13 +474,18 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     @Override
     public List<MessageDTO> getNewMessages(Long since) {
+        MessagePollingServer server = null;
         try {
             if (since < 0) {
                 since += System.currentTimeMillis();
             }
-            return new MessagePollingServer(30000, 100, since).start();
+            server = new MessagePollingServer(30000, 100, since);
+            cleanupManager.add(server);
+            return server.start();
         } catch (InterruptedException | LogicException | ClientAuthException e) {
             return null;
+        } finally {
+            cleanupManager.remove(server);
         }
     }
 
@@ -1034,7 +1045,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         }
         HibernateUtil.cleanup();
         HibernateUtil.mysqlCleanup();
-        DateUtils.clearThreadLocal();
+        logger.info("Cleanup complete. Good bye");
     }
 
     @Override
