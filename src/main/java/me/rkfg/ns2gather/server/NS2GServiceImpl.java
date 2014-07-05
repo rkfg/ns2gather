@@ -672,16 +672,20 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         HttpClient webClient = NetworkUtils.getHTTPClient(server.getIp(), server.getWebPort(), server.getWebLogin(),
                 server.getWebPassword());
         try {
-            HttpUriRequest changePasswordRequest = buildWebAdminGetRequest(server, "sv_password+" + server.getPassword());
-            webClient.execute(changePasswordRequest);
-        } catch (IOException e) {
-            throw new LogicException("Не удалось сменить пароль на сервере " + server.getName());
-        }
-        try {
-            HttpUriRequest changeMapRequest = buildWebAdminGetRequest(server, "sv_changemap+" + map.getName());
-            webClient.execute(changeMapRequest);
-        } catch (IOException e) {
-            throw new LogicException("Не удалось сменить карту на сервере " + server.getName());
+            try {
+                HttpUriRequest changePasswordRequest = buildWebAdminGetRequest(server, "sv_password+" + server.getPassword());
+                webClient.execute(changePasswordRequest);
+            } catch (IOException e) {
+                throw new LogicException("Не удалось сменить пароль на сервере " + server.getName());
+            }
+            try {
+                HttpUriRequest changeMapRequest = buildWebAdminGetRequest(server, "sv_changemap+" + map.getName());
+                webClient.execute(changeMapRequest);
+            } catch (IOException e) {
+                throw new LogicException("Не удалось сменить карту на сервере " + server.getName());
+            }
+        } finally {
+            DateUtils.clearThreadLocal();
         }
     }
 

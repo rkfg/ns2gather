@@ -18,6 +18,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.utils.DateUtils;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.json.JSONArray;
@@ -195,6 +196,8 @@ public class GatherPlayersManager implements AutoCloseable {
                         callback.onFailure(e);
                     } catch (JSONException e) {
                         callback.onFailure(e);
+                    } finally {
+                        DateUtils.clearThreadLocal();
                     }
                 }
             }, "Hive request for " + steamId).start();
@@ -278,6 +281,8 @@ public class GatherPlayersManager implements AutoCloseable {
             throw new LogicException("can't get player data");
         } catch (JSONException e) {
             throw new LogicException("invalid player data");
+        } finally {
+            DateUtils.clearThreadLocal();
         }
     }
 
