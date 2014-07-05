@@ -10,6 +10,7 @@ public class PlayerDTO extends CheckedDTO {
     Long lastHiveUpdate = 0L;
     HiveStatsDTO hiveStats;
     Side side = Side.NONE;
+    Long loginTimestamp = 0L;
 
     public PlayerDTO(Long id, String name, String profileUrl, Long lastPing) {
         super();
@@ -68,6 +69,14 @@ public class PlayerDTO extends CheckedDTO {
 
     public void setSide(Side side) {
         this.side = side;
+    }
+
+    public Long getLoginTimestamp() {
+        return loginTimestamp;
+    }
+
+    public void setLoginTimestamp(Long loginTimestamp) {
+        this.loginTimestamp = loginTimestamp;
     }
 
     @Override

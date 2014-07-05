@@ -121,6 +121,9 @@ public class GatherPlayersManager implements AutoCloseable {
             if (participant == null) {
                 throw LogicExceptionFormatted.format("Игрок %d не найден среди участников.", participantSteamId);
             }
+            if (participant.getSide() == Side.MERC) {
+                throw new LogicException("Вы не можете взять мерка в свою команду.");
+            }
             participant.setLastPing(System.currentTimeMillis());
             participant.setSide(side);
         }
@@ -140,6 +143,11 @@ public class GatherPlayersManager implements AutoCloseable {
                 case NONE:
                     free++;
                     break;
+                case MERC:
+                    // don't count merc(s)
+                    break;
+                default:
+                    break;
                 }
             }
             switch (type) {
@@ -155,8 +163,28 @@ public class GatherPlayersManager implements AutoCloseable {
         // clone players to fix them for the current gather
         public void playersToParticipants() {
             gatherParticipants = new ConcurrentHashMap<>();
-            for (PlayerDTO playerDTO : getPlayers()) {
-                gatherParticipants.put(playerDTO.getId(), playerDTO.clone());
+            PlayerDTO merc = null;
+            boolean needMerc = false;
+            Collection<PlayerDTO> players = getPlayers();
+            if (players.size() % 2 == 1) {
+                needMerc = true;
+            }
+            for (PlayerDTO playerDTO : players) {
+                PlayerDTO participant = playerDTO.clone();
+                if (needMerc) {
+                    if (merc == null) {
+                        merc = participant;
+                    } else {
+                        if (merc.getLoginTimestamp() < participant.getLoginTimestamp()) {
+                            merc = participant;
+                        }
+                    }
+
+                }
+                gatherParticipants.put(playerDTO.getId(), participant);
+            }
+            if (needMerc && merc != null) {
+                merc.setSide(Side.MERC);
             }
         }
 
@@ -214,8 +242,9 @@ public class GatherPlayersManager implements AutoCloseable {
         this.cleanupCallback = cleanupCallback;
     }
 
-    public void addPlayer(Long gatherId, PlayerDTO playerDTO) {
+    public void addPlayerToGather(Long gatherId, PlayerDTO playerDTO) {
         GatherPlayers gatherPlayers = getPlayersByGather(gatherId);
+        playerDTO.setLoginTimestamp(System.currentTimeMillis());
         gatherPlayers.putPlayer(playerDTO);
         addPlayerBySteamId(playerDTO);
     }

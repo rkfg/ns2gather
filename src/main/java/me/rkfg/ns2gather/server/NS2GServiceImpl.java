@@ -328,7 +328,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     return;
                 }
                 existing.setLastPing(System.currentTimeMillis());
-                connectedPlayers.addPlayer(gatherId, existing);
+                connectedPlayers.addPlayerToGather(gatherId, existing);
                 if (System.currentTimeMillis() - existing.getLastHiveUpdate() > Settings.HIVE_UPDATE_INTERVAL) {
                     final PlayerDTO hivePlayer = existing;
                     connectedPlayers.getPlayersByGather(gatherId).getHiveStats(steamId, new AsyncCallback<HiveStatsDTO>() {

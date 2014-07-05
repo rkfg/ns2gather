@@ -44,6 +44,7 @@ public class VoteResultPanel extends DialogBox {
         public ParticipantCell(Side side) {
             switch (side) {
             case NONE:
+            case MERC:
                 baseClass = "regular";
                 break;
             case ALIENS:
@@ -66,6 +67,9 @@ public class VoteResultPanel extends DialogBox {
             sb.appendHtmlConstant("<span class=\"" + playerClass + "\" title=\"" + SafeHtmlUtils.fromString(value.getName()).asString()
                     + "\">");
             value.buildInfo(sb);
+            if (value.getSide() == Side.MERC) {
+                sb.appendEscaped(" [MERC]");
+            }
             sb.appendHtmlConstant("</span>");
         }
     };
@@ -318,6 +322,7 @@ public class VoteResultPanel extends DialogBox {
                         }
                         break;
                     case NONE:
+                    case MERC:
                         dataProvider_nonDistributed.getList().add(participant);
                         break;
                     }
