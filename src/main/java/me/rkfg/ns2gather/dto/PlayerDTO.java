@@ -88,8 +88,12 @@ public class PlayerDTO extends CheckedDTO {
     }
 
     public void buildLink(SafeHtmlBuilder sb, boolean skills) {
-        sb.appendHtmlConstant("<a href=\"" + getProfileUrl() + "\" target=\"_blank\" title=\"" + getName() + "\">")
-                .appendEscaped(getEffectiveName()).appendHtmlConstant("</a>");
+        if (getProfileUrl() != null && !getProfileUrl().isEmpty()) {
+            sb.appendHtmlConstant("<a href=\"" + getProfileUrl() + "\" target=\"_blank\" title=\"" + getName() + "\">")
+                    .appendEscaped(getEffectiveName()).appendHtmlConstant("</a>");
+        } else {
+            sb.appendEscaped(getEffectiveName());
+        }
         if (skills && hiveStats != null && hiveStats.getHoursPlayed() != null && hiveStats.getSkill() != null) {
             sb.appendEscaped(" [H:" + hiveStats.getHoursPlayed() + "] [S:" + hiveStats.getSkill() + "]");
         }
