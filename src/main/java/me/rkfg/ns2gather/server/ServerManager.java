@@ -6,20 +6,24 @@ import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeoutException;
 
 import me.rkfg.ns2gather.dto.ServerDTO;
 import me.rkfg.ns2gather.dto.SteamPlayerDTO;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ru.ppsrk.gwt.client.ClientAuthException;
 import ru.ppsrk.gwt.client.LogicException;
 import ru.ppsrk.gwt.server.HibernateUtil;
 import ru.ppsrk.gwt.server.ServerUtils;
 
-import com.github.koraktor.steamcondenser.exceptions.SteamCondenserException;
 import com.github.koraktor.steamcondenser.steam.SteamPlayer;
 import com.github.koraktor.steamcondenser.steam.servers.SourceServer;
 
 public class ServerManager implements AutoCloseable {
+
+    Logger logger = LoggerFactory.getLogger(getClass());
 
     public class ServerData {
         HashMap<String, SteamPlayer> players = new HashMap<>();
@@ -93,7 +97,8 @@ public class ServerManager implements AutoCloseable {
                         try {
                             SourceServer sourceServer = new SourceServer(serverDTO.getIp());
                             getServerData(serverDTO.getId()).setPlayers(sourceServer.getPlayers());
-                        } catch (SteamCondenserException | TimeoutException e) {
+                        } catch (Throwable e) {
+                            logger.warn("Can't retrieve server {} [{}] players: {}", serverDTO.getName(), serverDTO.getIp(), e);
                         }
                     }
                 } catch (LogicException | ClientAuthException e) {
