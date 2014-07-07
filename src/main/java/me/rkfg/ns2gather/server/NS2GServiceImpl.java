@@ -48,7 +48,6 @@ import me.rkfg.ns2gather.server.ServerManager.ServersChangeCallback;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.utils.DateUtils;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.openid4java.consumer.ConsumerException;
@@ -672,20 +671,16 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         HttpClient webClient = NetworkUtils.getHTTPClient(server.getIp(), server.getWebPort(), server.getWebLogin(),
                 server.getWebPassword());
         try {
-            try {
-                HttpUriRequest changePasswordRequest = buildWebAdminGetRequest(server, "sv_password+" + server.getPassword());
-                webClient.execute(changePasswordRequest);
-            } catch (IOException e) {
-                throw new LogicException("Не удалось сменить пароль на сервере " + server.getName());
-            }
-            try {
-                HttpUriRequest changeMapRequest = buildWebAdminGetRequest(server, "sv_changemap+" + map.getName());
-                webClient.execute(changeMapRequest);
-            } catch (IOException e) {
-                throw new LogicException("Не удалось сменить карту на сервере " + server.getName());
-            }
-        } finally {
-            DateUtils.clearThreadLocal();
+            HttpUriRequest changePasswordRequest = buildWebAdminGetRequest(server, "sv_password+" + server.getPassword());
+            webClient.execute(changePasswordRequest);
+        } catch (IOException e) {
+            throw new LogicException("Не удалось сменить пароль на сервере " + server.getName());
+        }
+        try {
+            HttpUriRequest changeMapRequest = buildWebAdminGetRequest(server, "sv_changemap+" + map.getName());
+            webClient.execute(changeMapRequest);
+        } catch (IOException e) {
+            throw new LogicException("Не удалось сменить карту на сервере " + server.getName());
         }
     }
 
