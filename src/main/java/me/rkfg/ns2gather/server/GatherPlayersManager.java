@@ -174,7 +174,7 @@ public class GatherPlayersManager implements AutoCloseable {
                     if (merc == null) {
                         merc = participant;
                     } else {
-                        if (merc.getLoginTimestamp() < participant.getLoginTimestamp()) {
+                        if (merc.getLoginTimestamp() < participant.getLoginTimestamp() && !comms.contains(participant.getId())) {
                             merc = participant;
                         }
                     }

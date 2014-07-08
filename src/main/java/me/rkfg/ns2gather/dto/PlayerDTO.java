@@ -87,6 +87,7 @@ public class PlayerDTO extends CheckedDTO {
     public PlayerDTO clone() {
         PlayerDTO result = new PlayerDTO(id, name, profileUrl, lastPing);
         result.setNick(getNick());
+        result.setLoginTimestamp(getLoginTimestamp());
         return result;
     }
 
