@@ -995,15 +995,23 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
 
     private void removePlayer(Long gatherId, Long steamId, boolean isKicked) throws LogicException, ClientAuthException {
         synchronized (connectedPlayers.getPlayersByGather(gatherId)) {
+            logger.info("Removing votes...");
             removeVotes(steamId);
+            logger.info("Removing votes for player...");
             removeVotesForPlayer(gatherId, steamId);
+            logger.info("Posting message...");
             messageManager.postMessage(MessageType.USER_LEAVES, steamId.toString(), gatherId);
+            logger.info("Is kicked?");
             if (isKicked) {
+                logger.info("Yep, kicked?");
                 connectedPlayers.addKicked(steamId,
                         "Вы были кикнуты из Gather по неактивности. Нажмите «Зайти в новый сбор», чтобы продолжить участие.");
+                logger.info("Notifying about kick...");
                 messageManager.postMessage(MessageDTO.privateMessage(steamId, MessageType.USER_KICKED, "", null));
             }
+            logger.info("Notifying about votechange...");
             postVoteChangeMessage(gatherId);
+            logger.info("Updating gather state...");
             updateGatherStateByPlayerNumber(gatherId);
         }
     }
