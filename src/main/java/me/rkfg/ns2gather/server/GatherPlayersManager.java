@@ -58,7 +58,7 @@ public class GatherPlayersManager implements AutoCloseable {
     private CleanupCallback cleanupCallback;
 
     public interface CleanupCallback {
-        public void playerRemoved(Long gatherId, PlayerDTO player) throws LogicException, ClientAuthException;
+        public void playerRemoved(Long gatherId, Long steamId) throws LogicException, ClientAuthException;
     }
 
     public class GatherPlayers {
@@ -230,12 +230,8 @@ public class GatherPlayersManager implements AutoCloseable {
 
     }
 
-    public GatherPlayersManager() {
-        runPlayersCleanup();
-    }
-
     public GatherPlayersManager(CleanupCallback cleanupCallback) {
-        this();
+        runPlayersCleanup();
         this.cleanupCallback = cleanupCallback;
     }
 
@@ -339,13 +335,10 @@ public class GatherPlayersManager implements AutoCloseable {
                     GatherPlayers gatherPlayers = getPlayersByGather(gatherId);
                     for (PlayerDTO player : gatherPlayers.getPlayers()) {
                         if (System.currentTimeMillis() - player.getLastPing() > Settings.PLAYER_PING_TIMEOUT) {
-                            gatherPlayers.remove(player);
-                            if (cleanupCallback != null) {
-                                try {
-                                    cleanupCallback.playerRemoved(gatherId, player);
-                                } catch (LogicException | ClientAuthException e) {
-                                    e.printStackTrace();
-                                }
+                            try {
+                                cleanupCallback.playerRemoved(gatherId, player.getId());
+                            } catch (LogicException | ClientAuthException e) {
+                                e.printStackTrace();
                             }
                         }
                     }
@@ -357,5 +350,9 @@ public class GatherPlayersManager implements AutoCloseable {
     @Override
     public void close() throws Exception {
         playersCleanupTimer.cancel();
+    }
+
+    public void removePlayerFromGather(Long gatherId, Long steamId) {
+        getPlayersByGather(gatherId).remove(getPlayerBySteamId(steamId));
     }
 }
