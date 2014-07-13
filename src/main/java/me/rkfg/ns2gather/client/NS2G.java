@@ -196,6 +196,7 @@ public class NS2G implements EntryPoint {
     private final ScrollPanel scrollPanel_systemChat = new ScrollPanel();
     private final FlowPanel system_chat = new FlowPanel();
     private final Button button_setNick = new Button("Задать ник");
+    private Timer pingTimer;
 
     /**
      * This is the entry point method.
@@ -728,7 +729,7 @@ public class NS2G implements EntryPoint {
     }
 
     protected void runPing() {
-        new Timer() {
+        pingTimer = new Timer() {
 
             @Override
             public void run() {
@@ -740,7 +741,8 @@ public class NS2G implements EntryPoint {
                     }
                 });
             }
-        }.scheduleRepeating(ClientSettings.PING_INTERVAL);
+        };
+        pingTimer.scheduleRepeating(ClientSettings.PING_INTERVAL);
     }
 
     protected void login() {
@@ -805,6 +807,31 @@ public class NS2G implements EntryPoint {
 
     private class Button_logoutClickHandler implements ClickHandler {
         public void onClick(ClickEvent event) {
+            switch (gatherStatusLabel.getGatherState()) {
+            case CLOSED:
+            case OPEN:
+            case ONTIMER:
+                if (!Window.confirm("Вы действительно хотите покинуть сбор? Если все остальные участники проголосуют, "
+                        + "вы не сможете вернуться к ним и попадёте в новый сбор.")) {
+                    return;
+                }
+                break;
+            case PLAYERS:
+            case SIDEPICK:
+                Window.alert("Голосование уже завершено. Пожалуйста, дождитесь выбора сторон и набора команд. "
+                        + "Не закрывайте вкладку, если вы покинете сбор на этой стадии, к вам могут быть применены санкции согласно правилам.");
+                return;
+            case COMPLETED:
+                if (!Window
+                        .confirm("Вы действительно хотите покинуть сбор? После входа вы попадёте в новый сбор и больше не сможете посмотреть "
+                                + "результаты этого сбора и пароль для подключения. Вы также можете нажать кнопку «Зайти в новый сбор», чтобы попасть в новый сбор без перезахода.")) {
+                    return;
+                }
+                break;
+            }
+            if (pingTimer != null) {
+                pingTimer.cancel();
+            }
             ns2gService.logout(new MyAsyncCallback<Void>() {
 
                 @Override

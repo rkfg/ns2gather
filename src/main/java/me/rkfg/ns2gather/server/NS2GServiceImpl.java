@@ -91,8 +91,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     GatherPlayersManager connectedPlayers = new GatherPlayersManager(new CleanupCallback() {
 
         @Override
-        public void playerRemoved(Long gatherId, PlayerDTO player) throws LogicException, ClientAuthException {
-            removePlayer(gatherId, player.getId(), false);
+        public void playerRemoved(Long gatherId, Long steamId) throws LogicException, ClientAuthException {
+            removePlayer(gatherId, steamId, false);
         }
     });
 
@@ -437,7 +437,6 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
                     GatherPlayers gatherPlayers = connectedPlayers.getPlayersByGather(gatherId);
                     for (PlayerDTO player : gatherPlayers.getPlayers()) {
                         if (!votedSteamIds.contains(player.getId())) {
-                            gatherPlayers.remove(player);
                             removePlayer(gatherId, player.getId(), true);
                         }
                     }
@@ -877,12 +876,14 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             @Override
             public Void run(Session session) throws LogicException, ClientAuthException {
                 try {
+                    Long steamId = getSteamId();
                     @SuppressWarnings("unchecked")
-                    List<Remembered> remembereds = session.createQuery("from Remembered r where r.steamId = :sid")
-                            .setLong("sid", getSteamId()).list();
+                    List<Remembered> remembereds = session.createQuery("from Remembered r where r.steamId = :sid").setLong("sid", steamId)
+                            .list();
                     for (Remembered remembered : remembereds) {
                         session.delete(remembered);
                     }
+                    removePlayer(getCurrentGatherId(), steamId, false);
                 } catch (AnonymousAuthException e) {
 
                 }
@@ -999,6 +1000,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             removeVotes(steamId);
             logger.info("Removing votes for player...");
             removeVotesForPlayer(gatherId, steamId);
+            logger.info("Removing player from gather...");
+            connectedPlayers.removePlayerFromGather(gatherId, steamId);
             logger.info("Posting message...");
             messageManager.postMessage(MessageType.USER_LEAVES, steamId.toString(), gatherId);
             logger.info("Is kicked?");
