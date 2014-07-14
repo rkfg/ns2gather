@@ -429,11 +429,11 @@ public class NS2G implements EntryPoint {
             addChatMessage(
                     "Вы вошли в Gather анонимно. Вы не можете голосовать и писать в чат, но можете следить за ходом голосования и набором команд. "
                             + "Ознакомьтесь с <a href=\"rules.html\" target=\"_blank\">Правилами</a>", System.currentTimeMillis(),
-                    ChatMessageType.SYSTEM, false);
+                    ChatMessageType.SYSTEM);
         } else {
             addChatMessage(
                     "Вы заявили свою готовность играть Gather. Ознакомьтесь с <a href=\"rules.html\" target=\"_blank\">Правилами</a>",
-                    System.currentTimeMillis(), ChatMessageType.SYSTEM, false);
+                    System.currentTimeMillis(), ChatMessageType.SYSTEM);
         }
     }
 
@@ -455,7 +455,7 @@ public class NS2G implements EntryPoint {
                 html_version.setHTML("<a href=\"https://github.com/rkfg/ns2gather/issues\" title=\"Сообщить об ошибке\" target=\"_blank\">"
                         + result.getVersion() + "</a>");
                 if (result.getPasswords() != null) {
-                    addChatMessage(result.getPasswords(), System.currentTimeMillis(), ChatMessageType.SYSTEM, false);
+                    addChatMessage(result.getPasswords(), System.currentTimeMillis(), ChatMessageType.SYSTEM);
                 }
                 if (result.getVoteResults() != null) {
                     voteResultPanel.fillFields(result.getVoteResults());
@@ -675,15 +675,11 @@ public class NS2G implements EntryPoint {
     }
 
     protected void addChatMessage(String text, long timestamp, ChatMessageType messageType) {
-        addChatMessage(text, timestamp, messageType, true);
-    }
-
-    protected void addChatMessage(String text, long timestamp, ChatMessageType messageType, boolean escape) {
         boolean shouldScroll_user = scrollPanel_userChat.getVerticalScrollPosition() == scrollPanel_userChat
                 .getMaximumVerticalScrollPosition();
         boolean shouldScroll_system = scrollPanel_systemChat.getVerticalScrollPosition() == scrollPanel_systemChat
                 .getMaximumVerticalScrollPosition();
-        HTML msg = buildChatMessage(text, timestamp, messageType, escape);
+        HTML msg = buildChatMessage(text, timestamp, messageType);
         switch (messageType) {
         case CHAT:
             user_chat.add(msg);
@@ -708,13 +704,9 @@ public class NS2G implements EntryPoint {
         }
     }
 
-    private HTML buildChatMessage(String text, long timestamp, ChatMessageType messageType, boolean escape) {
-        return new HTML(format.format(new Date(timestamp)) + " <span class=\"" + getCSSClassByMessageType(messageType) + "\">"
-                + (escape ? formatText(new SafeHtmlBuilder().appendEscaped(text).toSafeHtml().asString()) : text) + "</span>");
-    }
-
-    private String formatText(String asString) {
-        return asString.replaceAll("(https?://\\S+)", "<a href=\"$1\" target=\"_blank\">$1</a>");
+    private HTML buildChatMessage(String text, long timestamp, ChatMessageType messageType) {
+        return new HTML(format.format(new Date(timestamp)) + " <span class=\"" + getCSSClassByMessageType(messageType) + "\">" + text
+                + "</span>");
     }
 
     private String getCSSClassByMessageType(ChatMessageType messageType) {

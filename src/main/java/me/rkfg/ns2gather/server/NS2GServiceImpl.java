@@ -56,6 +56,7 @@ import org.openid4java.discovery.DiscoveryException;
 import org.openid4java.discovery.DiscoveryInformation;
 import org.openid4java.message.AuthRequest;
 import org.openid4java.message.MessageException;
+import org.pegdown.PegDownProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,6 +69,7 @@ import ru.ppsrk.gwt.server.LogicExceptionFormatted;
 import ru.ppsrk.gwt.server.LongPollingServer;
 import ru.ppsrk.gwt.server.ServerUtils;
 
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -100,6 +102,7 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
     MessageManager messageManager = new MessageManager();
     GatherCountdownManager gatherCountdownManager = new GatherCountdownManager();
     private boolean debug = false;
+    PegDownProcessor pegDownProcessor = new NS2GPegDownProcessor();
 
     private class MessagePollingServer extends LongPollingServer<List<MessageDTO>> {
 
@@ -492,7 +495,11 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
         if (text.length() > ClientSettings.CHAT_MAX_LENGTH) {
             text = text.substring(0, ClientSettings.CHAT_MAX_LENGTH);
         }
-        messageManager.postMessage(MessageType.CHAT_MESSAGE, getPlayer().getEffectiveName() + ": " + text, getCurrentGatherId());
+        synchronized (pegDownProcessor) {
+            text = pegDownProcessor.markdownToHtml(text);
+        }
+        messageManager.postMessage(MessageType.CHAT_MESSAGE, SafeHtmlUtils.htmlEscape(getPlayer().getEffectiveName()) + ": " + text,
+                getCurrentGatherId());
     }
 
     @Override
