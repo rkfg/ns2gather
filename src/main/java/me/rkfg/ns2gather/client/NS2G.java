@@ -691,7 +691,17 @@ public class NS2G implements EntryPoint {
             break;
         }
         if (shouldScroll_user) {
-            scrollPanel_userChat.scrollToBottom();
+            if (text.contains("<img src=")) {
+                new Timer() {
+
+                    @Override
+                    public void run() {
+                        scrollPanel_userChat.scrollToBottom();
+                    }
+                }.schedule(ClientSettings.IMAGE_SCROLL_DELAY);
+            } else {
+                scrollPanel_userChat.scrollToBottom();
+            }
         }
         if (shouldScroll_system) {
             scrollPanel_systemChat.scrollToBottom();
