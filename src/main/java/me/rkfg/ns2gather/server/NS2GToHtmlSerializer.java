@@ -32,6 +32,7 @@ public class NS2GToHtmlSerializer extends ToHtmlSerializer {
         printer.print("<img");
         printAttribute("src", rendering.href);
         printAttribute("title", rendering.text);
+        printAttribute("class", "chat-image");
         for (LinkRenderer.Attribute attr : rendering.attributes) {
             printAttribute(attr.name, attr.value);
         }

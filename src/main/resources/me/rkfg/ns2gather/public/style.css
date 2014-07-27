@@ -96,3 +96,8 @@ h1 {
     color: #ff3333;
     font-weight: bold;
 }
+
+.chat-image {
+    max-width: 400px;
+    max-height: 400px;
+}
