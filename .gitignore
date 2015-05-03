@@ -1,2 +1,4 @@
 /target/
 /.gwt/
+/.settings/
+/.classpath
