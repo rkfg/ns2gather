@@ -231,7 +231,8 @@ public class NS2GServiceImpl extends RemoteServiceServlet implements NS2GService
             getSession().setAttribute("discovered", discovered);
 
             // obtain a AuthRequest message to be sent to the OpenID provider
-            AuthRequest authReq = consumerManager.authenticate(discovered, Settings.CALLBACK_URL);
+
+            AuthRequest authReq = consumerManager.authenticate(discovered, getServletContext().getInitParameter("callback.url"));
             String result = authReq.getDestinationUrl(true);
             return result;
         } catch (MessageException | ConsumerException | DiscoveryException e) {

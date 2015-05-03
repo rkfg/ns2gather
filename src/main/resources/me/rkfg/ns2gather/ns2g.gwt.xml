@@ -13,6 +13,7 @@
 
 	<!-- Other module inherits -->
 	<inherits name="com.kiouri.sliderbar.SliderBarMVP" />
+    <inherits name="net.lightoze.gwt.i18n.GwtI18nServer" />
 	<!-- Specify the app entry point class. -->
 	<entry-point class='me.rkfg.ns2gather.client.NS2G' />
 

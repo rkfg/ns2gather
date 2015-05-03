@@ -12,7 +12,7 @@
 
 	<properties>
 		<!-- Convenience property to set the GWT version -->
-		<gwtVersion>2.6.1</gwtVersion>
+		<gwtVersion>2.7.0</gwtVersion>
 		<!-- GWT needs at least java 1.5 -->
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -38,22 +38,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>javax.validation</groupId>
-			<artifactId>validation-api</artifactId>
-			<version>1.0.0.GA</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>javax.validation</groupId>
-			<artifactId>validation-api</artifactId>
-			<version>1.0.0.GA</version>
-			<classifier>sources</classifier>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>ru.ppsrk.gwt</groupId>
 			<artifactId>gwtutil</artifactId>
-			<version>1.0.3</version>
+			<version>1.0.4-SNAPSHOT</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>gwt-bootstrap</artifactId>
@@ -94,16 +81,6 @@
 			<version>20140107</version>
 		</dependency>
 		<dependency>
-			<groupId>com.mchange</groupId>
-			<artifactId>c3p0</artifactId>
-			<version>0.9.5-pre8</version>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-c3p0</artifactId>
-			<version>4.3.5.Final</version>
-		</dependency>
-		<dependency>
 			<groupId>com.kiouri.sliderbar</groupId>
 			<artifactId>gwt-slider-bar</artifactId>
 			<version>1.1-SNAPSHOT</version>
@@ -116,7 +93,12 @@
 		<dependency>
 			<groupId>org.pegdown</groupId>
 			<artifactId>pegdown</artifactId>
-			<version>1.4.2</version>
+			<version>1.5.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>net.lightoze.gwt-i18n-server</groupId>
+		    <artifactId>gwt-i18n-server</artifactId>
+		    <version>0.22</version>
 		</dependency>
 	</dependencies>
 
@@ -155,7 +137,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>2.1.1</version>
+				<version>2.6</version>
 				<configuration>
 					<webappDirectory>${webappDirectory}</webappDirectory>
 				</configuration>
@@ -163,7 +145,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
+				<version>3.3</version>
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>

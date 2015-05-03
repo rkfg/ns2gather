@@ -5,41 +5,45 @@
 
 <web-app>
 
-	<display-name>NS2 Gather Service</display-name>
-	<filter>
-		<filter-name>CleanupFilter</filter-name>
-		<filter-class>me.rkfg.ns2gather.server.CleanupFilter</filter-class>
-	</filter>
-	<filter-mapping>
-		<filter-name>CleanupFilter</filter-name>
-		<url-pattern>*</url-pattern>
-	</filter-mapping>
-	<!-- Servlets -->
-	<servlet>
-		<servlet-name>NS2Servlet</servlet-name>
-		<servlet-class>me.rkfg.ns2gather.server.NS2GServiceImpl</servlet-class>
-		<load-on-startup>1</load-on-startup>
-	</servlet>
+    <display-name>NS2 Gather Service</display-name>
+    <context-param>
+        <param-name>callback.url</param-name>
+        <param-value>http://127.0.0.1:8888/ns2g/callback</param-value>
+    </context-param>
+    <filter>
+        <filter-name>CleanupFilter</filter-name>
+        <filter-class>me.rkfg.ns2gather.server.CleanupFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>CleanupFilter</filter-name>
+        <url-pattern>*</url-pattern>
+    </filter-mapping>
+    <!-- Servlets -->
+    <servlet>
+        <servlet-name>NS2Servlet</servlet-name>
+        <servlet-class>me.rkfg.ns2gather.server.NS2GServiceImpl</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
 
-	<servlet>
-		<servlet-name>CallbackServlet</servlet-name>
-		<servlet-class>me.rkfg.ns2gather.server.AuthCallbackServlet</servlet-class>
-		<load-on-startup>1</load-on-startup>
-	</servlet>
+    <servlet>
+        <servlet-name>CallbackServlet</servlet-name>
+        <servlet-class>me.rkfg.ns2gather.server.AuthCallbackServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
 
-	<servlet-mapping>
-		<servlet-name>NS2Servlet</servlet-name>
-		<url-pattern>/ns2g/ns2g</url-pattern>
-	</servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>NS2Servlet</servlet-name>
+        <url-pattern>/ns2g/ns2g</url-pattern>
+    </servlet-mapping>
 
-	<servlet-mapping>
-		<servlet-name>CallbackServlet</servlet-name>
-		<url-pattern>/ns2g/callback</url-pattern>
-	</servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>CallbackServlet</servlet-name>
+        <url-pattern>/ns2g/callback</url-pattern>
+    </servlet-mapping>
 
-	<!-- Default page to serve -->
-	<welcome-file-list>
-		<welcome-file>ns2g.html</welcome-file>
-	</welcome-file-list>
+    <!-- Default page to serve -->
+    <welcome-file-list>
+        <welcome-file>ns2g.html</welcome-file>
+    </welcome-file-list>
 
 </web-app>

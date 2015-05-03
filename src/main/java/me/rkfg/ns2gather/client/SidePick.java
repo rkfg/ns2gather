@@ -7,7 +7,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlexTable;
-import com.google.gwt.user.client.ui.FocusWidget;
+import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 
 public class SidePick extends ResultPopupPanel<Side> {
@@ -44,7 +44,7 @@ public class SidePick extends ResultPopupPanel<Side> {
     }
 
     @Override
-    public FocusWidget getFocusWidget() {
+    public Focusable getFocusable() {
         return null;
     }
 
